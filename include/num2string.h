@@ -1,6 +1,8 @@
 #ifndef NUM_TO_STRING_H_
 #define NUM_TO_STRING_H_
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstdint>
