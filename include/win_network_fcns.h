@@ -1,15 +1,20 @@
 #ifndef _WIN_NETWORK_FUNCTIONS_H
 #define _WIN_NETWORK_FUNCTIONS_H
 
+#define _WINSOCK_DEPRECATED_NO_WARNINGS 
+
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <iphlpapi.h>
 
 #pragma comment(lib,"ws2_32.lib") //Winsock Library
+#pragma comment(lib, "iphlpapi.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 const uint16_t dllVersion = MAKEWORD(2, 2);
 
@@ -154,7 +159,7 @@ uint32_t send_message(SOCKET &s, const std::string op, const std::string val, st
     message = "";
     std::string cmd = op + " " + val + "\n";
 
-    result = send(s, cmd.c_str(), cmd.length(), 0);
+    result = send(s, cmd.c_str(), (int32_t)cmd.length(), 0);
     if (result == SOCKET_ERROR) {
         message = "Send failed with error: (" + std::to_string(result) + " : " + std::to_string(WSAGetLastError()) + ")";
         closesocket(s);
@@ -166,8 +171,61 @@ uint32_t send_message(SOCKET &s, const std::string op, const std::string val, st
 
 }   // end of send_message
 
+// ----------------------------------------------------------------------------------------
+void get_ip_address(std::vector<std::string> &data, std::string &lpMsgBuf)
+{
+    int32_t idx;
 
-uint32_t receive_message(SOCKET &s, const uint64_t max_res_len, std::string &message)
+    // Variables used by GetIpAddrTable 
+    PMIB_IPADDRTABLE pIPAddrTable;
+    unsigned long dwSize = 0;
+    unsigned long dwRetVal = 0;
+    in_addr IPAddr;
+
+    data.clear();
+    lpMsgBuf = "";
+
+    // Before calling AddIPAddress we use GetIpAddrTable to get an adapter to which we can add the IP.
+    pIPAddrTable = (MIB_IPADDRTABLE *)HeapAlloc(GetProcessHeap(), 0, sizeof(MIB_IPADDRTABLE));
+
+    if (pIPAddrTable) 
+    {
+        // Make an initial call to GetIpAddrTable to get the necessary size into the dwSize variable
+        if (GetIpAddrTable(pIPAddrTable, &dwSize, 0) ==
+            ERROR_INSUFFICIENT_BUFFER) {
+            HeapFree(GetProcessHeap(), 0, pIPAddrTable);
+            pIPAddrTable = (MIB_IPADDRTABLE *)HeapAlloc(GetProcessHeap(), 0, dwSize);
+        }
+
+        if (pIPAddrTable == NULL) 
+        {
+            lpMsgBuf = "Memory allocation failed for GetIpAddrTable";
+            return;
+        }
+    }
+
+    // Make a second call to GetIpAddrTable to get the actual data we want
+    if ((dwRetVal = GetIpAddrTable(pIPAddrTable, &dwSize, 0)) != NO_ERROR) 
+    {
+        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dwRetVal, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)& lpMsgBuf, 0, NULL);
+        return;
+    }
+
+    for (idx = 0; idx < (int)pIPAddrTable->dwNumEntries; ++idx) 
+    {
+        IPAddr.S_un.S_addr = (u_long)pIPAddrTable->table[idx].dwAddr;
+        data.push_back(inet_ntoa(IPAddr));
+    }
+
+    if (pIPAddrTable) 
+    {
+        HeapFree(GetProcessHeap(), 0, pIPAddrTable);
+        pIPAddrTable = NULL;
+    }
+
+}   // end of get_ip_address
+
+uint32_t receive_message(SOCKET &s, const uint32_t max_res_len, std::string &message)
 {
     int32_t result;
     char *read_buf = new char[max_res_len + 1];
