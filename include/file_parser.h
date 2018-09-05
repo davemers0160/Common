@@ -42,6 +42,65 @@ std::string get_path(std::string filename, std::string sep)
 
 // ----------------------------------------------------------------------------------------
 
+void parse_input_range(std::string input, std::vector<double> &range)
+{
+    range.clear();
+    std::vector<double> r;
+
+    // parse out the input values. should be in the form min:step:max
+    try
+    {
+        stringstream ss(input);
+        while (ss.good())
+        {
+            std::string substr;
+            getline(ss, substr, ':');
+            trim(substr);
+            if (substr.size() > 0)
+            {
+                r.push_back(std::stod(substr));
+            }
+
+        }
+    }
+    catch (std::exception &e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
+
+    if (r.size() != 3)
+    {
+        std::cout << "Incorrect range parameters supplied.  Setting value to: " << r[0] << std::endl;
+        range.push_back(r[0]);
+        return;
+    }
+
+    double s = r[0];
+    if (r[1] > 0)
+    {
+        while (s <= r[2])
+        {
+            range.push_back(s);
+            s += r[1];
+        }
+    }
+    else if (r[1] < 0)
+    {
+        while (s >= r[2])
+        {
+            range.push_back(s);
+            s += r[1];
+        }
+    }
+    else
+    {
+        range.push_back(r[0]);
+    }
+
+}	// end of parse_input_range
+
+// ----------------------------------------------------------------------------------------
+
 void parseCSVLine(std::string line, std::vector<std::string> &line_params)
 {
     stringstream ss(line);
