@@ -285,17 +285,17 @@ FC2::Error config_camera_propeties(FC2::Camera &cam, cam_properties_struct &cam_
 		return error;
 	}
 
-	sleep_ms(250);
+	sleep_ms(1000);
 
     // config Gain to initial value and set to auto
-	config_property(cam, Gain, FC2::GAIN, true, true, true);
-	error = set_abs_property(cam, Gain, cam_properties.gain);
-	if (error != FC2::PGRERROR_OK)
-	{
-		return error;
-	}
+	//config_property(cam, Gain, FC2::GAIN, true, true, true);
+	//error = set_abs_property(cam, Gain, cam_properties.gain);
+	//if (error != FC2::PGRERROR_OK)
+	//{
+	//	return error;
+	//}
 
-	sleep_ms(250);
+	//sleep_ms(500);
 
 	// get the auto values
     cam_properties.shutter = get_abs_property(cam, Shutter);
