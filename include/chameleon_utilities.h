@@ -285,7 +285,7 @@ FC2::Error config_camera_propeties(FC2::Camera &cam, cam_properties_struct &cam_
 		return error;
 	}
 
-	sleep_ms(1000);
+	sleep_ms(500);
 
     // config Gain to initial value and set to auto
 	config_property(cam, Gain, FC2::GAIN, true, true, true);
@@ -295,7 +295,7 @@ FC2::Error config_camera_propeties(FC2::Camera &cam, cam_properties_struct &cam_
 		return error;
 	}
 
-	//sleep_ms(500);
+	sleep_ms(2000);
 
 	// get the auto values
     cam_properties.shutter = get_abs_property(cam, Shutter);
