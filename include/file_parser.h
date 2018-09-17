@@ -42,6 +42,34 @@ std::string get_path(std::string filename, std::string sep)
 
 // ----------------------------------------------------------------------------------------
 
+
+void parse_line(std::string input, const char delimiter, std::vector<std::string> &params)
+{
+    params.clear();
+
+    try
+    {
+        stringstream ss(input);
+        while (ss.good())
+        {
+            std::string substr;
+            std::getline(ss, substr, delimiter);
+            trim(substr);
+            if (substr.size() > 0)
+            {
+                params.push_back(substr);
+            }
+
+        }
+    }
+    catch (std::exception &e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
+}   // end of parse_line
+
+// ----------------------------------------------------------------------------------------
+
 void parse_input_range(std::string input, std::vector<double> &range)
 {
     range.clear();
@@ -54,7 +82,7 @@ void parse_input_range(std::string input, std::vector<double> &range)
         while (ss.good())
         {
             std::string substr;
-            getline(ss, substr, ':');
+            std::getline(ss, substr, ':');
             trim(substr);
             if (substr.size() > 0)
             {
@@ -107,7 +135,7 @@ void parseCSVLine(std::string line, std::vector<std::string> &line_params)
     while (ss.good())
     {
         std::string substr;
-        getline(ss, substr, ',');
+        std::getline(ss, substr, ',');
         trim(substr);
         if (substr.size() > 0)
         {

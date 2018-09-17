@@ -152,12 +152,12 @@ uint32_t init_tcp_socket(std::string ip_address, uint32_t port, SOCKET &s, std::
 
 
 
-uint32_t send_message(SOCKET &s, const std::string op, const std::string val, std::string &message)
+uint32_t send_message(SOCKET &s, const std::string command, std::string &message)
 {
     int32_t result;
 
     message = "";
-    std::string cmd = op + " " + val + "\n";
+    std::string cmd = command + "\n";
 
     result = send(s, cmd.c_str(), (int32_t)cmd.length(), 0);
     if (result == SOCKET_ERROR) {
