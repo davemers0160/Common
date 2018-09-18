@@ -295,7 +295,7 @@ FC2::Error config_camera_propeties(FC2::Camera &cam, cam_properties_struct &cam_
 		return error;
 	}
 
-	sleep_ms(2000);
+	sleep_ms(2500);
 
 	// get the auto values
     cam_properties.shutter = get_abs_property(cam, Shutter);
