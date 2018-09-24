@@ -28,7 +28,7 @@ figure(plot_num)
 set(gcf,'position',([100,100,1200,400]),'color','w')
 image(data);
 %colormap(jet(max_data));
-colormap(jet(20000));
+colormap(jet(40000));
 axis off
 ax = gca;
 ax.Position = [0.05 0.05 0.90 0.90];
