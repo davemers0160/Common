@@ -11,6 +11,7 @@ function [data] = read_binary_lidar_data(input_file)
     data = fread(file_id, sz(1)*sz(2), 'int32');
     data = reshape(data,[sz(2),sz(1)])';
 
+    data = single(data);
     fclose(file_id);
     
 end
