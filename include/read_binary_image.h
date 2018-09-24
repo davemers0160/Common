@@ -1,20 +1,20 @@
-#ifndef _READ_BINARY_LIDAR_DATA_H
-#define _READ_BINARY_LIDAR_DATA_H
+#ifndef _READ_BINARY_IMAGE_H
+#define _READ_BINARY_IMAGE_H
 
 
 #include <cstdint>
 #include <cstdio>
 
-template <typename T>
-void read_binary_image(std::string filename, uint32_t &height,  uint32_t &width, T* &data)
+//template <typename T>
+void read_binary_image(std::string filename, dlib::matrix<uint32_t> &img)
 {
 	try
 	{
 		FILE* FP = fopen(filename.c_str(), "rb");
 		int32_t result = 0;
 		
-		height = 0;
-		width = 0;
+        uint32_t height = 0;
+        uint32_t width = 0;
 		
 		if(!FP) 
 		{
@@ -27,10 +27,15 @@ void read_binary_image(std::string filename, uint32_t &height,  uint32_t &width,
 		result = fread(&height, sizeof(uint32_t), 1, FP);
 		result = fread(&width, sizeof(uint32_t), 1, FP);
 
+        uint32_t *data = new uint32_t[width*height];
 
-		data = new T[width*height];
+		result = fread(data, sizeof(uint32_t), width*height, FP);
 
-		result = fread(data, sizeof(T), width*height, FP);
+        img = dlib::mat(data, height, width);
+
+        delete[] data;
+        data = NULL;
+
 
 		fclose(FP);
 	}
