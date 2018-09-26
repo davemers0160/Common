@@ -1,7 +1,7 @@
 format long g
 format compact
 clc
-close all
+%close all
 %clearvars
 
 % get the location of the script file to save figures
@@ -33,3 +33,4 @@ axis off
 ax = gca;
 ax.Position = [0.05 0.05 0.90 0.90];
 
+plot_num = plot_num + 1;
