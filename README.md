@@ -1,2 +1,3 @@
-# Common
-Repository that contains code that can be used across multiple projects
+# Common Repository
+This repository contains code that can be used across multiple projects.
+
