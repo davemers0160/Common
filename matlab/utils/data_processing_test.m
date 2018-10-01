@@ -1,38 +1,121 @@
+format long g
+format compact
+clc
+close all
+clearvars
+
 plot_num = 1;
+load('d:\Common\matlab\lidar\OS1_991827000195.mat');
 
-ld_file = 'D:\IUPUI\Test_Data\rw\Lab2\lidar\lidar_rng_00000_xcrop.bin';
+%%
 
-[data] = read_binary_lidar_data(ld_file);
+data_directory = 'D:\IUPUI\Test_Data\real_world_raw\';
 
-data_sr = imresize(data,[size(data,1)*18,size(data,2)*6],'nearest');
+%ld_file = 'Lab2\lidar\lidar_rng_00000_20180921_075338.bin';
+ld_file = 'Library3\lidar\lidar_rng_00000_20180919_081532.bin';
 
-figure(plot_num)
-set(gcf,'position',([100,100,1200,400]),'color','w')
-image(data_sr);
-%colormap(jet(max_data));
-colormap(jet(11000));
-axis off
-plot_num = plot_num + 1;
+[data] = read_binary_lidar_data(fullfile(data_directory,ld_file));
+[lx, ly, lz] = convert_lidar_to_xyz(lidar_struct, data);
+
+l_xyz(:,:,1) = lx;
+l_xyz(:,:,2) = ly;
+l_xyz(:,:,3) = lz;
+
+%data_sr = imresize(data,[size(data,1)*18,size(data,2)*6],'nearest');
+
+% figure()
+% set(gcf,'position',([100,100,1200,400]),'color','w')
+% image(data_sr);
+% %colormap(jet(max_data));
+% colormap(jet(11000));
+% axis off
+% plot_num = plot_num + 1;
 
 
 %%
-im_file_l = 'D:\IUPUI\Test_Data\real_world_raw\Lab2\left\exp_40\image_134_40.00_15356234_20180921_075333.png';
-im_file_r = 'D:\IUPUI\Test_Data\real_world_raw\Lab2\right\exp_40\image_133_40.00_16024674_20180921_075332.png';
 
-img_l = imread(im_file_l);
-img_r = imread(im_file_r);
+% im_file_l = 'Lab2\left\exp_40\image_134_40.00_15356234_20180921_075333.png';
+% im_file_r = 'Lab2\right\exp_40\image_133_40.00_16024674_20180921_075332.png';
 
-img_l2 = img_l(8:8+1007,2:2+1259,:);
-img_r2 = img_r(8:8+1007,2:2+1259,:);
+im_file_l = 'Library3/left/exp_40/image_136_40.00_15356234_20180919_081526.png';
+im_file_r = 'Library3/right/exp_40/image_134_40.00_16024674_20180919_081528.png';
 
-figure();image(img_r); axis off
+img_l = imread(fullfile(data_directory,im_file_l));
+img_r = imread(fullfile(data_directory,im_file_r));
+img_r = imrotate(img_r,-0.5);
 figure();image(img_l); axis off
+figure();image(img_r); axis off
+
+im_w = 900;
+im_h = 720;
+
+% left crop numbers
+x_l_off = 10;
+y_l_off = 0;
+x_l = floor(size(img_l,2)/2 - im_w/2) + x_l_off;
+y_l = floor(size(img_l,1)/2 - im_h/2) + y_l_off;
+crop_w_l = [x_l:x_l+im_w-1];
+crop_h_l = [y_l:y_l+im_h-1];
+
+% right crop numbers
+x_r_off = 10;
+y_r_off = -10;
+x_r = floor(size(img_l,2)/2 - im_w/2) + x_r_off;
+y_r = floor(size(img_l,1)/2 - im_h/2) + y_r_off;
+crop_w_r = [x_r:x_r+im_w-1];
+crop_h_r = [y_r:y_r+im_h-1];
+
+% crop the images
+img_l = img_l(crop_h_l, crop_w_l, :);
+img_r = img_r(crop_h_r, crop_w_r, :);
+
+figure();image(img_l); axis off
+figure();image(img_r); axis off
+
+
+%% Lidar cropping parameters
+
+cr_w = floor(im_w/6)-1;
+cr_h = floor(im_h/18)-1;
+
+% left crop numbers
+% x_l_off = 10;
+% y_l_off = 0;
+x_l = 944;
+y_l = 16;
+ld_crop_w_l = [x_l:x_l+cr_w-1];
+ld_crop_h_l = [y_l:y_l+cr_h-1];
+
+% right crop numbers
+% x_r_off = 10;
+% y_r_off = 0;
+x_r = 957;
+y_r = 15;
+ld_crop_w_r = [x_r:x_r+cr_w-1];
+ld_crop_h_r = [y_r:y_r+cr_h-1];
+
+% crop the lidar data
+ld_l = lx(ld_crop_h_l,ld_crop_w_l);
+ld_r = lx(ld_crop_h_r,ld_crop_w_r);
+
+ptCloud = pointCloud(l_xyz(ld_crop_h_l,ld_crop_w_l,:));
+
+%figure(); pcshow(ptCloud,'MarkerSize',10);
+figure(); image(ld_l); colormap(jet(6000)); axis off;
+figure(); image(ld_r); colormap(jet(6000)); axis off;
+
+%%  
+
+
+imgl_g = rgb2gray(img_r);
+ld_sr=imresize(ld_r,size(imgl_g));
+
+ld_sr = floor((ld_sr-min(ld_sr(:)))*255/(max(ld_sr(:)) - min(ld_sr(:))));
+figure(); image(cat(3,ld_sr,imgl_g,imgl_g)); axis off;
+
 
 
 %%
-
-
-
 l_crop_h = [106:106+1007];
 l_crop_w = [210:210+1259];
 r_crop_h = [106:106+1007];
