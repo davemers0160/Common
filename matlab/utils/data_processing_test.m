@@ -9,10 +9,10 @@ load('d:\Common\matlab\lidar\OS1_991827000195.mat');
 
 %%
 
-data_directory = 'D:\IUPUI\Test_Data\real_world_raw\';
+data_directory = 'D:\IUPUI\Test_Data\real_world\';
 
-%ld_file = 'Lab2\lidar\lidar_rng_00000_20180921_075338.bin';
-ld_file = 'Library3\lidar\lidar_rng_00000_20180919_081532.bin';
+ld_file = 'Lab2\lidar\lidar_rng_00000_20180921_075338.bin';
+%ld_file = 'Library3\lidar\lidar_rng_00000_20180919_081532.bin';
 
 [data] = read_binary_lidar_data(fullfile(data_directory,ld_file));
 [lx, ly, lz] = convert_lidar_to_xyz(lidar_struct, data);
@@ -34,11 +34,11 @@ l_xyz(:,:,3) = lz;
 
 %%
 
-% im_file_l = 'Lab2\left\exp_40\image_134_40.00_15356234_20180921_075333.png';
-% im_file_r = 'Lab2\right\exp_40\image_133_40.00_16024674_20180921_075332.png';
+im_file_l = 'Lab2\left\exp_40\image_134_40.00_15356234_20180921_075333.png';
+im_file_r = 'Lab2\right\exp_40\image_133_40.00_16024674_20180921_075332.png';
 
-im_file_l = 'Library3/left/exp_40/image_136_40.00_15356234_20180919_081526.png';
-im_file_r = 'Library3/right/exp_40/image_134_40.00_16024674_20180919_081528.png';
+%im_file_l = 'Library3/left/exp_40/image_136_40.00_15356234_20180919_081526.png';
+%im_file_r = 'Library3/right/exp_40/image_134_40.00_16024674_20180919_081528.png';
 
 img_l = imread(fullfile(data_directory,im_file_l));
 img_r = imread(fullfile(data_directory,im_file_r));
@@ -116,19 +116,19 @@ figure(); image(cat(3,ld_sr,imgl_g,imgl_g)); axis off;
 
 
 %%
-l_crop_h = [106:106+1007];
-l_crop_w = [210:210+1259];
-r_crop_h = [106:106+1007];
-r_crop_w = [330:330+1259];
-
-ld_l = data_sr(l_crop_h,l_crop_w);
-ld_r = data_sr(r_crop_h,r_crop_w);
-
-RGB = depthOverlay(img_l2(300:700,20:end-20,:), 12000-ld_l(300:700,20:end-20));
-title('depth overlay');
-
-figure();
-imshowpair(img_l2,ld_l);
+% l_crop_h = [106:106+1007];
+% l_crop_w = [210:210+1259];
+% r_crop_h = [106:106+1007];
+% r_crop_w = [330:330+1259];
+% 
+% ld_l = data_sr(l_crop_h,l_crop_w);
+% ld_r = data_sr(r_crop_h,r_crop_w);
+% 
+% RGB = depthOverlay(img_l2(300:700,20:end-20,:), 12000-ld_l(300:700,20:end-20));
+% title('depth overlay');
+% 
+% figure();
+% imshowpair(img_l2,ld_l);
 
 
 
