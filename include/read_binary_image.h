@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <cstdio>
 
-//template <typename T>
-void read_binary_image(std::string filename, dlib::matrix<uint32_t> &img)
+template <typename T>
+void read_binary_image(std::string filename, dlib::matrix<T> &img)
 {
 	try
 	{
@@ -27,15 +27,16 @@ void read_binary_image(std::string filename, dlib::matrix<uint32_t> &img)
 		result = fread(&height, sizeof(uint32_t), 1, FP);
 		result = fread(&width, sizeof(uint32_t), 1, FP);
 
-        uint32_t *data = new uint32_t[width*height];
+        //uint32_t *data = new uint32_t[width*height];
+        T *data = new T[width*height];
 
-		result = fread(data, sizeof(uint32_t), width*height, FP);
+		result = fread(data, sizeof(T), width*height, FP);
 
+        //img = dlib::matrix_cast<T>(dlib::mat(data, height, width));
         img = dlib::mat(data, height, width);
 
         delete[] data;
         data = NULL;
-
 
 		fclose(FP);
 	}
