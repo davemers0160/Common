@@ -22,13 +22,13 @@ end
 
 [data] = read_binary_lidar_data(fullfile(data_path, data_file));
 
-max_data = max(data(:));
+max_data = (floor(max(data(:))/1000) + 1) * 1000;
 
 figure(plot_num)
-set(gcf,'position',([100,100,1200,400]),'color','w')
+set(gcf,'position',([100,100,800,600]),'color','w')
 image(data);
-%colormap(jet(max_data));
-colormap(jet(40000));
+colormap(jet(max_data));
+%colormap(jet(40000));
 axis off
 ax = gca;
 ax.Position = [0.05 0.05 0.90 0.90];

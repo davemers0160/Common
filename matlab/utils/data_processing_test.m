@@ -78,6 +78,8 @@ figure();image(img_r); axis off
 cr_w = floor(im_w/6)-1;
 cr_h = floor(im_h/18)-1;
 
+max_data = (floor(max(lx(:))/1000) + 1)*1000;
+
 % left crop numbers
 % x_l_off = 10;
 % y_l_off = 0;
@@ -101,8 +103,8 @@ ld_r = lx(ld_crop_h_r,ld_crop_w_r);
 ptCloud = pointCloud(l_xyz(ld_crop_h_l,ld_crop_w_l,:));
 
 %figure(); pcshow(ptCloud,'MarkerSize',10);
-figure(); image(ld_l); colormap(jet(6000)); axis off;
-figure(); image(ld_r); colormap(jet(6000)); axis off;
+figure(); image(ld_l); colormap(jet(max_data)); axis off;
+figure(); image(ld_r); colormap(jet(max_data)); axis off;
 
 %%  
 
