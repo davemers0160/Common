@@ -18,10 +18,31 @@
 
 // ----------------------------------------------------------------------------------------
 
-namespace dlib
-{
-    namespace cpu 
-    {
+// place this in cpu_dlib.h under namespace cpu
+/*
+    // ----------------------------------------------------------------------------------------
+
+        void elu (
+            tensor& dest,
+            const tensor& src,
+			const tensor& param
+        );
+
+        void elu_gradient (
+            tensor& grad,
+            const tensor& dest,
+            const tensor& gradient_input,
+			const tensor& param
+        );
+        
+*/
+
+// place this in cpu_dlib.cpp under namespace cpu
+
+/*
+
+    // ----------------------------------------------------------------------------------------
+    
         void elu (
             tensor& dest,
             const tensor& src,
@@ -34,7 +55,7 @@ namespace dlib
             const auto s = src.host();
 
 			for (size_t i = 0; i < src.size(); ++i)
-                d[i] = std::max(s[i],0.0f) +  std::min(0.0f,p*std::exp(s[i])-1);
+                d[i] = std::max(s[i],0.0f) + std::min(0.0f,p*std::exp(s[i])-1);
         }
 
         void elu_gradient (
@@ -70,9 +91,8 @@ namespace dlib
                 }
             }
         }
-	}
-}
-
+        
+*/
 
 
 // ----------------------------------------------------------------------------------------
@@ -254,29 +274,40 @@ namespace dlib
             params = initial_param_value;
         }
 
-        template <typename SUBNET>
-        void forward(
-            const SUBNET& sub,
-            resizable_tensor& data_output
+        // template <typename SUBNET>
+        // void forward(
+            // const SUBNET& sub,
+            // resizable_tensor& data_output
+        // )
+        // {
+            // data_output.copy_size(sub.get_output());
+            // tt::elu(data_output, sub.get_output(), params);
+        // }
+        void forward_inplace(const tensor& input, tensor& output)
+        {
+            tt::elu(output, input, params);
+        } 
+        
+        // template <typename SUBNET>
+        // void backward(
+            // const tensor& gradient_input,
+            // SUBNET& sub,
+            // tensor& params_grad
+        // )
+        // {
+            // tt::elu_gradient(sub.get_gradient_input(), sub.get_output(),
+                // gradient_input, params);
+        // }
+        void backward_inplace(
+            const tensor& computed_output,
+            const tensor& gradient_input, 
+            tensor& data_grad, 
+            tensor& 
         )
         {
-            data_output.copy_size(sub.get_output());
-            tt::elu(data_output, sub.get_output(), params);
+            tt::elu_gradient(data_grad, computed_output, gradient_input, params);
         }
-
-        template <typename SUBNET>
-        void backward(
-            const tensor& gradient_input,
-            SUBNET& sub,
-            tensor& params_grad
-        )
-        {
-            //tt::prelu_gradient(sub.get_gradient_input(), sub.get_output(),
-            //    gradient_input, params, params_grad);
-            tt::elu_gradient(sub.get_gradient_input(), sub.get_output(),
-                gradient_input, params);
-        }
-
+        
         inline dpoint map_input_to_output(const dpoint& p) const { return p; }
         inline dpoint map_output_to_input(const dpoint& p) const { return p; }
 
