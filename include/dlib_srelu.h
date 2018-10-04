@@ -308,10 +308,10 @@ namespace dlib
         void setup(const SUBNET& /*sub*/)
         {
             params.set_size(4);
-            params[0] = tl;
-            params[1] = tr;
-            params[2] = al;
-            params[3] = ar;
+            params.host()[0] = tl;
+            params.host()[1] = tr;
+            params.host()[2] = al;
+            params.host()[3] = ar;
         }
 
         template <typename SUBNET>
@@ -331,7 +331,7 @@ namespace dlib
             tensor& params_grad
         )
         {
-            tt::prelu_gradient(sub.get_gradient_input(), sub.get_output(), 
+            tt::srelu_gradient(sub.get_gradient_input(), sub.get_output(), 
                 gradient_input, params, params_grad);
         }
         
