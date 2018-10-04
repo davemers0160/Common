@@ -274,30 +274,11 @@ namespace dlib
             params = initial_param_value;
         }
 
-        // template <typename SUBNET>
-        // void forward(
-            // const SUBNET& sub,
-            // resizable_tensor& data_output
-        // )
-        // {
-            // data_output.copy_size(sub.get_output());
-            // tt::elu(data_output, sub.get_output(), params);
-        // }
         void forward_inplace(const tensor& input, tensor& output)
         {
             tt::elu(output, input, params);
         } 
         
-        // template <typename SUBNET>
-        // void backward(
-            // const tensor& gradient_input,
-            // SUBNET& sub,
-            // tensor& params_grad
-        // )
-        // {
-            // tt::elu_gradient(sub.get_gradient_input(), sub.get_output(),
-                // gradient_input, params);
-        // }
         void backward_inplace(
             const tensor& computed_output,
             const tensor& gradient_input, 
@@ -354,117 +335,8 @@ namespace dlib
     template <typename SUBNET>
     using elu = add_layer<elu_, SUBNET>;
 
-}
-
-/*
-
-namespace dlib
-{
-    class elu_
-    {
-    public:
-        
-        explicit elu_(
-            float initial_param_value_ = 1.0
-        ) : initial_param_value(initial_param_value_)
-        {
-        }
-
-        float get_initial_param_value(
-        ) const { return initial_param_value; }
-
-        template <typename SUBNET>
-        void setup (const SUBNET& )
-        {
-			params.set_size(1);
-            params = initial_param_value; 
-		}
-
-        //template <typename SUBNET>
-        //void forward_inplace(const tensor& input, tensor& output, tensor& params)
-        //{
-        //    tt::elu(output, input, params);
-        //} 
-
-        template <typename SUBNET>
-        void forward(
-            const SUBNET& sub,
-            resizable_tensor& data_output
-        )
-        {
-            data_output.copy_size(sub.get_output());
-            tt::elu(data_output, sub.get_output(), params);
-        }
-
-        //template <typename SUBNET>
-        //void backward_inplace(
-        //    const tensor& computed_output,
-        //    const tensor& gradient_input, 
-        //    tensor& data_grad, 
-        //    tensor& params
-        //)
-        //{
-        //    tt::elu_gradient(data_grad, computed_output, gradient_input, params);
-        //}
-
-        template <typename SUBNET>
-        void backward(
-            const tensor& gradient_input,
-            SUBNET& sub
-        )
-        {
-            tt::elu_gradient(sub.get_gradient_input(), sub.get_output(), gradient_input, params);
-        }
-
-
-        inline dpoint map_input_to_output (const dpoint& p) const { return p; }
-        inline dpoint map_output_to_input (const dpoint& p) const { return p; }
-
-        const tensor& get_layer_params() const { return params; }
-        tensor& get_layer_params() { return params; }
-
-        friend void serialize(const elu_& item, std::ostream& out)
-        {
-            serialize("elu_", out);
-            serialize(item.params, out);
-            serialize(item.initial_param_value, out);
-        }
-
-        friend void deserialize(elu_& item, std::istream& in)
-        {
-            std::string version;
-            deserialize(version, in);
-            if (version != "elu_")
-                throw serialization_error("Unexpected version '"+version+"' found while deserializing dlib::elu_.");
-            deserialize(item.params, in);
-            deserialize(item.initial_param_value, in);
-        }
-
-        friend std::ostream& operator<<(std::ostream& out, const elu_& item)
-        {
-            out << "elu\t ("
-                << "initial_param_value="<<item.initial_param_value
-                << ")";
-            return out;
-        }
-
-        friend void to_xml(const elu_& item, std::ostream& out)
-        {
-            out << "<elu initial_param_value='"<<item.initial_param_value<<"'>\n";
-            out << mat(item.params);
-            out << "</elu>\n";
-        }
-
-    private:
-        resizable_tensor params;
-		float initial_param_value;
-    };
-
-    template <typename SUBNET>
-    using elu = add_layer<elu_, SUBNET>;
-
 // ----------------------------------------------------------------------------------------
 }
-*/
+
 
 #endif	// _DNN_ELU_H
