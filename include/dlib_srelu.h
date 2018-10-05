@@ -292,10 +292,10 @@ namespace dlib
     public:
         explicit srelu_(
             float tl_ = -1.0, 
-            float tr_ = 1.0,
             float al_ = 0.1,
+            float tr_ = 1.0,
             float ar_ = 0.1
-        ) : tl(tl_),tr(tr_),al(al_),ar(ar_)
+        ) : tl(tl_),al(al_),tr(tr_),ar(ar_)
         {
         }
 
@@ -309,8 +309,8 @@ namespace dlib
         {
             params.set_size(4);
             params.host()[0] = tl;
-            params.host()[1] = tr;
-            params.host()[2] = al;
+            params.host()[1] = al;
+            params.host()[2] = tr;
             params.host()[3] = ar;
         }
 
@@ -346,8 +346,8 @@ namespace dlib
             serialize("srelu_", out);
             serialize(item.params, out);
             serialize(item.tl, out);
-            serialize(item.tr, out);
             serialize(item.al, out);
+            serialize(item.tr, out);
             serialize(item.ar, out);
         }
 
@@ -359,8 +359,8 @@ namespace dlib
                 throw serialization_error("Unexpected version '" + version + "' found while deserializing dlib::srelu_.");
             deserialize(item.params, in);
             deserialize(item.tl, in);
-            deserialize(item.tr, in);
             deserialize(item.al, in);
+            deserialize(item.tr, in);
             deserialize(item.ar, in);
         }
 
@@ -368,23 +368,26 @@ namespace dlib
         {
             out << "srelu\t ("
                 << "tl=" << item.tl
-                << "tr=" << item.tr
-                << "al=" << item.al
-                << "ar=" << item.ar                
+                << ", al=" << item.al
+                << ", tr=" << item.tr
+                << ", ar=" << item.ar                
                 << ")";
             return out;
         }
 
         friend void to_xml(const srelu_& item, std::ostream& out)
         {
-            out << "<srelu tl='" << item.tl << "', tr='" << item.tr << "', al='" << item.al << "', ar='" << item.ar << "'>\n";
+            out << "<srelu tl='" << item.tl 
+                << "', al='" << item.al 
+                << "', tr='" << item.tr 
+                << "', ar='" << item.ar << "'>\n";
             out << mat(item.params);
             out << "</srelu>\n";
         }
 
     private:
         resizable_tensor params;
-        float tl,tr,al,ar;
+        float tl,al,tr,ar;
     };
 
     template <typename SUBNET>
