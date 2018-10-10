@@ -5,12 +5,9 @@
 #include <cstdint>
 #include <vector>
 
-
 // dlib includes
 #include "dlib/matrix.h"
 #include "dlib/image_transforms/interpolation.h"
-
-
 
 template <typename img_type>
 dlib::rectangle get_cropping_rect(const img_type& src, uint32_t crop_w, uint32_t crop_h)
@@ -46,7 +43,7 @@ dlib::rectangle get_cropping_rect(const img_type& src, uint32_t crop_w, uint32_t
 //-----------------------------------------------------------------------------
 
 template<typename img_type, uint64_t D>
-void center_cropper(std::array<img_type, D> src, std::array<img_type, D> &dst, uint64_t &crop_w, uint64_t &crop_h)
+void center_cropper(std::array<img_type, D> src, std::array<img_type, D> &dst, uint32_t &crop_w, uint32_t &crop_h)
 {
 
     dlib::rectangle crop_rect = get_cropping_rect(src[0], crop_w, crop_h);
