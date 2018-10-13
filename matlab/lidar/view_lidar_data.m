@@ -13,7 +13,7 @@ plot_num = 1;
 file_filter = {'*.bin','Binary Files';'*.*','All Files' };
 
 startpath = 'D:\IUPUI\Test_Data\real_world_raw\';
-[data_file, data_path] = uigetfile(file_filter, 'Select DFD-Net Log File', startpath);
+[data_file, data_path] = uigetfile(file_filter, 'Select Binary Lidar File', startpath);
 if(data_path == 0)
     return;
 end
