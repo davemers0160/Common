@@ -43,7 +43,7 @@ dlib::rectangle get_cropping_rect(const img_type& src, uint32_t crop_w, uint32_t
 //-----------------------------------------------------------------------------
 
 template<typename img_type, uint64_t D>
-void center_cropper(std::array<img_type, D> src, std::array<img_type, D> &dst, uint32_t &crop_w, uint32_t &crop_h)
+void center_cropper(std::array<img_type, D> &src, std::array<img_type, D> &dst, uint32_t crop_w, uint32_t crop_h)
 {
 
     dlib::rectangle crop_rect = get_cropping_rect(src[0], crop_w, crop_h);
@@ -58,7 +58,7 @@ void center_cropper(std::array<img_type, D> src, std::array<img_type, D> &dst, u
 //-----------------------------------------------------------------------------
 
 template<typename img_type>
-void center_cropper(img_type src, img_type &dst, uint64_t &crop_w, uint64_t &crop_h)
+void center_cropper(img_type src, img_type &dst, uint32_t crop_w, uint32_t crop_h)
 {
 
     dlib::rectangle crop_rect = get_cropping_rect(src, crop_w, crop_h);
