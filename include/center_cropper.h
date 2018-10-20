@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "ycrcb_pixel.h"
+
 // dlib includes
 #include "dlib/matrix.h"
 #include "dlib/image_transforms/interpolation.h"
