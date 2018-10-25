@@ -25,7 +25,7 @@ end
 max_data = (floor(max(data(:))/1000) + 1) * 1000;
 
 figure(plot_num)
-set(gcf,'position',([100,100,800,600]),'color','w')
+set(gcf,'position',([100,100,1300,400]),'color','w')
 image(data);
 colormap(jet(max_data));
 %colormap(jet(40000));
