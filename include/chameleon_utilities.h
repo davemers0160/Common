@@ -7,13 +7,15 @@ This file contains the configures the routines for the Chameleon 3 camera.
 #ifndef CHAMELEON_UTILITIES_H
 #define CHAMELEON_UTILITIES_H
 
-#include <iostream>
+#include <cstdint>
 #include <ctime>
 #include <sstream>
 #include <fstream>
 #include <string>
 #include <iomanip>
 #include <vector>
+#include <tuple>
+#include <iostream>
 
 
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
@@ -34,12 +36,18 @@ using namespace std;
 
 
 typedef struct{
-    uint32_t sharpness;
-    float shutter; 
-    float gain; 
-    float brightness; 
-    float auto_exp; 
-    float fps;
+     uint32_t sharpness;
+     float shutter; 
+     float gain; 
+     float brightness; 
+     float auto_exp; 
+     float fps;
+    //std::tuple<uint32_t, bool, bool, bool> sharpness;
+    //std::tuple<float, bool, bool, bool> shutter;
+    //std::tuple<float, bool, bool, bool> gain;
+    //std::tuple<float, bool, bool, bool> brightness;
+    //std::tuple<float, bool, bool, bool> auto_exp;
+    //std::tuple<float, bool, bool, bool> fps;
 } cam_properties_struct;
 
 
