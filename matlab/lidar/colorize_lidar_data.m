@@ -11,7 +11,7 @@ full_path = mfilename('fullpath');
 %% get the user input to the lidar scan
 file_filter = {'*.bin','Binary Files';'*.*','All Files' };
 
-startpath = 'D:\IUPUI\Test_Data\real_world_raw\';
+startpath = 'D:\IUPUI\Test_Data\rw\';
 [data_file, data_path] = uigetfile(file_filter, 'Select Binary Lidar File', startpath);
 if(data_path == 0)
     return;
