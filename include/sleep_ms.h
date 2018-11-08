@@ -16,7 +16,7 @@ void sleep_ms(uint32_t value)
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 	Sleep(value);
 #else
-	const timespec delay[]= {0, value*1000000UL} ;
+	const timespec delay[]= {0, (uint32_t)(value*1000000)} ;
 	nanosleep(delay, NULL);
 #endif
 

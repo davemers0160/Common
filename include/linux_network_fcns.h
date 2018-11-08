@@ -76,12 +76,15 @@ uint32_t init_tcp_socket(std::string ip_address, uint32_t port, int32_t &sock_fd
     hints.ai_socktype = SOCK_STREAM;
   
     int ret = getaddrinfo(ip_address.c_str(), std::to_string(port).c_str(), &hints, &info_start);
-    if (ret != 0) {
+    if (ret != 0) 
+    {
         //error_msg = "getaddrinfo: " + gai_strerror(ret);
         error_msg = "getaddrinfo: " + std::to_string(ret);
         return -1;
     }
-    if (info_start == NULL) {
+
+    if (info_start == NULL) 
+    {
         error_msg = "getaddrinfo: empty result";
         return -1;
     }
@@ -98,6 +101,7 @@ uint32_t init_tcp_socket(std::string ip_address, uint32_t port, int32_t &sock_fd
         if (connect(sock_fd, ai->ai_addr, ai->ai_addrlen) == -1) 
         {
             close(sock_fd);
+            error_msg += " connect==-1";
             continue;
         }
 
@@ -108,6 +112,7 @@ uint32_t init_tcp_socket(std::string ip_address, uint32_t port, int32_t &sock_fd
     if (ai == NULL) 
     {
         sock_fd = -1;
+        error_msg += " ai==NULL";
         return -1;
     }
            
