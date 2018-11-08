@@ -3,6 +3,7 @@
 
 
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -31,7 +32,8 @@ uint32_t init_udp_socket(int32_t port, int32_t &sock_fd, std::string &error_msg)
     sock_fd = socket(PF_INET, SOCK_DGRAM, 0);
     if (sock_fd < 0) 
     {
-        error_msg = "socket: " + std::strerror(errno);
+        //error_msg = "socket: " + std::strerror(errno);
+        error_msg = "socket: " + std::to_string(sock_fd);
         return -1;
     }
 
@@ -42,7 +44,8 @@ uint32_t init_udp_socket(int32_t port, int32_t &sock_fd, std::string &error_msg)
     my_addr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(sock_fd, (struct sockaddr*)&my_addr, sizeof(my_addr)) < 0) {
-        error_msg =  "bind: " + std::strerror(errno);
+        //error_msg =  "bind: " + std::strerror(errno);
+        error_msg =  "bind error";
         return -1;
     }
 
@@ -50,7 +53,8 @@ uint32_t init_udp_socket(int32_t port, int32_t &sock_fd, std::string &error_msg)
     timeout.tv_sec = 1;
     timeout.tv_usec = 0;
     if (setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-        error_msg = "setsockopt: " + std::strerror(errno);
+        //error_msg = "setsockopt: " + std::strerror(errno);
+        error_msg = "setsockopt error";
         return -1;
     }  
     
@@ -73,7 +77,8 @@ uint32_t init_tcp_socket(std::string ip_address, uint32_t port, int32_t &sock_fd
   
     int ret = getaddrinfo(ip_address.c_str(), std::to_string(port).c_str(), &hints, &info_start);
     if (ret != 0) {
-        error_msg = "getaddrinfo: " + gai_strerror(ret);
+        //error_msg = "getaddrinfo: " + gai_strerror(ret);
+        error_msg = "getaddrinfo: " + std::to_string(ret);
         return -1;
     }
     if (info_start == NULL) {
@@ -85,7 +90,8 @@ uint32_t init_tcp_socket(std::string ip_address, uint32_t port, int32_t &sock_fd
     {
         sock_fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
         if (sock_fd < 0) {
-            error_msg = "socket: " + std::strerror(errno);
+            //error_msg = "socket: " + std::strerror(errno);
+            error_msg = "socket: " + std::to_string(sock_fd);
             continue;
         }
 
@@ -119,7 +125,7 @@ uint32_t send_message(int32_t &s, const std::string command, std::string &error_
 
     ssize_t result = write(s, cmd.c_str(), cmd.length());
     if (result != (ssize_t)cmd.length()) {
-        error_msg =  "init_client: failed to send command" << std::endl;
+        error_msg =  "init_client: failed to send command";
         return -1;
     }   
     
