@@ -12,7 +12,7 @@
 #include "dlib/image_transforms/interpolation.h"
 
 template <typename img_type>
-dlib::rectangle get_cropping_rect(const img_type& src, uint32_t crop_w, uint32_t crop_h)
+dlib::rectangle get_center_crop_rect(const img_type& src, uint32_t crop_w, uint32_t crop_h)
 {
     uint64_t x = 0, y = 0;
     
@@ -48,7 +48,7 @@ template<typename img_type, uint64_t D>
 void center_cropper(std::array<img_type, D> &src, std::array<img_type, D> &dst, uint32_t crop_w, uint32_t crop_h)
 {
 
-    dlib::rectangle crop_rect = get_cropping_rect(src[0], crop_w, crop_h);
+    dlib::rectangle crop_rect = get_center_crop_rect(src[0], crop_w, crop_h);
     
     for(uint64_t idx=0; idx<D; ++idx)
     {
@@ -63,7 +63,7 @@ template<typename img_type>
 void center_cropper(img_type src, img_type &dst, uint32_t crop_w, uint32_t crop_h)
 {
 
-    dlib::rectangle crop_rect = get_cropping_rect(src, crop_w, crop_h);
+    dlib::rectangle crop_rect = get_center_crop_rect(src, crop_w, crop_h);
     
     dst = dlib::subm(src, crop_rect);
     
