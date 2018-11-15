@@ -1,3 +1,9 @@
+format long g
+format compact
+clc
+close all
+clearvars
+
 
 %% read in the data
 dm_img = double(imread('D:\IUPUI\PhD\Results\dfd_dnn_pso\itr1\dfd_pso_13\depthmap_image_v6_pso_13_01_test_00049.png'));
@@ -22,7 +28,7 @@ axis off
 %% calculate the metrics
 
 
-sub_img = (dm_img -gt_img);
+sub_img = (dm_img - gt_img);
 MAE(1) = mean(abs(sub_img(:)));
 RMSE(1) = sqrt(mean(sub_img(:).^2));
 SSIM(1) = ssim(gt_img, dm_img,'DynamicRange',255);
@@ -41,7 +47,30 @@ NMAE
 NRMSE
 SSIM
 
+%% high pass filter tests
+
+%hpf = [0 -0.25 0; -0.25 2 -0.25; 0, -0.25, 0];
+hpf = [1 1 1; 1 -8 1; 1 1 1];
+
+gt_hpf = filter2(hpf, gt_img);
+
+dm_hpf = filter2(hpf, dm_img);
+
+flat_hpf = filter2(hpf, dm_flat);
 
 
+dm_hpf_dif = abs(gt_hpf - dm_hpf);
 
+mean(dm_hpf_dif(:))
+
+flat_hpf_dif = abs(gt_hpf - flat_hpf);
+
+mean(flat_hpf_dif(:))
+
+figure; image(dm_hpf_dif); colormap(gray(256));
+figure; image(flat_hpf_dif); colormap(gray(256));
+
+sum_gt_hpf = sum(gt_hpf(:))
+sum_dm_hpf = sum(dm_hpf(:))
+sum_flat_hpf = sum(flat_hpf(:))
 
