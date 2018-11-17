@@ -6,10 +6,10 @@ clearvars
 
 
 %% read in the data
-dm_img = double(imread('D:\IUPUI\PhD\Results\dfd_dnn_pso\itr1\dfd_pso_13\depthmap_image_v6_pso_13_01_test_00049.png'));
+dm_img = double(imread('D:\IUPUI\PhD\Results\dfd_dnn_pso\itr1\dfd_pso_13\depthmap_image_v6_pso_13_01_test_00004.png'));
 dm_img_size = size(dm_img);
 
-gt_img = double(imread('D:\IUPUI\Test_Data\rw\WS2\lidar\lidar_rng_right_00000_8bit.png'));
+gt_img = double(imread('D:\IUPUI\Test_Data\rw\Auditorium2\lidar\lidar_rng_left_00000_8bit.png'));
 gt_img = gt_img(1:dm_img_size(1), 1:dm_img_size(2));
 gt_img(gt_img>255) = 255;
 
