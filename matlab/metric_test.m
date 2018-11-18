@@ -47,6 +47,10 @@ NMAE
 NRMSE
 SSIM
 
+var(gt_img(:))
+var(dm_img(:))
+var(dm_flat(:))
+
 %% high pass filter tests
 
 %hpf = [0 -0.25 0; -0.25 2 -0.25; 0, -0.25, 0];
