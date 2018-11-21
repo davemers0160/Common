@@ -73,34 +73,44 @@ void parse_line(std::string input, const char delimiter, std::vector<std::string
 void parse_input_range(std::string input, std::vector<double> &range)
 {
     range.clear();
+    std::vector<std::string> params;
     std::vector<double> r;
 
     // parse out the input values. should be in the form min:step:max
-    try
-    {
-        stringstream ss(input);
-        while (ss.good())
-        {
-            std::string substr;
-            std::getline(ss, substr, ':');
-            trim(substr);
-            if (substr.size() > 0)
-            {
-                r.push_back(std::stod(substr));
-            }
+    // try
+    // {
+        // stringstream ss(input);
+        // while (ss.good())
+        // {
+            // std::string substr;
+            // std::getline(ss, substr, ':');
+            // trim(substr);
+            // if (substr.size() > 0)
+            // {
+                // r.push_back(std::stod(substr));
+            // }
 
-        }
-    }
-    catch (std::exception &e)
-    {
-        std::cout << "Error: " << e.what() << std::endl;
-    }
+        // }
+    // }
+    // catch (std::exception &e)
+    // {
+        // std::cout << "Error: " << e.what() << std::endl;
+    // }
 
-    if (r.size() != 3)
+    parse_line(input, ':', params);
+
+    
+    if (params.size() != 3)
     {
-        std::cout << "Incorrect range parameters supplied.  Setting value to: " << r[0] << std::endl;
-        range.push_back(r[0]);
+        std::cout << "Incorrect range parameters supplied.  Setting value to: 0" << std::endl;
+        range.push_back(0);
         return;
+    }
+    else
+    {
+        r.push_back(std::stod(params[0]));
+        r.push_back(std::stod(params[1]));
+        r.push_back(std::stod(params[2]));
     }
 
     double s = r[0];
