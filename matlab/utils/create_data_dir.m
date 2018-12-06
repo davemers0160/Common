@@ -1,5 +1,5 @@
-function create_data_dir(scenario_name)
-    save_location = 'D:\IUPUI\Test_Data\real_world_raw\';
+function create_data_dir(scenario_name, save_location)
+    % save_location = 'D:\IUPUI\Test_Data\real_world_raw\';
     
     fprintf('Creating scenario directory: %s\n', fullfile(save_location, scenario_name))
     mkdir(fullfile(save_location, scenario_name));

@@ -5,7 +5,16 @@ close all
 clearvars
 
 plot_num = 1;
-load('d:\Common\matlab\lidar\OS1_991827000195.mat');
+
+%% get the mat file with the lidar data
+file_filter = {'*.mat';'*.*'};
+data_path = 'D:\Common\matlab\lidar';
+[lidar_file, data_path] = uigetfile(file_filter, 'Select LIDAR data file', data_path);
+if(data_path == 0)
+    return;
+end
+
+load(fullfile(data_path,lidar_file));
 
 %%
 
