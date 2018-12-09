@@ -19,12 +19,21 @@ end
 
 folders = strsplit(data_path,filesep);
 
+%% get the location to save the data to
+save_path = 'D:\IUPUI\PhD\Images\lidar\';
+file_filter = {'*.png','PNG Files';'*.*','All Files' };
+
+[save_file, save_path] = uiputfile(file_filter, 'Select Save File', save_path);
+if(save_path == 0)
+    return;
+end
+
 %%
 [data] = read_binary_lidar_data(fullfile(data_path, data_file));
 
 max_data = (floor(max(data(:))/1000) + 1) * 1000;
 
-save_path = 'D:\IUPUI\PhD\Images\lidar\';
+
 s_data = uint8(255*(data/max_data));
 
 figure
@@ -32,5 +41,5 @@ image(s_data)
 colormap(jet(256))
 axis off
 
-imwrite(s_data,jet(256),fullfile(save_path,strcat(folders{5},'_color_lidar.png')));
+imwrite(s_data,jet(256),fullfile(save_path,save_file));
 
