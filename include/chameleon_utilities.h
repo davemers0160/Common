@@ -34,6 +34,9 @@ This file contains the configures the routines for the Chameleon 3 camera.
 namespace FC2 = FlyCapture2;
 using namespace std;
 
+// Chameleon 3 registers
+const uint32_t TEMPERATURE = 0x082C;        // temperature register
+const uint32_t CAMERA_POWER = 0x0610;       // camera power register
 
 typedef struct{
      uint32_t sharpness;
@@ -475,6 +478,8 @@ FC2::Error camera_power(FC2::Camera &cam, uint8_t state)
 
 }	// end of camera_power
 
+// ----------------------------------------------------------------------------------------
+
 FC2::Error set_software_trigger(FC2::Camera &cam, bool onOff)
 {
 	FC2::Error error;
@@ -502,6 +507,7 @@ FC2::Error set_software_trigger(FC2::Camera &cam, bool onOff)
 	return error;
 }	// SetSoftwareTrigger
 
+// ----------------------------------------------------------------------------------------
 
 bool poll_trigger_ready(FC2::Camera &cam)
 {
@@ -523,6 +529,8 @@ bool poll_trigger_ready(FC2::Camera &cam)
 	return true;
 }	// end of PollForTriggerReady
 
+// ----------------------------------------------------------------------------------------
+
 FC2::Error fire_software_trigger(FC2::Camera &cam)
 {
 	const uint32_t k_softwareTrigger = 0x62C;
@@ -531,6 +539,41 @@ FC2::Error fire_software_trigger(FC2::Camera &cam)
 	return cam.WriteRegister(k_softwareTrigger, k_fireVal);
 
 }	// end of FireSoftwareTrigger
+
+// ----------------------------------------------------------------------------------------
+
+void get_camera_temperature(FC2::Camera &cam, double &cam_temp)
+{
+    uint32_t regVal = 0;
+    uint8_t temp[2] = { 0,0 };
+    uint32_t t = 0;
+
+    FC2::Property Temperture;
+
+    // set the frame rate for the camera
+    config_property(cam, Temperture, FC2::TEMPERATURE, true, true, true);
+
+    cam_temp = 0.1*((double)get_property(cam, Temperture)) - 273.15;
+
+
+    //// read the temperature register
+    //error = cam.ReadRegister(TEMPERATURE, &regVal);
+
+    //if ((regVal & 0x80000000) != 0)
+    //{
+    //    t = ((((regVal & 0x00FF) << 8) | ((regVal >> 8) & 0x00FF))>>4)&0x0FFF;
+    //    //temp[0] = (regVal >> 8) & 0x00FF;
+    //    //temp[1] = ((regVal & 0x00FF)<<8) |;
+    //    cam_temp = 0.1*t;
+    //}
+    //else
+    //    cam_temp = 0.0;
+
+    //return error;
+
+}	// end of get_camera_temperature
+
+// ----------------------------------------------------------------------------------------
 
 #endif  // CHAMELEON_UTILITIES_H
 
