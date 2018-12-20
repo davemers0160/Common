@@ -42,6 +42,22 @@ std::string get_path(std::string filename, std::string sep)
 
 // ----------------------------------------------------------------------------------------
 
+std::string path_check(std::string path)
+{
+    if (path.empty())
+        return path;
+
+    std::string path_sep = path.substr(path.length() - 1, 1);
+    if (path_sep != "\\" & path_sep != "/")
+    {
+        return path + "/";
+    }
+
+    return path;
+
+}   // end of path_check
+
+// ----------------------------------------------------------------------------------------
 
 void parse_line(std::string input, const char delimiter, std::vector<std::string> &params)
 {

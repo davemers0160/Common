@@ -13,6 +13,20 @@
 
 using namespace std;
 
+//--------------------------------------------------------
+
+std::string get_env_variable(std::string env_var)
+{
+    char* p;
+    p = getenv(env_var.c_str());
+
+    if (p == NULL)
+        return "";
+    else
+        return std::string(p);
+}
+
+//--------------------------------------------------------
 
 void getPlatform(std::string &platform)
 {
