@@ -1,39 +1,8 @@
-format long g
-format compact
-clc
-close all
-clearvars
-
-% get the location of the script file to save figures
-full_path = mfilename('fullpath');
-[scriptpath,  filename, ext] = fileparts(full_path);
-%mkdir(strcat(scriptpath,'\Images'));
-plot_num = 1;
-
-%% get the filename and read in the data
-start_path = 'D:/Projects/MNIST/results/';
-file_filter = {'*.xml','XML Files';'*.*','All Files' };
-[filename, filepath] = uigetfile(file_filter, 'Select XML file', start_path, 'MultiSelect', 'on');
-
-if(filepath==0)
-    return;
-end
-
-if(~iscell(filename))
-    filename = {filename};
-end
-
-folders = strsplit(filepath(1:end-1),filesep);
-
-commandwindow;
-fprintf('Running gorgon analysis on %s\n',folders{end});
-
-%% cycle through each file and get the info
-
-for idx=1:numel(filename)
+function gorgon_filter_analysis(filename)
+    plot_num = 1;
+    [gorgon_data, gorgon_struct] = read_gorgon_data(filename);
+    [filepath,~,~] = fileparts(filename);
     
-    [gorgon_data, gorgon_struct] = read_gorgon_data(fullfile(filepath, filename{idx}));
-
 %     fprintf('\nGorgon Data Capture:\n');
 %     fprintf('  Layer:      %03d\n',gorgon_struct.layer);
 %     fprintf('  N:         %04d\n', gorgon_struct.n);
@@ -164,10 +133,5 @@ for idx=1:numel(filename)
 
     plot_num = plot_num + 1;
     
-    pause(1);
-    
-    close all;
-    
-end
 
-fprintf('Complete!\n');
+end

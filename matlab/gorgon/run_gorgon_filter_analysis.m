@@ -1,0 +1,44 @@
+format long g
+format compact
+clc
+close all
+clearvars
+
+% get the location of the script file to save figures
+full_path = mfilename('fullpath');
+[scriptpath,  filename, ext] = fileparts(full_path);
+%mkdir(strcat(scriptpath,'\Images'));
+plot_num = 1;
+
+%% get the folder to analyze
+start_path = 'D:/Projects/MNIST/results/';
+
+filepath = uigetdir(start_path,'Select Folder');
+if(filepath == 0)
+    return;
+end
+
+listing = dir(filepath);
+listing = listing(3:end);
+
+commandwindow;
+
+%%
+
+for idx=1:numel(listing)
+    if(~listing(idx).isdir)
+        continue;
+    end
+    
+    xml_listing = dir(strcat(listing(idx).folder,filesep,listing(idx).name,filesep,'*.xml'));
+    fprintf('Running gorgon analysis on %s\n',listing(idx).name);
+    
+    for jdx=1:numel(xml_listing)
+        gorgon_filter_analysis(fullfile(xml_listing(jdx).folder,xml_listing(jdx).name));
+        close all;
+    end
+    fprintf('------------------------------------------------------\n');
+
+end
+
+fprintf('Complete!\n');
