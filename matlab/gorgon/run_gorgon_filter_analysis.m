@@ -34,7 +34,9 @@ for idx=1:numel(listing)
     fprintf('Running gorgon analysis on %s\n',listing(idx).name);
     
     for jdx=1:numel(xml_listing)
-        gorgon_filter_analysis(fullfile(xml_listing(jdx).folder,xml_listing(jdx).name));
+        [layer, u] = gorgon_filter_analysis(fullfile(xml_listing(jdx).folder,xml_listing(jdx).name));
+        fprintf('Layer: %03d\t Unique Classes: %03d\n', layer, numel(u));
+
         close all;
     end
     fprintf('------------------------------------------------------\n');

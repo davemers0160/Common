@@ -1,4 +1,4 @@
-function gorgon_filter_analysis(filename)
+function [layer, u] = gorgon_filter_analysis(filename)
     plot_num = 1;
     [gorgon_data, gorgon_struct] = read_gorgon_data(filename);
     [filepath,~,~] = fileparts(filename);
@@ -91,8 +91,8 @@ function gorgon_filter_analysis(filename)
     print(plot_num, '-dpng', fullfile(filepath,strcat('som_results_',num2str(gorgon_struct.layer,'%02d'),'.png')));
 
     plot_num = plot_num + 1;
-    
-    fprintf('Layer: %03d\t Unique Classes: %03d\n',gorgon_struct.layer, numel(u));
+    layer = gorgon_struct.layer;
+    %fprintf('Layer: %03d\t Unique Classes: %03d\n',gorgon_struct.layer, numel(u));
 
     %% Plot SOM
 
