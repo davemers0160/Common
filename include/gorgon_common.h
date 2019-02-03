@@ -78,9 +78,9 @@ inline dlib::matrix<dlib::rgb_pixel> mat_to_rgbjetmat(const dlib::matrix<float> 
 {
     dlib::matrix<dlib::rgb_pixel> jet_mat(t.nr(), t.nc());
 
-    for (uint32_t r = 0; r < t.nr(); ++r)
+    for (uint64_t r = 0; r < (uint64_t)t.nr(); ++r)
     {
-        for (uint32_t c = 0; c < t.nc(); ++c)
+        for (uint64_t c = 0; c < (uint64_t)t.nc(); ++c)
         {
             //jet_mat(r, c) = val2rgb_jet(t(r, c), t_min, t_max);
             dlib::assign_pixel(jet_mat(r, c), val2rgb_jet(t(r, c), t_min, t_max));

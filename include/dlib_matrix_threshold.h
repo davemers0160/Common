@@ -8,13 +8,13 @@
 template <typename image_type, typename thresh_type>
 void truncate_threshold(image_type &src, image_type &dst, thresh_type threshold)
 {
-    uint32_t r, c;
+    uint64_t r, c;
     
     dst.set_size(src.nr(), src.nc());
     
-    for(r=0; r<src.nr(); ++r)
+    for(r = 0; r < (uint64_t)src.nr(); ++r)
     {
-        for(c=0; c<src.nc(); ++c)
+        for(c = 0; c < (uint64_t)src.nc(); ++c)
         {
             if(src(r,c)> threshold)
                 dlib::assign_pixel(dst(r,c),threshold);

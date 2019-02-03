@@ -12,7 +12,7 @@ plot_num = 1;
 %% get the user input to the lidar scan
 file_filter = {'*.bin','Binary Files';'*.*','All Files' };
 
-startpath = 'D:\IUPUI\Test_Data\rw_raw2\';
+startpath = 'D:\IUPUI\Test_Data\rw_raw3\';
 [data_file, data_path] = uigetfile(file_filter, 'Select Binary Lidar File', startpath);
 if(data_path == 0)
     return;
