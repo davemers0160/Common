@@ -24,6 +24,7 @@ listing = listing(3:end);
 commandwindow;
 
 %%
+fprintf('%s\n',filepath);
 
 for idx=1:numel(listing)
     if(~listing(idx).isdir)

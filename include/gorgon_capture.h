@@ -193,7 +193,7 @@ public:
 
                 uint64_t img_size = nr * nc;
 
-                for (idx = 0; idx < layer_output.k(); ++idx)
+                for (idx = 0; idx < (uint64_t)layer_output.k(); ++idx)
                 {
                     gorgonStream.write(reinterpret_cast<const char*>(&idx), sizeof(idx));
 
