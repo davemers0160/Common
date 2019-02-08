@@ -49,5 +49,5 @@ for idx=1:numel(listing)
     fprintf(file_id,'------------------------------------------------------\n');
 
 end
-
+fclose(file_id);
 fprintf('Complete!\n');
