@@ -11,8 +11,14 @@ full_path = mfilename('fullpath');
 plot_num = 1;
 
 %% get the folder to analyze
-%start_path = 'D:/Projects/MNIST/results/';
-start_path = 'D:/IUPUI/PhD/Results/dfd_dnn/dnn_reduction';
+if(ispc)
+    %start_path = 'D:/Projects/MNIST/results/';
+    start_path = 'D:/IUPUI/PhD/Results/dfd_dnn/dnn_reduction';
+elseif(isunix)
+    start_path = '/home/owner/Projects/dfd_dnn_reduction';
+else
+    start_path = '';
+end
 
 filepath = uigetdir(start_path,'Select Folder');
 if(filepath == 0)

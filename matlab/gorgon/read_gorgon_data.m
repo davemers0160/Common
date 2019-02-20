@@ -21,7 +21,7 @@ function [gorgon_data, gorgon_struct] = read_gorgon_data(filename)
 
     [file_path, datafile_name, ~] = fileparts(filename);
 
-    datafile_name=strcat(file_path,'\',datafile_name,'.dat');
+    datafile_name=strcat(file_path,filesep,datafile_name,'.dat');
     tmp=dir(datafile_name);
     file_size=tmp.bytes;
 
