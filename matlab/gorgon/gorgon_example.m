@@ -43,8 +43,15 @@ for idx=1:numel(gorgon_data)
     t(:,:,idx) = gorgon_data{idx}.data;
 end
 
-min_x = min(x(:));
-max_x = max(x(:));
+
+mean_x = mean(x(:));
+std_x = std(x(:));
+
+% min_x = min(x(:));
+% max_x = max(x(:));
+
+min_x = mean_x - 3*std_x;
+max_x = mean_x + 3*std_x;
 
 fprintf('min: %3.4f, max: %3.4f\n\n', min_x, max_x);
 

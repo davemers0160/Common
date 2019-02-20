@@ -86,7 +86,8 @@ function [layer, u] = gorgon_filter_analysis(filename)
     net = selforgmap([gorgon_struct.k,1], coverSteps, initNeighbor, topologyFcn, distanceFcn);
     net.performParam.regularization = 0.2;
     net.trainParam.epochs = 200;
-
+    % net.biasConnect(1)=1;
+    
     net = train(net,x');
 
     y = net(x');
@@ -173,5 +174,7 @@ function [layer, u] = gorgon_filter_analysis(filename)
     print(plot_num, '-dpng', fullfile(filepath,strcat('som_cluster_',num2str(gorgon_struct.layer,'%02d'),'.png')));
 
     plot_num = plot_num + 1;
+    
+    %%
     
 end
