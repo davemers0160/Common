@@ -36,7 +36,7 @@ function [layer, u] = gorgon_filter_analysis(filename)
     s_y = ceil(gorgon_struct.k/s_x);
 
     %% plot all of the outputs
-
+if(false)
     %c = colormap(jet(numel(gorgon_data)));
     figure(plot_num)
     set(gcf,'position',([100,100,1200,650]),'color','w', 'Name', 'Filter Output')
@@ -76,7 +76,8 @@ function [layer, u] = gorgon_filter_analysis(filename)
     print(plot_num, '-dpng', fullfile(filepath,strcat('filter_output_',num2str(gorgon_struct.layer,'%02d'),'.png')));
 
     plot_num = plot_num + 1;
-    
+end
+
 %% SOM
     coverSteps = 100;
     initNeighbor = 2;
@@ -87,10 +88,13 @@ function [layer, u] = gorgon_filter_analysis(filename)
     net.performParam.regularization = 0.2;
     net.trainParam.epochs = 200;
     % net.biasConnect(1)=1;
+    %g = gpuArray(single(x'));
+    %net = train(net,g,'useParallel','yes');
     
-    net = train(net,x');
+    x = x';
+    net = train(net,x);
 
-    y = net(x');
+    y = net(x);
     y_s = sum(y,2);
 
     classes = vec2ind(y);

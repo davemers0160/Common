@@ -12,10 +12,10 @@ function [p_best, g_best, P, V, F, G] = run_pso_cluster(z, pso_params)
     F = zeros(pso_params.N, pso_params.itr_max+1);
     
     % X represents the population to be tested for a given iteration
-    X = cell(pso_params.N, pso_params.itr_max+1);
+    X = cell(pso_params.N, 1);
     
     % V represents the velocity vectors for a given iteration
-    V = cell(pso_params.N, pso_params.itr_max+1);
+    V = cell(pso_params.N, 1);
 
     % P represents the best poplation member for that iteration
     P = cell(pso_params.N, pso_params.itr_max+1);
@@ -35,8 +35,8 @@ function [p_best, g_best, P, V, F, G] = run_pso_cluster(z, pso_params)
     %% init X and V
     
     for idx=1:pso_params.N
-        X{idx, itr} = pso_params.x_lim(1) + (pso_params.x_lim(2)-pso_params.x_lim(1))*rand(ZN, D);
-        V{idx, itr} = pso_params.v_lim(1) + (pso_params.v_lim(2)-pso_params.v_lim(1))*rand(ZN, D);     
+        X{idx, 1} = pso_params.x_lim(1) + (pso_params.x_lim(2)-pso_params.x_lim(1))*rand(ZN, D);
+        V{idx, 1} = pso_params.v_lim(1) + (pso_params.v_lim(2)-pso_params.v_lim(1))*rand(ZN, D);     
     end
         
     % evaluate F(X,Z)
@@ -44,7 +44,7 @@ function [p_best, g_best, P, V, F, G] = run_pso_cluster(z, pso_params)
     m_idx = zeros(ZN, pso_params.N);
     for jdx=1:pso_params.N
         for idx=1:ZN
-            [d{idx,jdx}, m_idx(idx,jdx)] = calc_distance(z(idx,:), X{jdx,itr});
+            [d{idx,jdx}, m_idx(idx,jdx)] = calc_distance(z(idx,:), X{jdx,1});
         end
         F(jdx, itr) = calc_fitness(d(:,jdx), m_idx(:,jdx));
     end
@@ -59,10 +59,10 @@ function [p_best, g_best, P, V, F, G] = run_pso_cluster(z, pso_params)
     
     % Update P and G
     for idx=1:pso_params.N
-        P{idx,itr} = X{idx,itr};    
+        P{idx,itr} = X{idx,1};    
     end
 
-    G{itr} = X{f_min_idx, itr};
+    G{itr} = X{f_min_idx, 1};
 
         
     %% update V and X
@@ -70,9 +70,9 @@ function [p_best, g_best, P, V, F, G] = run_pso_cluster(z, pso_params)
         %V(idx, itr+1).con = kap * (V(idx,itr).con + (c1*R).*(P(idx,itr).con - X(idx,itr).con) + (c2*S).*(G(itr).con - X(idx,itr).con));
         R = rand(ZN, D);
         S = rand(ZN, D);
-        V{idx, itr+1} = pso_params.kap*(V{idx, itr} + (pso_params.c1*R).*(P{idx,itr} - X{idx,itr}) + (pso_params.c2*S).*(G{itr} - X{idx,itr}));
+        V{idx, 1} = pso_params.kap*(V{idx, 1} + (pso_params.c1*R).*(P{idx,1} - X{idx,1}) + (pso_params.c2*S).*(G{itr} - X{idx,1}));
 
-        X{idx, itr+1} = X{idx, itr} + V{idx, itr+1};          
+        X{idx, 1} = X{idx, 1} + V{idx, 1};          
     end
         
     %% start the PSO loop
@@ -85,7 +85,7 @@ function [p_best, g_best, P, V, F, G] = run_pso_cluster(z, pso_params)
         m_idx = zeros(ZN, pso_params.N);
         for jdx=1:pso_params.N
             for idx=1:ZN
-                [d{idx,jdx}, m_idx(idx,jdx)] = calc_distance(z(idx,:), X{jdx,itr});
+                [d{idx,jdx}, m_idx(idx,jdx)] = calc_distance(z(idx,:), X{jdx,1});
             end
             F(jdx, itr) = calc_fitness(d(:,jdx), m_idx(:,jdx));
         end        
@@ -100,14 +100,14 @@ function [p_best, g_best, P, V, F, G] = run_pso_cluster(z, pso_params)
         % Update P and G
         for idx=1:pso_params.N
             if(F(idx,itr) < F(idx,itr-1))
-                P{idx,itr} = X{idx,itr};
-            else
-                P{idx,itr} = P{idx,itr-1};
+                P{idx,1} = X{idx,1};
+%             else
+%                 P{idx,1} = P{idx,itr-1};
             end
         end
 
         if(p_best(1, itr) < g_best(itr-1))
-            G{itr} = X{f_min_idx, itr};
+            G{itr} = X{f_min_idx, 1};
             g_best(itr) = p_best(1, itr);
         else
             G{itr} = G{itr-1};
@@ -120,9 +120,9 @@ function [p_best, g_best, P, V, F, G] = run_pso_cluster(z, pso_params)
             %V(idx, itr+1).con = kap * (V(idx,itr).con + (c1*R).*(P(idx,itr).con - X(idx,itr).con) + (c2*S).*(G(itr).con - X(idx,itr).con));
             R = rand(ZN, D);
             S = rand(ZN, D);
-            V{idx, itr+1} = pso_params.kap*(V{idx, itr} + (pso_params.c1*R).*(P{idx,itr} - X{idx,itr}) + (pso_params.c2*S).*(G{itr} - X{idx,itr}));
+            V{idx, 1} = pso_params.kap*(V{idx, 1} + (pso_params.c1*R).*(P{idx,1} - X{idx,1}) + (pso_params.c2*S).*(G{itr} - X{idx,1}));
 
-            X{idx, itr+1} = X{idx, itr} + V{idx, itr+1};          
+            X{idx, 1} = X{idx, 1} + V{idx, 1};          
         end
          
     end
