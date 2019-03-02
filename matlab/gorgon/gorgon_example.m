@@ -54,9 +54,10 @@ min_x = mean_x - 3*std_x;
 max_x = mean_x + 3*std_x;
 
 fprintf('min: %3.4f, max: %3.4f\n\n', min_x, max_x);
-
+min_x = -2;
+max_x = 0;
 % get sub plot sizes
-s_x = ceil(sqrt(gorgon_struct.k)*1.2);
+s_x = floor(sqrt(gorgon_struct.k)*1.2+0.5);
 s_y = ceil(gorgon_struct.k/s_x);
 
 %% plot all of the outputs
@@ -75,7 +76,7 @@ for idx=1:numel(gorgon_data)
 
         subplot(s_y,s_x,idx);
 
-        image(255*(t(:,:,idx)-min_x)/(max_x-min_x));
+        imagesc((t(:,:,idx)-min_x)/(max_x-min_x));
         colormap(jet(256));
         axis off
         title(strcat(num2str(idx,'%03d')));
