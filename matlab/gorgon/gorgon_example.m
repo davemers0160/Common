@@ -11,14 +11,19 @@ full_path = mfilename('fullpath');
 plot_num = 1;
 
 %% get the filename and read in the data
-
+start_path = 'D:\Projects\machineLearningResearch\gorgon_captures';
 file_filter = {'*.xml','XML Files';'*.*','All Files' };
-[filename, filepath] = uigetfile(file_filter, 'Select XML file', scriptpath);
+[filename, filepath] = uigetfile(file_filter, 'Select XML file', start_path);
 
 if(filepath==0)
     return;
 end
 
+commandwindow;
+
+%%
+
+fprintf('file name: %s\n',filename);
 
 [gorgon_data, gorgon_struct] = read_gorgon_data(fullfile(filepath, filename));
 
@@ -41,19 +46,20 @@ end
 for idx=1:numel(gorgon_data)
     x(idx,:) = gorgon_data{idx}.data(:);   
     t(:,:,idx) = gorgon_data{idx}.data;
+    fprintf('max x(%d,:): %2.4f\n', idx, max(x(idx,:)));
 end
 
 
 mean_x = mean(x(:));
 std_x = std(x(:));
 
-% min_x = min(x(:));
-% max_x = max(x(:));
+min_x = min(x(:));
+max_x = max(x(:));
 
-min_x = mean_x - 3*std_x;
-max_x = mean_x + 3*std_x;
+%min_x = mean_x - 3*std_x;
+%max_x = mean_x + 3*std_x;
 
-fprintf('min: %3.4f, max: %3.4f\n\n', min_x, max_x);
+fprintf('\nmin: %3.4f, max: %3.4f\n\n', min_x, max_x);
 
 % get sub plot sizes
 s_x = ceil(sqrt(gorgon_struct.k)*1.2);
@@ -75,8 +81,9 @@ for idx=1:numel(gorgon_data)
 
         subplot(s_y,s_x,idx);
 
-        image(255*(t(:,:,idx)-min_x)/(max_x-min_x));
-        colormap(jet(256));
+        %image(255*(t(:,:,idx)-min_x)/(max_x-min_x));
+        imagesc(t(:,:,idx));
+        colormap(jet(5000));
         axis off
         title(strcat(num2str(idx,'%03d')));
     end
