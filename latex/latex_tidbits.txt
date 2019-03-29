@@ -1,0 +1,19 @@
+% This is a list of latex command and tricks
+
+%
+% This one places << >> around the text and colors it red - used to
+% bring out comments and things to fix
+%
+\usepackage[table]{xcolor}
+\newcommand\todo[1]{\typeout{WARNING}{\textcolor{red}{$\ll$#1$\gg$}}}
+
+%
+% designed to place a single quote around text adapted from here:
+% https://tex.stackexchange.com/questions/113327/how-to-do-single-quotes-in-latex-suite
+\newcommand\bsq[1]{\lq{#1}\rq}
+
+
+%
+% double quote macro
+%
+\newcommand{\bdq}[1]{``#1''}
