@@ -49,18 +49,18 @@ std::string get_path(std::string filename, std::string sep)
 #if defined(__linux__)
 std::string get_linux_path()
 {
+    std::string path = "/";
     char result[PATH_MAX+1];
-    std::string path = "";
-
     memset(result, 0, sizeof(result)); 
     
     ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-
-    if (count != -1) {
-        path = dirname(result);
+    
+    if (count != -1) 
+    {
+        path = get_path(dirname(result), "/");
     }
 
-    return path;
+    return (path+"/");
 
 }
 #endif
