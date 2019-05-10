@@ -37,7 +37,7 @@ pso_stats = [];
 
 while(itr_cnt < itr_max)
 
-    fprintf('PSO Generation: %03d\n', itr_cnt);
+    %fprintf('PSO Generation: %03d\n', itr_cnt);
     itr_cnt = itr_cnt +1;
 
     % generate r and s vectors
