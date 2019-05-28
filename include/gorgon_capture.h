@@ -43,7 +43,7 @@ public:
     }
     //gorgon_capture(const gorgon_capture&) {}
     
-    //template<typename net_type>
+    // this is the initialization or capturing conv type layers
     gorgon_capture(
         uint64_t N,
         uint64_t K,
@@ -56,9 +56,24 @@ public:
         nr = NR;
         nc = NC;
         l = L;
-        data_size = n*nr*nc*k;
+        b = N;
+        data_size = (n*nr*nc*k) + b;
     }
 
+    // this is the initialization for capturing fc type layers
+    gorgon_capture(
+        uint64_t N,
+        uint64_t K
+    )
+    {
+        n = N;
+        k = K;
+        nr = 1;
+        nc = 1;
+        b = 1;
+        l = L;
+        data_size = (n+b) * k;
+    }
 
 
     //void set_savefile(std::string filename_) { filename = filename_; }
@@ -148,20 +163,10 @@ public:
                 const auto& layer_params = layer_details.get_layer_params(); 
                 const float* params_data = layer_params.host();
 
-                //uint64_t data_size = n*nr*nc*k;
-
-                //dlib::serialize("gorgon_v1", gorgonStream);
-                //dlib::serialize(step, gorgonStream);
-                //dlib::serialize(L, gorgonStream);
-                //dlib::serialize(n, gorgonStream);
-                //dlib::serialize(k, gorgonStream);
-                //dlib::serialize(nr, gorgonStream);
-                //dlib::serialize(nc, gorgonStream);
                 gorgonStream.write(reinterpret_cast<const char*>(&step), sizeof(step));
 
                 for (uint64_t idx=0; idx < data_size; ++idx)
                 {
-                    //dlib::serialize(params_data[idx], gorgonStream);
                     gorgonStream.write(reinterpret_cast<const char*>(&params_data[idx]), sizeof(params_data[idx]));
                 }
 
@@ -174,6 +179,22 @@ public:
         }
 
     }   // end of save_params
+
+// ----------------------------------------------------------------------------------------
+
+    template <typename net_type>
+    std::vector<float> get_params(
+        net_type& net
+    )
+    {
+        const auto& layer_details = dlib::layer<L>(net).layer_details();
+        const auto& layer_params = layer_details.get_layer_params();
+        const float* params_data = layer_params.host();
+
+        std::vector<float> pd(params_data, params_data + data_size);
+
+        return pd;
+    }
 
 // ----------------------------------------------------------------------------------------
 
@@ -351,6 +372,7 @@ private:
     uint64_t nr = 0;
     uint64_t nc = 0;
     uint64_t l = 0;
+    uint64_t b = 0;
     uint64_t data_size = 0;
     
     //std::vector<float> convert_ptr(
