@@ -7,7 +7,6 @@ clearvars
 % get the location of the script file to save figures
 full_path = mfilename('fullpath');
 [scriptpath,  filename, ext] = fileparts(full_path);
-%mkdir(strcat(scriptpath,'\Images'));
 plot_num = 1;
 
 %% get the folder to analyze

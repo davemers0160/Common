@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<?xml-stylesheet type='text/xsl' href='image_metadata_stylesheet.xsl'?>
+<gorgon_data>
+    <version major='3' minor='0' />
+    <layer number='5'/>
+    <filter n='1' rows='1' cols='1' k='1'/>
+</gorgon_data>
+

@@ -8,6 +8,11 @@
 #include <fstream>
 #include <utility>
 #include <cctype>
+
+#if defined(__linux__)
+#include <limits.h>
+#endif
+
 //#include <locale>
 
 using namespace std;
@@ -39,6 +44,26 @@ std::string get_path(std::string filename, std::string sep)
     int prog_loc = (int)(filename.rfind(sep));
     return filename.substr(0, prog_loc);    // does not return the last separator
 }
+
+// ----------------------------------------------------------------------------------------
+#if defined(__linux__)
+std::string get_linux_path()
+{
+    std::string path = "/";
+    char result[PATH_MAX+1];
+    memset(result, 0, sizeof(result)); 
+    
+    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+    
+    if (count != -1) 
+    {
+        path = get_path(dirname(result), "/");
+    }
+
+    return (path+"/");
+
+}
+#endif
 
 // ----------------------------------------------------------------------------------------
 
