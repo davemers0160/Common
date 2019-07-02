@@ -8,6 +8,7 @@
 #include <fstream>
 #include <utility>
 #include <cctype>
+#include <string>
 
 #if defined(__linux__)
 #include <limits.h>
@@ -86,7 +87,7 @@ std::string path_check(std::string path)
 
 void parse_line(std::string input, const char delimiter, std::vector<std::string> &params)
 {
-    params.clear();
+    //params.clear();
 
     try
     {
@@ -118,26 +119,6 @@ void parse_input_range(std::string input, std::vector<double> &range)
     std::vector<double> r;
 
     // parse out the input values. should be in the form min:step:max
-    // try
-    // {
-        // stringstream ss(input);
-        // while (ss.good())
-        // {
-            // std::string substr;
-            // std::getline(ss, substr, ':');
-            // trim(substr);
-            // if (substr.size() > 0)
-            // {
-                // r.push_back(std::stod(substr));
-            // }
-
-        // }
-    // }
-    // catch (std::exception &e)
-    // {
-        // std::cout << "Error: " << e.what() << std::endl;
-    // }
-
     parse_line(input, ':', params);
 
     
@@ -198,18 +179,18 @@ void parseCSVLine(std::string line, std::vector<std::string> &line_params)
 
 // ----------------------------------------------------------------------------------------
 
-void parseCSVFile(std::string parseFilename, std::vector<std::vector<std::string>> &params)
+void parseCSVFile(std::string parse_filename, std::vector<std::vector<std::string>> &params)
 {
-	std::ifstream csvfile(parseFilename);
-	std::string nextLine;
+	std::ifstream csv_file(parse_filename);
+	std::string next_line;
 
-	while (std::getline(csvfile, nextLine))
+	while (std::getline(csv_file, next_line))
 	{
-		if ((nextLine[0] != '#') && (nextLine.size() > 0))
+		if ((next_line[0] != '#') && (next_line.size() > 0))
 		{
 			std::vector<std::string> line_params;
             
-            parseCSVLine(nextLine, line_params);
+            parseCSVLine(next_line, line_params);
             
 			if (line_params.size() > 0)
 			{
@@ -223,6 +204,75 @@ void parseCSVFile(std::string parseFilename, std::vector<std::vector<std::string
 
 
 // ----------------------------------------------------------------------------------------
+
+
+//void parse_group_line(std::string line, const char open, const char close, std::vector<std::string> &params, std::vector<std::string> &group_params)
+void parse_group_line(std::string line, const char open, const char close, std::vector<std::string> &params)
+{
+
+    std::string sec_start = "";
+    std::string sec_end = "";
+    std::string group = "";
+
+    // parse the lines - find the first instance of a group and then the last one
+    // then separate the two sections
+    // this assumes that there are no non-group section between groups
+    uint32_t g_start = (uint32_t)line.find(open);
+    uint32_t g_stop = (uint32_t)line.rfind(close);
+
+    // get the substrings
+    sec_start = line.substr(0, g_start);
+    parse_line(sec_start, ',', params);
+
+    if (g_stop < line.length())
+    {
+        group = line.substr(g_start, g_stop - g_start + 1);
+
+        stringstream gs(group);
+        while (gs.good())
+        {
+            std::string s1;
+            std::string s2;
+            std::getline(gs, s1, open);
+            std::getline(gs, s2, close);
+
+            trim(s2);
+            if (s2.size() > 0)
+            {
+                params.push_back(s2);
+            }
+        }
+        sec_end = line.substr(g_stop + 1, line.length() - 1);
+        parse_line(sec_end, ',', params);    
+    }
+}
+
+// ----------------------------------------------------------------------------------------
+
+//void parse_group_csv_file(std::string parse_filename, const char open, const char close, std::vector<std::vector<std::string>> &params, std::vector < std::vector<std::string>> &group_params)
+void parse_group_csv_file(std::string parse_filename, const char open, const char close, std::vector<std::vector<std::string>> &params)
+{
+    std::ifstream csv_file(parse_filename);
+    std::string next_line;
+
+    while (std::getline(csv_file, next_line))
+    {
+        if ((next_line[0] != '#') && (next_line.size() > 0))
+        {
+            std::vector<std::string> line_params, gp_params;
+
+            parse_group_line(next_line, open, close, line_params);
+
+            if (line_params.size() > 0)
+            {
+                params.push_back(line_params);
+            }
+
+        }
+    }
+}
+
+
 
 
 #endif	// FILE_PARSER_H_
