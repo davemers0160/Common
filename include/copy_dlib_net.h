@@ -4,7 +4,7 @@
 
 #include <type_traits>
 
-
+#include <dlib/dnn.h>
 
 
 namespace dlib
