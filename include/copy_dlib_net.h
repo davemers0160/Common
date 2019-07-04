@@ -41,7 +41,6 @@ namespace dlib
             )
             {
                 invoke_functor(layer<begin>(from_net), layer<begin2>(to_net));
-
                 copy_layer_loop<begin + 1, end, begin2 + 1>::visit(from_net, to_net);
             }
         };
@@ -79,7 +78,8 @@ namespace dlib
     }   // end of cpnet namespace
 
 
-        // this most likely will be the copy net function in the end
+    // This is the main funciton to call.  Supply it the the start and end (b1, e1) of the network you want to copy.
+    // b2 is the start of the network you want to copy to.
     template <size_t b1, size_t e1, size_t b2, typename net_type1, typename net_type2>
     void copy_net(net_type1 &from_net, net_type2 &to_net)
     {
