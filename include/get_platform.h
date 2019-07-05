@@ -40,5 +40,11 @@ void getPlatform(std::string &platform)
 
 }
 
+//--------------------------------------------------------
+
+void get_platform(std::string &platform)
+{
+    platform = get_env_variable("PLATFORM");
+}
 
 #endif  // GET_PLATFORM_H
