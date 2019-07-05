@@ -28,20 +28,6 @@ std::string get_env_variable(std::string env_var)
 
 //--------------------------------------------------------
 
-void getPlatform(std::string &platform)
-{
-    char* p;
-    p = getenv("PLATFORM");
-
-    if(p == NULL)
-        platform = "";
-    else
-        platform = std::string(p);
-
-}
-
-//--------------------------------------------------------
-
 void get_platform(std::string &platform)
 {
     platform = get_env_variable("PLATFORM");
