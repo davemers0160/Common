@@ -8,6 +8,12 @@
 #include <fstream>
 #include <utility>
 #include <cctype>
+#include <string>
+
+#if defined(__linux__)
+#include <limits.h>
+#endif
+
 //#include <locale>
 
 using namespace std;
@@ -41,6 +47,26 @@ std::string get_path(std::string filename, std::string sep)
 }
 
 // ----------------------------------------------------------------------------------------
+#if defined(__linux__)
+std::string get_linux_path()
+{
+    std::string path = "/";
+    char result[PATH_MAX+1];
+    memset(result, 0, sizeof(result)); 
+    
+    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+    
+    if (count != -1) 
+    {
+        path = get_path(dirname(result), "/");
+    }
+
+    return (path+"/");
+
+}
+#endif
+
+// ----------------------------------------------------------------------------------------
 
 std::string path_check(std::string path)
 {
@@ -61,7 +87,7 @@ std::string path_check(std::string path)
 
 void parse_line(std::string input, const char delimiter, std::vector<std::string> &params)
 {
-    params.clear();
+    //params.clear();
 
     try
     {
@@ -93,26 +119,6 @@ void parse_input_range(std::string input, std::vector<double> &range)
     std::vector<double> r;
 
     // parse out the input values. should be in the form min:step:max
-    // try
-    // {
-        // stringstream ss(input);
-        // while (ss.good())
-        // {
-            // std::string substr;
-            // std::getline(ss, substr, ':');
-            // trim(substr);
-            // if (substr.size() > 0)
-            // {
-                // r.push_back(std::stod(substr));
-            // }
-
-        // }
-    // }
-    // catch (std::exception &e)
-    // {
-        // std::cout << "Error: " << e.what() << std::endl;
-    // }
-
     parse_line(input, ':', params);
 
     
@@ -155,7 +161,7 @@ void parse_input_range(std::string input, std::vector<double> &range)
 
 // ----------------------------------------------------------------------------------------
 
-void parseCSVLine(std::string line, std::vector<std::string> &line_params)
+void parse_csv_line(std::string line, std::vector<std::string> &line_params)
 {
     stringstream ss(line);
     while (ss.good())
@@ -173,18 +179,18 @@ void parseCSVLine(std::string line, std::vector<std::string> &line_params)
 
 // ----------------------------------------------------------------------------------------
 
-void parseCSVFile(std::string parseFilename, std::vector<std::vector<std::string>> &params)
+void parse_csv_file(std::string parse_filename, std::vector<std::vector<std::string>> &params)
 {
-	std::ifstream csvfile(parseFilename);
-	std::string nextLine;
+	std::ifstream csv_file(parse_filename);
+	std::string next_line;
 
-	while (std::getline(csvfile, nextLine))
+	while (std::getline(csv_file, next_line))
 	{
-		if ((nextLine[0] != '#') && (nextLine.size() > 0))
+		if ((next_line[0] != '#') && (next_line.size() > 0))
 		{
 			std::vector<std::string> line_params;
             
-            parseCSVLine(nextLine, line_params);
+            parse_csv_line(next_line, line_params);
             
 			if (line_params.size() > 0)
 			{
@@ -194,10 +200,112 @@ void parseCSVFile(std::string parseFilename, std::vector<std::vector<std::string
 		}
 	}
 
-}	// end of parseCSVFile
+}	// end of parse_csv_file
 
 
 // ----------------------------------------------------------------------------------------
+
+
+//void parse_group_line(std::string line, const char open, const char close, std::vector<std::string> &params, std::vector<std::string> &group_params)
+void parse_group_line(std::string line, const char open, const char close, std::vector<std::string> &params)
+{
+
+    std::string sec_start = "";
+    std::string sec_end = "";
+    std::string group = "";
+
+    // parse the lines - find the first instance of a group and then the last one
+    // then separate the two sections
+    // this assumes that there are no non-group section between groups
+    uint32_t g_start = (uint32_t)line.find(open);
+    uint32_t g_stop = (uint32_t)line.rfind(close);
+
+    // get the substrings
+    sec_start = line.substr(0, g_start);
+    parse_line(sec_start, ',', params);
+
+    if (g_stop < line.length())
+    {
+        group = line.substr(g_start, g_stop - g_start + 1);
+
+        stringstream gs(group);
+        while (gs.good())
+        {
+            std::string s1;
+            std::string s2;
+            std::getline(gs, s1, open);
+            std::getline(gs, s2, close);
+
+            trim(s2);
+            if (s2.size() > 0)
+            {
+                params.push_back(s2);
+            }
+        }
+        sec_end = line.substr(g_stop + 1, line.length() - 1);
+        parse_line(sec_end, ',', params);    
+    }
+}
+
+// ----------------------------------------------------------------------------------------
+
+//void parse_group_csv_file(std::string parse_filename, const char open, const char close, std::vector<std::vector<std::string>> &params, std::vector < std::vector<std::string>> &group_params)
+void parse_group_csv_file(std::string parse_filename, const char open, const char close, std::vector<std::vector<std::string>> &params)
+{
+    std::ifstream csv_file(parse_filename);
+    std::string next_line;
+
+    while (std::getline(csv_file, next_line))
+    {
+        if ((next_line[0] != '#') && (next_line.size() > 0))
+        {
+            std::vector<std::string> line_params, gp_params;
+
+            parse_group_line(next_line, open, close, line_params);
+
+            if (line_params.size() > 0)
+            {
+                params.push_back(line_params);
+            }
+
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------------------
+
+void get_file_parts(std::string fullfilename, std::string &file_name, std::string &file_ext)
+{
+    // get the extension location
+    std::size_t file_ext_loc = fullfilename.rfind('.');
+    std::size_t last_file_sep;
+
+    // get the last file separator location depending on OS
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+    std::size_t last_file_sep1 = fullfilename.rfind('/');
+    //std::size_t last_file_sep2 = fullfilename.rfind('\\');
+
+    // this needs to be fixed!!!!!!!!
+    last_file_sep = last_file_sep1;
+
+    //if(last_file_sep1>last_file_sep2)
+    //{
+    //}
+    //else
+    //{
+    //	last_file_sep = last_file_sep2;
+    //}
+
+#else
+    last_file_sep = fullfilename.rfind('/');
+#endif
+
+    file_ext = fullfilename.substr((file_ext_loc + 1), (fullfilename.length() - file_ext_loc - 1));
+    //fileName = fullfilename.substr((last_file_sep + 1), (fullfilename.length() - 2 - ext.length()));
+    file_name = fullfilename.substr(0, (std::abs(long long(file_ext_loc))));
+
+
+}	// end of get_file_parts
 
 
 #endif	// FILE_PARSER_H_

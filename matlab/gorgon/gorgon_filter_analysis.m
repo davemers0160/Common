@@ -35,7 +35,39 @@ function [layer, u] = gorgon_filter_analysis(filename)
     s_x = ceil(sqrt(gorgon_struct.k)*1.2);
     s_y = ceil(gorgon_struct.k/s_x);
 
-    %% plot all of the outputs
+    
+    
+%% plot all of the outputs one at a time 
+if(true)
+    
+    for idx=1:numel(gorgon_data)
+        
+        figure(plot_num)
+        set(gcf,'position',([100,100,800,650]),'color','w', 'Name', 'Filter Output')
+        hold on
+        grid on
+        box on
+        
+        image(255*(t(:,:,idx)-min_x)/(max_x-min_x));
+        colormap(jet(256));
+        axis off
+        title(strcat(num2str(idx,'%03d')),'fontweight','bold', 'FontSize', 18);        
+
+        ax = gca;
+        ax.YDir = 'reverse';
+        ax.Position = [0.00 -0.15 1.01 1.1];
+        
+        print(plot_num, '-dpng', fullfile(filepath,strcat('filter_output_',num2str(gorgon_struct.layer,'%02d_num_'),num2str(idx,'%03d'),'.png')));
+        drawnow;
+        
+    end
+    
+end
+plot_num = plot_num + 1;
+
+bp = 1;
+
+%% plot all of the outputs
 if(false)
     %c = colormap(jet(numel(gorgon_data)));
     figure(plot_num)

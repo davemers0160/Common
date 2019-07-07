@@ -19,9 +19,9 @@ void time_median_cv(std::vector<cv::Mat> src, cv::Mat &dst)
     
     dst = cv::Mat(src[0].size(),src[0].type(),cv::Scalar::all(0));
        
-    for(uint32_t row=0; row<src[0].rows; ++row)
+    for(uint32_t row=0; row<(uint32_t)src[0].rows; ++row)
     {
-        for(uint32_t col=0; col<src[0].cols; ++col)
+        for(uint32_t col=0; col<(uint32_t)src[0].cols; ++col)
         {
             for(uint32_t N=0; N<src.size(); ++N)
             {
