@@ -63,10 +63,11 @@ max_x = max(x(:));
 %min_x = mean_x - 3*std_x;
 %max_x = mean_x + 3*std_x;
 
-fprintf('\nmin: %3.4f, max: %3.4f\n\n', min_x, max_x);
-
+fprintf('min: %3.4f, max: %3.4f\n\n', min_x, max_x);
+min_x = -2;
+max_x = 0;
 % get sub plot sizes
-s_x = ceil(sqrt(gorgon_struct.k)*1.2);
+s_x = floor(sqrt(gorgon_struct.k)*1.2+0.5);
 s_y = ceil(gorgon_struct.k/s_x);
 
 %% plot all of the outputs in one plot
@@ -147,6 +148,11 @@ for idx=1:numel(index)
         
         save_file = strcat('filter_ouput_', color_name, '_L', num2str(gorgon_struct.layer, '%03d'), '_N', num2str(index(idx), '%03d'), '.png');   
         imwrite(tmp3, cm, fullfile(save_path, save_file));
+
+        imagesc((t(:,:,idx)-min_x)/(max_x-min_x));
+        colormap(jet(256));
+        axis off
+        title(strcat(num2str(idx,'%03d')));
 
     end
     
