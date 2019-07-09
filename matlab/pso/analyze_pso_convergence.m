@@ -15,7 +15,7 @@ plot_num = 1;
 % are starting at iteration 1 and nothing has been run yet
 file_filter = {'*.mat','Mat Files';'*.*','All Files' };
 
-startpath = 'D:\IUPUI\DfD\dfd_dnn_pso\pso_results\';
+startpath = 'D:\IUPUI\DfD\dfd_dnn_pso\pso_results\dfd_dnn\';
 
 [mat_save_file, mat_save_path] = uigetfile(file_filter, 'Select Mat File', startpath);
 if(mat_save_path == 0)
@@ -27,6 +27,10 @@ load(fullfile(mat_save_path,mat_save_file));
 commandwindow;
 
 %% start running the analysis
+
+% reduce the number of iterations by one - use only if a run is currently
+% in progress
+itr = itr - 1;
 
 % get the number of particles 
 N = size(X,1);
@@ -70,6 +74,7 @@ for idx=1:numel(lim)
     p_index(idx) = find(m_total > lim(idx), 1, 'first');
 end
 
+fprintf('\nFinal Convergence: %2.4f%%\n\n', m_total(end));
 
 %% plot the results
 
@@ -111,14 +116,14 @@ ylabel('Convergence (%)', 'fontweight','bold','FontSize', 13);
 ytickformat('%2.2f');
 set(gca,'YMinorTick','on', 'YMinorGrid','on');
 
-title('PSO Particle Convergence Chart', 'fontweight','bold','FontSize', 16);
+title('PSO Particle Convergence', 'fontweight','bold','FontSize', 16);
 
 l2 = [p1];
-plot_name = {'PSO Convergence'};
+plot_name = {'Particle Convergence'};
 
 for idx=1:numel(lim) 
     l2 = cat(2, l2, l{idx});
-    plot_name{idx+1} = strcat(num2str(lim(idx)*100, '%2.2f'),'%');
+    plot_name{idx+1} = strcat(num2str(lim(idx)*100, '%2.2f'),'% Convergence');
 end
 
 lgd = legend(l2, plot_name, 'location', 'southwest', 'orientation', 'vertical');
