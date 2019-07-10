@@ -38,20 +38,52 @@ using namespace std;
 const uint32_t TEMPERATURE = 0x082C;        // temperature register
 const uint32_t CAMERA_POWER = 0x0610;       // camera power register
 
-typedef struct{
-     uint32_t sharpness;
-     float shutter; 
-     float gain; 
-     float brightness; 
-     float auto_exp; 
-     float fps;
+
+template<typename T>
+struct cam_prop
+{
+    T value;
+    bool auto_mode;
+    bool on_off;
+    bool abs_control;
+
+    cam_prop() {}
+    //cam_prop(T value_)
+    //{
+    //    value = value_;
+    //}
+
+    cam_prop(T value_, bool auto_mode_, bool on_off_, bool abs_control_)
+    {
+        value = value_;
+        auto_mode = auto_mode_;
+        on_off = on_off_;
+        abs_control = abs_control_;
+    }
+};
+
+struct cam_properties_struct {
+
+    cam_prop<uint32_t> sharpness;
+    cam_prop<float> shutter;
+    cam_prop<float> gain;
+    cam_prop<float> brightness;
+    cam_prop<float> auto_exp;
+    cam_prop<float> fps;
+
+    cam_properties_struct() 
+    {
+        //sharpness = cam_prop<uint32_t>(0);
+    }
+
     //std::tuple<uint32_t, bool, bool, bool> sharpness;
     //std::tuple<float, bool, bool, bool> shutter;
     //std::tuple<float, bool, bool, bool> gain;
     //std::tuple<float, bool, bool, bool> brightness;
     //std::tuple<float, bool, bool, bool> auto_exp;
     //std::tuple<float, bool, bool, bool> fps;
-} cam_properties_struct;
+
+};
 
 
 // ----------------------------------------------------------------------------------------
@@ -90,12 +122,12 @@ inline std::ostream& operator<< (
 {
     using std::endl;
     out << "Camera Settings: " << std::endl;
-    out << "  Shutter Speed (ms): " << item.shutter << std::endl;
-    out << "  Brightness:         " << item.brightness << std::endl;
-    out << "  Gain (dB):          " << item.gain << std::endl;
-    out << "  Sharpness:          " << item.sharpness << std::endl;
-    out << "  Exposure (EV):      " << item.auto_exp << std::endl;
-    out << "  FPS:                " << item.fps << std::endl;
+    out << "  Shutter Speed (ms): " << item.shutter.value << std::endl;
+    out << "  Brightness:         " << item.brightness.value << std::endl;
+    out << "  Gain (dB):          " << item.gain.value << std::endl;
+    out << "  Sharpness:          " << item.sharpness.value << std::endl;
+    out << "  Exposure (EV):      " << item.auto_exp.value << std::endl;
+    out << "  FPS:                " << item.fps.value << std::endl;
     return out;
 }
 
@@ -258,7 +290,7 @@ FC2::Error config_camera_propeties(FC2::Camera &cam, cam_properties_struct &cam_
 
 	// set the frame rate for the camera
 	config_property(cam, Framerate, FC2::FRAME_RATE, false, true, true);
-	error = set_abs_property(cam, Framerate, cam_properties.fps);
+	error = set_abs_property(cam, Framerate, cam_properties.fps.value);
 	if (error != FC2::PGRERROR_OK)
 	{
 		return error;
@@ -266,7 +298,7 @@ FC2::Error config_camera_propeties(FC2::Camera &cam, cam_properties_struct &cam_
 
 	// config Sharpness to initial value and set to auto
 	config_property(cam, Sharpness, FC2::SHARPNESS, false, true, false);
-	error = set_int_property(cam, Sharpness, cam_properties.sharpness);
+	error = set_int_property(cam, Sharpness, cam_properties.sharpness.value);
 	if (error != FC2::PGRERROR_OK)
 	{
 		return error;
@@ -274,7 +306,7 @@ FC2::Error config_camera_propeties(FC2::Camera &cam, cam_properties_struct &cam_
 
 	// configure the auto-exposure property
 	config_property(cam, Auto_Exposure, FC2::AUTO_EXPOSURE, true, true, true);
-	error = set_abs_property(cam, Auto_Exposure, cam_properties.auto_exp);
+	error = set_abs_property(cam, Auto_Exposure, cam_properties.auto_exp.value);
 	if (error != FC2::PGRERROR_OK)
 	{
 		return error;
@@ -282,7 +314,7 @@ FC2::Error config_camera_propeties(FC2::Camera &cam, cam_properties_struct &cam_
 
 	// configure the brightness property
 	config_property(cam, Brightness, FC2::BRIGHTNESS, false, true, true);
-	error = set_abs_property(cam, Brightness, cam_properties.brightness);
+	error = set_abs_property(cam, Brightness, cam_properties.brightness.value);
 	if (error != FC2::PGRERROR_OK)
 	{
 		return error;
@@ -290,7 +322,7 @@ FC2::Error config_camera_propeties(FC2::Camera &cam, cam_properties_struct &cam_
 
 	// config Shutter to initial value and set to auto
 	config_property(cam, Shutter, FC2::SHUTTER, false, true, true);
-	error = set_abs_property(cam, Shutter, cam_properties.shutter);
+	error = set_abs_property(cam, Shutter, cam_properties.shutter.value);
 	if (error != FC2::PGRERROR_OK)
 	{
 		return error;
@@ -301,7 +333,7 @@ FC2::Error config_camera_propeties(FC2::Camera &cam, cam_properties_struct &cam_
     // config Gain to initial value and set to auto
     //config_property(cam, Gain, FC2::GAIN, true, true, true);
     config_property(cam, Gain, FC2::GAIN, false, true, true);
-    error = set_abs_property(cam, Gain, cam_properties.gain);
+    error = set_abs_property(cam, Gain, cam_properties.gain.value);
 	if (error != FC2::PGRERROR_OK)
 	{
 		return error;
@@ -310,11 +342,11 @@ FC2::Error config_camera_propeties(FC2::Camera &cam, cam_properties_struct &cam_
 	sleep_ms(1000); //2500
 
 	// get the auto values
-    cam_properties.shutter = get_abs_property(cam, Shutter);
-    cam_properties.gain = get_abs_property(cam, Gain);
-    cam_properties.sharpness = get_property(cam, Sharpness);
-    cam_properties.auto_exp = get_abs_property(cam, Auto_Exposure);
-    cam_properties.brightness = get_abs_property(cam, Brightness);
+    cam_properties.shutter.value = get_abs_property(cam, Shutter);
+    cam_properties.gain.value = get_abs_property(cam, Gain);
+    cam_properties.sharpness.value = get_property(cam, Sharpness);
+    cam_properties.auto_exp.value = get_abs_property(cam, Auto_Exposure);
+    cam_properties.brightness.value = get_abs_property(cam, Brightness);
 
     //config_property(cam, Gain, FC2::GAIN, false, false, true);
     //error = set_abs_property(cam, Gain, cam_properties.gain);

@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #ifndef GET_CURRENT_TIME_H_
 #define GET_CURRENT_TIME_H_
 

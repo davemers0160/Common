@@ -194,7 +194,7 @@ class lens_driver
             sum2 = (sum2 + sum1) % 255;
 
             // calculate for data
-            for (uint32_t idx = 0; idx < Packet.byte_count - 2; ++idx)
+            for (uint8_t idx = 0; idx < Packet.byte_count - 2; ++idx)
             {
                 sum1 = (sum1 + Packet.data[idx]) % 255;
                 sum2 = (sum2 + sum1) % 255;
