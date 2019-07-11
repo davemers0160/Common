@@ -111,12 +111,12 @@ void parse_line(std::string input, const char delimiter, std::vector<std::string
 }   // end of parse_line
 
 // ----------------------------------------------------------------------------------------
-
-void parse_input_range(std::string input, std::vector<double> &range)
+template<typename T>
+void parse_input_range(std::string input, std::vector<T> &range)
 {
     range.clear();
     std::vector<std::string> params;
-    std::vector<double> r;
+    std::vector<T> r;
 
     // parse out the input values. should be in the form min:step:max
     parse_line(input, ':', params);
@@ -130,12 +130,12 @@ void parse_input_range(std::string input, std::vector<double> &range)
     }
     else
     {
-        r.push_back(std::stod(params[0]));
-        r.push_back(std::stod(params[1]));
-        r.push_back(std::stod(params[2]));
+        r.push_back((T)(std::stod(params[0])));
+        r.push_back((T)(std::stod(params[1])));
+        r.push_back((T)(std::stod(params[2])));
     }
 
-    double s = r[0];
+    T s = r[0];
     if (r[1] > 0)
     {
         while (s <= r[2])
