@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-//#include "ycrcb_pixel.h"
+#include "ycrcb_pixel.h"
 
 #include <dlib/pixel.h>
 #include <dlib/matrix.h>

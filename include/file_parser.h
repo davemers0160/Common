@@ -303,9 +303,9 @@ void get_file_parts(std::string fullfilename, std::string &file_name, std::strin
     last_file_sep = fullfilename.rfind('/');
 #endif
 
-    file_ext = fullfilename.substr((file_ext_loc + 1), (fullfilename.length() - file_ext_loc - 1));
+    //file_ext = fullfilename.substr((file_ext_loc + 1), (fullfilename.length() - file_ext_loc - 1));
     //fileName = fullfilename.substr((last_file_sep + 1), (fullfilename.length() - 2 - ext.length()));
-    file_name = fullfilename.substr(0, (std::abs(long long(file_ext_loc))));
+    //file_name = fullfilename.substr(0, (std::abs(long long(file_ext_loc))));
 
 
 }	// end of get_file_parts
