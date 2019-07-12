@@ -12,6 +12,9 @@
 
 #if defined(__linux__)
 #include <limits.h>
+#include <cstring>
+#include <unistd.h>
+#include <libgen.h>
 #endif
 
 //#include <locale>
