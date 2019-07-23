@@ -447,7 +447,7 @@ FC2::Error init_camera(FC2::Camera &cam, uint32_t cam_index, FC2::FC2Config &cam
         return error;
     }
 
-    camera_config.grabTimeout = 200;// (unsigned int)(1000 / framerate);
+    camera_config.grabTimeout = 1000;// (unsigned int)(1000 / framerate);
     camera_config.highPerformanceRetrieveBuffer = true;
     camera_config.asyncBusSpeed = FC2::BUSSPEED_ANY;
     camera_config.numBuffers = 1;
