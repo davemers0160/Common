@@ -61,10 +61,10 @@ std::string get_linux_path()
     
     if (count != -1) 
     {
-        path = get_path(dirname(result), "/");
+        path = get_path(dirname(result), "/") + "/";
     }
 
-    return (path+"/");
+    return (path);
 
 }
 #endif
