@@ -30,7 +30,7 @@ commandwindow;
 
 % reduce the number of iterations by one - use only if a run is currently
 % in progress
-%itr = itr - 1;
+num_itr = itr;
 
 % get the number of particles 
 N = size(X,1);
@@ -39,10 +39,10 @@ GB = G(end);
 
 num_params = numel(GB.con) + numel(GB.bn) + numel(GB.act) + numel(GB.fc);
 
-m = zeros(N,itr);
+m = zeros(N,num_itr);
 
 % cycle through the ierations to the the percentage 
-for idx=1:itr
+for idx=1:num_itr
     
     fprintf('Iteration: %03d: ', idx);
     % cycle through the particles
@@ -88,21 +88,21 @@ box on;
 grid on;
 hold on;
 
-p1 = plot([1:1:itr], m_total*100, '-b', 'LineWidth', 1);
+p1 = plot([1:1:num_itr], m_total*100, '-b', 'LineWidth', 1);
 
 for idx=1:numel(lim)  
     %l{idx} = plot([1,p_index(idx)], [lim(idx), lim(idx)]*100, 'LineStyle' ,'--', 'LineWidth', 1, 'Color', col(idx));
     %stem(p_index(idx), lim(idx)*100, 'LineStyle' ,'--', 'LineWidth', 1, 'Color', col(idx), 'Marker', 'none');
     
-    l{idx} = plot([0,itr+1], [lim(idx), lim(idx)]*100, 'LineStyle' ,'--', 'LineWidth', 1, 'Color', col(idx));
+    l{idx} = plot([0,num_itr+1], [lim(idx), lim(idx)]*100, 'LineStyle' ,'--', 'LineWidth', 1, 'Color', col(idx));
     stem(p_index(idx), m_total(p_index(idx))*100, 'LineStyle' ,'--', 'LineWidth', 1, 'Color', 'k', 'Marker', 'none');
 end
 
 set(gca, 'fontweight', 'bold', 'FontSize', 13);
 
 % X-axis
-xlim([1 itr]);
-xticks([0:5:itr]);
+xlim([1 num_itr]);
+xticks([0:5:num_itr]);
 xtickangle(90);
 xlabel('Iteration', 'fontweight','bold','FontSize', 13);
 set(gca,'XMinorTick','on', 'XMinorGrid','on');
@@ -117,7 +117,7 @@ ylabel('Convergence (%)', 'fontweight','bold','FontSize', 13);
 ytickformat('%2.2f');
 set(gca,'YMinorTick','on', 'YMinorGrid','on');
 
-title('PSO Particle Convergence', 'fontweight','bold','FontSize', 16);
+title('MNIST PSO Particle Convergence', 'fontweight','bold','FontSize', 16);
 
 l2 = [p1];
 plot_name = {'Particle Convergence'};
@@ -133,7 +133,7 @@ lgd.Position = [0.1, tmp(2:4)];
 
 ax = gca;
 ax.YAxis.MinorTickValues = (plt_min:0.025:plt_max)*100;
-ax.XAxis.MinorTickValues = (1:1:itr);
+ax.XAxis.MinorTickValues = (1:1:num_itr);
 ax.Position = [0.08 0.1 0.90 0.85];
 
 plot_num = plot_num + 1;
