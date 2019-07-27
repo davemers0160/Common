@@ -66,9 +66,9 @@ end
 
 %% get the cummulative results
 
-m_total = sum(m,1);
+m_sum = sum(m,1);
 
-m_total = m_total/(num_params*N); 
+m_total = m_sum/(num_params*N); 
 
 lim = [0.90, 0.95, 0.99];
 
@@ -76,7 +76,7 @@ for idx=1:numel(lim)
     p_index(idx) = find(m_total > lim(idx), 1, 'first');
 end
 
-fprintf('\nFinal Convergence: %2.4f%%\n\n', m_total(end));
+fprintf('\nFinal Convergence: %2.4f%%\n\n', m_total(end)*100);
 
 %% plot the results
 
