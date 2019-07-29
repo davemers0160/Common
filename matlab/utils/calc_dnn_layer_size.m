@@ -38,7 +38,7 @@ img_height = 4:1:640;
 %conv_params = [[3,3,2,2];[3,3,2,2]];    % new dfd_net with 3x3 downsamplers - v25
 %conv_params = [[1,1,2,2];[1,1,2,2]];    % new dfd_net with 1x1 downsamplers - v26
 %conv_params = [[5,5,2,2];[5,5,2,2]];    % new dfd_net with 3x3 downsamplers - v27
-conv_params = [[7,7,2,3];[2,2,2,2];[2,2,2,2];[2,2,2,2];[2,2,2,2]];      % ~resnet101~
+conv_params = [[7,7,2,2];[2,2,2,2];[2,2,2,2];[2,2,2,2];[2,2,2,2]];      % ~resnet101~
 
 cont_params = [];
 %cont_params = [[2,2,2,2]];
