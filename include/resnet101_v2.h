@@ -64,7 +64,7 @@ using resnet_type = dlib::loss_multiclass_log< dlib::fc<1000, dlib::avg_pool_eve
     con2d<1024, scale_blk2<512,128,128,
     con2d<512, scale_blk1<256,64,64,
     con2d<256,dlib::prelu<dlib::bn_con<con7d<64,
-    dlib::input_rgb_image_sized<224>
+    dlib::input_rgb_image_sized<230>
     >>>> >> >> >>>> > >>>;
     
 // ----------------------------------------------------------------------------------------
@@ -84,10 +84,13 @@ using ml_net_type = dlib::loss_mmod<con9<1,
 // ----------------------------------------------------------------------------------------
 
 template <typename net_type>
-void config_net(net_type &net, std::vector<uint32_t> params)
+void config_net(net_type &net, dlib::mmod_options options, std::vector<uint32_t> params)
 {
 
     net = net_type(options);
+
+    dlib::layer<net_type::num_layers - 1>(net).set_pyramid_outer_padding(8);
+    dlib::layer<net_type::num_layers - 1>(net).set_pyramid_padding(8);
 
 }   // end of config_net
 

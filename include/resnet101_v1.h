@@ -79,10 +79,13 @@ using ml_net_type = dlib::loss_mmod<con9<1,
 // ----------------------------------------------------------------------------------------
 
 template <typename net_type>
-void config_net(net_type &net, std::vector<uint32_t> params)
+void config_net(net_type &net, dlib::mmod_options options, std::vector<uint32_t> params)
 {
 
     net = net_type(options);
+
+    dlib::layer<net_type::num_layers - 1>(net).set_pyramid_outer_padding(8);
+    dlib::layer<net_type::num_layers - 1>(net).set_pyramid_padding(8);
 
 }   // end of config_net
 
