@@ -49,19 +49,19 @@ using ares_blk = dlib::prelu<dlib::add_prev1<ablk<N1,N2,N3, dlib::tag1<SUBNET>>>
 // --------------------------------------scale blocks-----------------------------------
 
 template <int N1,int N2,int N3, typename SUBNET>
-using scale_blk1 =  res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, SUBNET>>>;
+using scale_blk1 = res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, SUBNET>>>;
 template <int N1,int N2,int N3, typename SUBNET>
-using ascale_blk1 =  ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, SUBNET>>>;
+using ascale_blk1 = ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, SUBNET>>>;
 
 template <int N1,int N2,int N3, typename SUBNET>
-using scale_blk2 =  res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, SUBNET>>>>;
+using scale_blk2 = res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, SUBNET>>>>;
 template <int N1,int N2,int N3, typename SUBNET>
-using ascale_blk2 =  ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, SUBNET>>>>;
+using ascale_blk2 = ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, SUBNET>>>>;
 
 template <int N1,int N2,int N3, typename SUBNET>
-using scale_blk3 =  res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, SUBNET>>>>>>>>>>;
+using scale_blk3 = res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, res_blk<N1,N2,N3, SUBNET>>>>>>;
 template <int N1,int N2,int N3, typename SUBNET>
-using ascale_blk3 =  ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, SUBNET>>>>>>>>>>;
+using ascale_blk3 = ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, SUBNET>>>>>>;
 
 // ----------------------------------------------------------------------------------------
 // Network Definition 
@@ -69,21 +69,21 @@ using ascale_blk3 =  ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ares_blk<N1,N2,N3, ar
 
 using resnet_type = dlib::loss_multiclass_log< dlib::fc<1000, dlib::avg_pool_everything<
     scale_blk1<2048,512,512,
-	con2d<2048, scale_blk3<1024,256,256, scale_blk3<1024,256,256, scale_blk1<1024,256,256,
+	con2d<2048, scale_blk3<1024,256,256, 
     con2d<1024, scale_blk2<512,128,128,
     con2d<512, scale_blk1<256,64,64,
     con2d<256, dlib::prelu<dlib::bn_con<con7d<64,
     dlib::input_rgb_image_sized<230>
-    >>>> >> >> >>>> > >>>;
+    >>>> >> >> >> > >>>;
 
 using aresnet_type = dlib::loss_multiclass_log< dlib::fc<1000, dlib::avg_pool_everything<
     ascale_blk1<2048,512,512,
-	con2d<2048, ascale_blk3<1024,256,256, ascale_blk3<1024,256,256, ascale_blk1<1024,256,256,
+	con2d<2048, ascale_blk3<1024,256,256,
     con2d<1024, ascale_blk2<512,128,128,
     con2d<512, ascale_blk1<256,64,64,
     con2d<256, dlib::prelu<dlib::affine<con7d<64,
     dlib::input_rgb_image_sized<230>
-    >>>> >> >> >>>> > >>>;
+    >>>> >> >> >> > >>>;
         
 // ----------------------------------------------------------------------------------------
     
@@ -91,25 +91,26 @@ using ml_net_type = dlib::loss_mmod<con9<1,
     cont2u<256, cont2u<256, cont2u<256,
     //----
     scale_blk1<2048,512,512,
-	con2d<2048, scale_blk3<1024,256,256, scale_blk3<1024,256,256, scale_blk1<1024,256,256,
+	con2d<2048, scale_blk3<1024,256,256, 
     con2d<1024, scale_blk2<512,128,128,
     con2d<512, scale_blk1<256,64,64,
     con2d<256, dlib::prelu<dlib::bn_con<con7d<64,    
     //----
     dlib::input_array_image_pyramid<dlib::pyramid_down<6>, array_depth>
-    >>>> >> >> >>>> > >>> >>;
-
+    >>>> >> >> >> > >>> >>;
+    
 using aml_net_type = dlib::loss_mmod<con9<1,
     cont2u<256, cont2u<256, cont2u<256,
     //----
     ascale_blk1<2048,512,512,
-	con2d<2048, ascale_blk3<1024,256,256, ascale_blk3<1024,256,256, ascale_blk1<1024,256,256,
+	con2d<2048, ascale_blk3<1024,256,256, 
     con2d<1024, ascale_blk2<512,128,128,
     con2d<512, ascale_blk1<256,64,64,
     con2d<256, dlib::prelu<dlib::affine<con7d<64,    
     //----
     dlib::input_array_image_pyramid<dlib::pyramid_down<6>, array_depth>
-    >>>> >> >> >>>> > >>> >>;
+    >>>> >> >> >> > >>> >>;    
+    
     
 // ----------------------------------------------------------------------------------------
 // Configuration function
