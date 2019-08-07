@@ -277,7 +277,7 @@ void parse_group_csv_file(std::string parse_filename, const char open, const cha
 
 // ----------------------------------------------------------------------------------------
 
-void get_file_parts(std::string fullfilename, std::string &file_name, std::string &file_ext)
+void get_file_parts(std::string fullfilename, std::string &file_path, std::string &file_name, std::string &file_ext)
 {
     // get the extension location
     std::size_t file_ext_loc = fullfilename.rfind('.');
@@ -285,29 +285,19 @@ void get_file_parts(std::string fullfilename, std::string &file_name, std::strin
 
     // get the last file separator location depending on OS
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-    std::size_t last_file_sep1 = fullfilename.rfind('/');
-    //std::size_t last_file_sep2 = fullfilename.rfind('\\');
-
-    // this needs to be fixed!!!!!!!!
-    last_file_sep = last_file_sep1;
-
-    //if(last_file_sep1>last_file_sep2)
-    //{
-    //}
-    //else
-    //{
-    //	last_file_sep = last_file_sep2;
-    //}
-
+    last_file_sep = fullfilename.find_last_of("/\\");
 #else
-    last_file_sep = fullfilename.rfind('/');
+    last_file_sep = fullfilename.find_last_of("/\\");
 #endif
 
-    //file_ext = fullfilename.substr((file_ext_loc + 1), (fullfilename.length() - file_ext_loc - 1));
-    //fileName = fullfilename.substr((last_file_sep + 1), (fullfilename.length() - 2 - ext.length()));
-    //file_name = fullfilename.substr(0, (std::abs(long long(file_ext_loc))));
+    file_path = fullfilename.substr(0, last_file_sep);
+    file_name = fullfilename.substr(last_file_sep + 1, (fullfilename.length() - file_ext_loc + 1));
 
-
+    if (file_ext_loc > fullfilename.length())
+        file_ext = "";
+    else
+        file_ext = fullfilename.substr((file_ext_loc + 1), (fullfilename.length() - file_ext_loc - 1));
+    
 }	// end of get_file_parts
 
 
