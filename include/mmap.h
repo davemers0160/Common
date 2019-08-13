@@ -3,6 +3,7 @@
 
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 #include <windows.h>
+#pragma comment(lib, "user32.lib")
 #else
 #include <fcntl.h>
 #include <unistd.h>
@@ -44,7 +45,7 @@ namespace mmap
                 
             #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
                 file_handle_ = ::CreateFile(
-                    file_name.c_str(),
+                    (LPCWSTR)file_name.c_str(),
                     GENERIC_READ | GENERIC_WRITE,
                     FILE_SHARE_READ | FILE_SHARE_WRITE,
                     NULL,
@@ -54,7 +55,8 @@ namespace mmap
 
                 if (file_handle_ == INVALID_HANDLE_VALUE) 
                 {
-                    std::runtime_error("");
+                    std::runtime_error("Error opening file: " + file_name);
+                    return;
                 }
 
                 file_size_ = ::GetFileSize(file_handle_, NULL);
@@ -62,10 +64,10 @@ namespace mmap
                 map_handle_ = ::CreateFileMapping(file_handle_, NULL, PAGE_READWRITE, 0, 0, NULL);
 
                 if (map_handle_ == NULL) 
-                {
-                    
+                {                    
                     close();
-                    std::runtime_error("");
+                    std::runtime_error("Error mapping file.");
+                    return;
                 }
 
                 map_address_ = ::MapViewOfFile(map_handle_, FILE_MAP_ALL_ACCESS, 0, 0, 0);

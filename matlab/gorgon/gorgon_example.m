@@ -72,7 +72,7 @@ s_y = ceil(gorgon_struct.k/s_x);
 
 %% plot all of the outputs in one plot
 
-if(false)
+if(true)
     
     %c = colormap(jet(numel(gorgon_data)));
     figure(plot_num)
@@ -102,7 +102,7 @@ if(false)
 end
 
 %% plot all of the outputs
-
+return;
 color_select = 2;
 
 if(color_select == 1)
@@ -178,6 +178,7 @@ end
 %% yet another way of looking at it
 
 
+
 color_select = 1;
 
 if(color_select == 1)
@@ -236,7 +237,6 @@ for idx=1:numel(index)
 
     end
     
-    close(plot_num);
+    %close(plot_num);
     plot_num = plot_num + 1;
-    
 end
