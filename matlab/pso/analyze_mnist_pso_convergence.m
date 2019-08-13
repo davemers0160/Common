@@ -30,7 +30,7 @@ commandwindow;
 
 % reduce the number of iterations by one - use only if a run is currently
 % in progress
-num_itr = itr;
+num_itr = itr-2;
 
 % get the number of particles 
 N = size(X,1);
