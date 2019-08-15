@@ -1,21 +1,21 @@
-using System;
-using System.Windows.Forms;
-using System.IO;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Win32;
-using System.Runtime.InteropServices;
-using System.Windows.Forms.DataVisualization.Charting;
-using System.Numerics;
-using System.IO.Ports;
-using System.Diagnostics;
+// using System;
+// using System.Windows.Forms;
+// using System.IO;
+// using System.Collections;
+// using System.Collections.Generic;
+// using System.ComponentModel;
+// using System.Data;
+// using System.Drawing;
+// using System.Linq;
+// using System.Text;
+// using System.Threading;
+// using System.Threading.Tasks;
+// using Microsoft.Win32;
+// using System.Runtime.InteropServices;
+// using System.Windows.Forms.DataVisualization.Charting;
+// using System.Numerics;
+// using System.IO.Ports;
+// using System.Diagnostics;
 
 
 
@@ -23,40 +23,44 @@ namespace common_impl
 {
 
 
+        // Variables for the file sytem watcher to track the file trigger method
+        static DateTime last_read = DateTime.MinValue;
+        static FileSystemWatcher fsw;
+        private string triggerFile = "Trigger";
+        private string triggerFilePath = "..//..//";
 
-
-        private void configTriggerWatcher(string filepath, string filter)
+        private void config_file_watcher(string filepath, string filter)
         {
 
-            triggerWatcher = new FileSystemWatcher();
-            triggerWatcher.Path = filepath;
+            fsw = new FileSystemWatcher();
+            fsw.Path = filepath;
 
             /* Watch for changes in LastAccess and LastWrite times, and the renaming of files or directories. */
-            triggerWatcher.NotifyFilter = NotifyFilters.LastWrite; // | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+            fsw.NotifyFilter = NotifyFilters.LastWrite; // | NotifyFilters.FileName | NotifyFilters.DirectoryName;
 
             // Only watch text files.
-            triggerWatcher.Filter = filter;
+            fsw.Filter = filter;
 
             // Add event handlers.
-            triggerWatcher.Changed += new FileSystemEventHandler(TriggerFileWatcherOnChange);
+            fsw.Changed += new FileSystemEventHandler(TriggerFileWatcherOnChange);
 
-        }   // end of configTriggerWatcher
+        }   // end of config_file_watcher
 
 
-        private void enableTriggerWatcher(bool enable)
+        private void enable_file_watcher(bool enable)
         {
-            triggerWatcher.EnableRaisingEvents = enable;
+            fsw.EnableRaisingEvents = enable;
 
-        }   // end of enableTriggerWatcher
+        }   // end of enable_file_watcher
 
 
-        private void TriggerFileWatcherOnChange(object source, FileSystemEventArgs e)
+        private void file_watcher_change(object source, FileSystemEventArgs e)
         {
 
-            enableTriggerWatcher(false);
-            DateTime lastWriteTime = File.GetLastWriteTime(e.FullPath);
+            enable_file_watcher(false);
+            DateTime last_write_time = File.GetLastWriteTime(e.FullPath);
 
-            if (lastWriteTime.Subtract(lastRead).Ticks >= 10000)
+            if (last_write_time.Subtract(last_read).Ticks >= 10000)
             {
                 FileStream fs = new FileStream(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
@@ -79,12 +83,12 @@ namespace common_impl
                     //}
 
                 }
-                lastRead = lastWriteTime;
+                last_read = last_write_time;
 
             }
 
-            enableTriggerWatcher(true);
+            enable_file_watcher(true);
 
-        }   // end of OnChanged
+        }   // end of file_watcher_change
         
 }
