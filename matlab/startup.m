@@ -3,7 +3,7 @@
 
 disp('Start Up...');
 if(ispc)
-    dfd_root = 'D:/IUPUI/DfD/MATLAB/';
+    dfd_root = 'D:/Projects/dfd_common/matlab/';
     common_root = 'D:/Common/matlab/';
 
 else
