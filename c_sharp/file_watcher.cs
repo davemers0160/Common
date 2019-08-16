@@ -1,6 +1,6 @@
-// using System;
+using System;
 // using System.Windows.Forms;
-// using System.IO;
+using System.IO;
 // using System.Collections;
 // using System.Collections.Generic;
 // using System.ComponentModel;
@@ -18,43 +18,45 @@
 // using System.Diagnostics;
 
 
-
-namespace common_impl
+namespace common
 {
 
+    public class file_watcher
+    {
+        // Variables for the file sytem watcher
+        DateTime last_read = DateTime.MinValue;
+        DateTime last_write_time = DateTime.MinValue;
+        FileSystemWatcher fsw;
+        public bool changed = true;
 
-        // Variables for the file sytem watcher to track the file trigger method
-        static DateTime last_read = DateTime.MinValue;
-        static FileSystemWatcher fsw;
-        private string triggerFile = "Trigger";
-        private string triggerFilePath = "..//..//";
+        //private string triggerFile = "Trigger";
+        //private string triggerFilePath = "..//..//";
 
-        private void config_file_watcher(string filepath, string filter)
+        public void config_file_watcher(string file_path, string file_name)
         {
 
             fsw = new FileSystemWatcher();
-            fsw.Path = filepath;
+            fsw.Path = Path.GetDirectoryName(file_path);
 
-            /* Watch for changes in LastAccess and LastWrite times, and the renaming of files or directories. */
+            // Watch for changes in LastAccess and LastWrite times, and the renaming of files or directories
             fsw.NotifyFilter = NotifyFilters.LastWrite; // | NotifyFilters.FileName | NotifyFilters.DirectoryName;
 
             // Only watch text files.
-            fsw.Filter = filter;
+            fsw.Filter = file_name;
 
             // Add event handlers.
-            fsw.Changed += new FileSystemEventHandler(TriggerFileWatcherOnChange);
+            fsw.Changed += new FileSystemEventHandler(file_watcher_change);
 
         }   // end of config_file_watcher
 
 
-        private void enable_file_watcher(bool enable)
+        public void enable_file_watcher(bool enable)
         {
             fsw.EnableRaisingEvents = enable;
-
         }   // end of enable_file_watcher
 
 
-        private void file_watcher_change(object source, FileSystemEventArgs e)
+        public void file_watcher_change(object source, FileSystemEventArgs e)
         {
 
             enable_file_watcher(false);
@@ -62,27 +64,9 @@ namespace common_impl
 
             if (last_write_time.Subtract(last_read).Ticks >= 10000)
             {
-                FileStream fs = new FileStream(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-
-                //using (StreamReader triggerFile = new StreamReader(fs))
-                using (BinaryReader triggerFile = new BinaryReader(fs))
-                {
-                    triggerValue = triggerFile.Read();
-
-                    triggerFile.Dispose();
-                    fs.Close();
-
-                    //if (triggerValue == 1)
-                    //{
-                    //    //msgConsole_RTB.AppendText("File Trigger..." + Environment.NewLine);
-                    //    //msgConsole_RTB.ScrollToCaret();
-                    //    //var p = new Main_GUI();
-                    //    //p.Trigger_BTN_Click(null, null);
-                    //    this.Trigger();
-                    //    //Invoke(new Action(() => { Trigger(); }));
-                    //}
-
-                }
+                changed = true;
+                //mnist_app.Form1.img.Clear();
+                //mnist_app.Form1.img = mnist_app.Form1.load_image(mnist_app.Form1.image_file_path);
                 last_read = last_write_time;
 
             }
@@ -90,5 +74,7 @@ namespace common_impl
             enable_file_watcher(true);
 
         }   // end of file_watcher_change
-        
-}
+
+    }   // end of class impl
+
+}   // end of namespace common

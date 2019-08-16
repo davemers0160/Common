@@ -16,37 +16,40 @@
 // using System.Numerics;
 // using System.IO.Ports;
 // using System.Diagnostics;
-using System.Windows.Forms.FileDialog
+using System.Windows.Forms;
 
-namespace common_impl
+namespace common
 {
 
-    //void select_file(object sender, EventArgs e)
-    void select_file(string init_dir, string filter, ref string file_path, ref string file_name)
+    public partial class impl
     {
-
-        file_path = string.Empty;
-        file_name = string.Empty;
-        
-        using(OpenFileDialog ofd = new OpenFileDialog())
+        //void select_file(object sender, EventArgs e)
+        public static void select_file(string init_dir, string filter, out string file_path, out string file_name)
         {
-            ofd.InitialDirectory = init_dir;
-            ofd.Filter = filter;
-            ofd.RestoreDirectory  = false;
 
-            //DialogResult result = ofd.ShowDialog();
+            file_path = string.Empty;
+            file_name = string.Empty;
 
-            if (ofd.ShowDialog() == DialogResult.OK)
+            using (OpenFileDialog ofd = new OpenFileDialog())
             {
+                ofd.InitialDirectory = init_dir;
+                ofd.Filter = filter;
+                ofd.RestoreDirectory = false;
 
-                string fileName = ofd.FileName;
+                //DialogResult result = ofd.ShowDialog();
 
-                file_name = ofd.SafeFileName;
-                file_path = Path.GetDirectoryName(fileName) + "\\";
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
 
+                    file_path = ofd.FileName;
+                    file_name = ofd.SafeFileName;
+
+                    //string tfile_path = Path.GetDirectoryName(file_path) + "\\";
+
+                }
             }
-        }
-    }   // end of select_file
-        
-}   // end of namespace
-        
+        }   // end of select_file
+
+    }   // end of class
+
+}   // end of namespace common
