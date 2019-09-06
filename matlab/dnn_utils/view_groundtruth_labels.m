@@ -12,11 +12,12 @@ plot_num = 1;
 commandwindow;
 
 %% convert the ground truth table 
-data = gTruth.Variables;
+data = Data2Train.Variables;
 
-label_names = gTruth.Properties.VariableNames;
+label_names = Data2Train.Properties.VariableNames;
 
 %% parse through the ground truth object detection table labels
+data_directory = 'D:/Projects/yellow_jacket/data/capture1/';
 
 num_images = size(data,1);
 num_classes = size(data,2);
@@ -25,8 +26,10 @@ cm = rand(num_classes,3);
 
 for idx=1:num_images
     
+    fprintf('%s\n', data{idx,1});
+    [startpath,  filename, ext] = fileparts(data{idx,1});
     % read in the image
-    img = imread(data{idx,1});
+    img = imread(strcat(data_directory,filename,ext));
     [im_r, im_c] = size(img);
     nm = [im_c, im_r, im_c, im_r];
     
@@ -50,7 +53,9 @@ for idx=1:num_images
     
     imshow(img);
     
-    plot_num = plot_num + 1;
+    %keyboard;
+    pause(0.2);
+    %plot_num = plot_num + 1;
       
 end
 

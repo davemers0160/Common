@@ -12,9 +12,9 @@ plot_num = 1;
 commandwindow;
 
 %% convert the ground truth table 
-data = gTruth.Variables;
+data = Data2Val.Variables;
 
-label_names = gTruth.Properties.VariableNames;
+label_names = Data2Val.Properties.VariableNames;
 
 
 
@@ -50,7 +50,7 @@ for idx=1:num_images
             num_boxes = size(data{idx,jdx},1);
             
             for kdx = 1:num_boxes         
-                s_line = strcat(s_line, num2str(data{idx,jdx}(kdx,:), '{%d,%d,%d,%d,'), label_names{jdx}, '},');
+                s_line = strcat(s_line, num2str(floor(data{idx,jdx}(kdx,1:2)), '{%d,%d,'), num2str(ceil(data{idx,jdx}(kdx,3:4)), '%d,%d,'), label_names{jdx}, '},');
                 %fprintf('{%d,%d,%d,%d,%s}, ', data{idx,jdx}(kdx,:), label_names{jdx});                
             end           
         end        
