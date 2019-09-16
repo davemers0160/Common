@@ -1,4 +1,4 @@
-lib_path = 'D:\Projects\mnist_dll\build_dll\Release\';
+lib_path = 'D:\Projects\mnist_dll\build\Release\';
 lib_name = 'MNIST_DLL';
 hfile = 'D:\Projects\mnist_dll\include\mnist_dll.h';
 
@@ -9,8 +9,8 @@ hfile = 'D:\Projects\mnist_dll\include\mnist_dll.h';
 libisloaded(lib_name)
 % unloadlibrary(lib_name); 'MNIST_DLL'
 
-libfunctions(lib_name)
-libfunctionsview(lib_name)
+%libfunctions(lib_name)
+%libfunctionsview(lib_name)
 
 calllib('MNIST_DLL','init_net','D:/Projects/mnist_dll/nets/mnist_net_pso_14_97.dat');
 
