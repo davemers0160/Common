@@ -4,7 +4,7 @@ clc
 close all
 clearvars
 
-lib_path = 'D:\Projects\mnist_dll\build\Release\';
+lib_path = 'D:\Projects\mnist_dll\build_dll\Release\';
 lib_name = 'MNIST_DLL';
 hfile = 'D:\Projects\mnist_dll\include\mnist_dll.h';
 
