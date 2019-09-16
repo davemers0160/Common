@@ -2,6 +2,8 @@ function [iq, i_data, q_data] = read_binary_iq_data(filename, data_type)
 
         % only supports the following data types: 'double', 'single',
         % u/int8, u/int16, u/int32, u/int64, float32, float64
+        % ex: [iq, i_data, q_data] = read_binary_iq_data('iq_file.dat', 'double')
+        
         file_id = fopen(filename,'r');
         
         % get the file size
@@ -26,8 +28,10 @@ function [iq, i_data, q_data] = read_binary_iq_data(filename, data_type)
             file_size = floor((file_stop - file_start)/(2));
         end
         
+        % read the data into column format [I, Q]
         iq = fread(file_id, [2, file_size], data_type, 'ieee-le').';
         
+        % separate into individual channels if needed
         i_data = iq(:,1);
         q_data = iq(:,2);
 
