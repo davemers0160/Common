@@ -10,12 +10,12 @@ function [layer_img] = build_layer_image(ls, ld, cell_dim, padding, map_length)
     nc = ls.nc;
     img_length = nr*nc;
     
-    img_h = (nr + padding)*(cell_dim(1)-1) + nr;
-    img_w = (nc + padding)*(cell_dim(2)-1) + nc;
+    img_h = (nr + padding)*(cell_dim(1)-1) + nr + 2*padding;
+    img_w = (nc + padding)*(cell_dim(2)-1) + nc + 2*padding;
     layer_img = zeros(img_h, img_w, 3);
 
-    r = 1;
-    c = 1;
+    r = padding + 1;
+    c = padding + 1;
 
     for idx=1:ls.k
         p1 = ((idx - 1)*(img_length)) + 1;
@@ -27,7 +27,7 @@ function [layer_img] = build_layer_image(ls, ld, cell_dim, padding, map_length)
 
         c = c + (nc + padding);
         if(c > img_w)
-            c = 1;
+            c = padding + 1;
             r = r + (nr + padding);
         end
 
