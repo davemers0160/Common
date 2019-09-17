@@ -23,31 +23,42 @@ calllib('MNIST_DLL','init_net','D:/Projects/mnist_dll/nets/mnist_net_pso_14_97.d
 %% set up the graphs and locations
 
 % [0.1440 0.2700 0.5090 0.6600]
-f{1} = figure('Units', 'normalized', 'Position', [0.0900 0.5100 0.3500 0.4200], 'Name', 'Layer 12');
+f{1} = figure('Units', 'normalized', 'Position', [0.1440 0.2700 0.5090 0.6600], 'Name', 'Layer 12');
+% f{1} = figure('Units', 'normalized', 'Position', [0.0900 0.5100 0.3500 0.4200], 'Name', 'Layer 12');
 f{1}.ToolBar = 'none';
 
-f{2} = figure('Units', 'normalized', 'Position', [0.4400 0.5300 0.2800 0.4000], 'Name', 'Layer 09');
-f{2}.ToolBar = 'none';
+% f{2} = figure('Units', 'normalized', 'Position', [0.4400 0.5300 0.2800 0.4000], 'Name', 'Layer 09');
+% f{2}.ToolBar = 'none';
 
 % [0.6560 0.4465 0.3420 0.4843]
-f{3} = figure('Units', 'normalized', 'Position', [0.7200 0.5300 0.2800 0.4000], 'Name', 'Layer 08');
+f{3} = figure('Units', 'normalized', 'Position', [0.6560 0.4465 0.3420 0.4843], 'Name', 'Layer 08');
+% f{3} = figure('Units', 'normalized', 'Position', [0.7200 0.5300 0.2800 0.4000], 'Name', 'Layer 08');
 f{3}.ToolBar = 'none';
 
-f{4} = figure('Units', 'normalized', 'Position', [0.0000 0.0400 0.3500 0.4100], 'Name', 'Layer 05');
-f{4}.ToolBar = 'none';
-
-f{5} = figure('Units', 'normalized', 'Position', [0.3500 0.0400 0.3500 0.4100], 'Name', 'Layer 02');
-f{5}.ToolBar = 'none';
+% f{4} = figure('Units', 'normalized', 'Position', [0.0000 0.0400 0.3500 0.4100], 'Name', 'Layer 05');
+% f{4}.ToolBar = 'none';
+% 
+% f{5} = figure('Units', 'normalized', 'Position', [0.3500 0.0400 0.3500 0.4100], 'Name', 'Layer 02');
+% f{5}.ToolBar = 'none';
 
 % [0.6560 0.03705 0.3420 0.3550]
-f{6} = figure('Units', 'normalized', 'Position', [0.7000 0.0400 0.2900 0.4100], 'Name', 'Layer 01');
+f{6} = figure('Units', 'normalized', 'Position', [0.6560 0.0370 0.3420 0.3550], 'Name', 'Layer 01');
+% f{6} = figure('Units', 'normalized', 'Position', [0.7000 0.0400 0.2900 0.4100], 'Name', 'Layer 01');
 f{6}.ToolBar = 'none';
 
-f{7} = figure('Units', 'normalized', 'Position', [0.0000 0.7800 0.0900 0.1500], 'Name', 'Input Image');
+% [0.0197916666666667 0.673148148148148 0.120833333333333 0.241666666666667] 
+f{7} = figure('Units', 'normalized', 'Position', [0.0000 0.6650 0.1400 0.2400], 'Name', 'Input Image');
+% f{7} = figure('Units', 'normalized', 'Position', [0.0000 0.7800 0.0900 0.1500], 'Name', 'Input Image');
 f{7}.ToolBar = 'none';
 
 layer_struct = struct('k', 0, 'n',0, 'nr', 0, 'nc', 0, 'size',0);
 %data = [];
+
+%% get the camerra started
+
+cam = webcam(1);
+
+
 
 %% run the net
 threshold = 128;
@@ -62,17 +73,42 @@ map_length = 1000;
 cell_dim = [[7,19];[6,19];[6,19]];
 padding = [4, 4, 2];
 
-while(index<20)
 
-tic
-
-img = rgb2gray(imread('D:\Projects\mnist\data\test\wc_test.png'));
+% get the image extents and assume they don't change during the demo
+color_img = rot90(snapshot(cam),2);
+img = rgb2gray(color_img);
 [img_h, img_w] = size(img);
 c = find(img(floor(img_h/2),:) > threshold);
 r = find(img(:,floor(img_w/2)) > threshold);
-img2 = 255 - img(r(1):r(end), c(1):c(end));
 
-img_s = imresize(img2, [28, 28])';
+c = (c(1)+2:c(end)-2);
+r = (r(1)+2:r(end)-2);
+
+img2 = 255 - (img(r, c));
+
+img_s = double(imresize(img2, [28, 28]))';
+
+min_img = min(img_s(:));
+max_img = max(img_s(:));
+
+
+while(true)
+
+tic
+color_img = rot90(snapshot(cam),2);
+img = rgb2gray(color_img);
+% %img = rgb2gray(imread('D:\Projects\mnist\data\test\wc_test.png'));
+% [img_h, img_w] = size(img);
+% c = find(img(floor(img_h/2),:) > threshold);
+% r = find(img(:,floor(img_w/2)) > threshold);
+img2 = 255 - (img(r, c));
+
+img_s = double(imresize(img2, [28, 28]))';
+
+% min_img = min(img_s(:));
+% max_img = max(img_s(:));
+
+img_s = uint8(255*(img_s - min_img)/(max_img - min_img));
 
 %img2 = rgb2gray(imread('D:\Projects\mnist\data\test\2_28.png'));
 %img_s = img2';
@@ -83,8 +119,8 @@ img_s = imresize(img2, [28, 28])';
 figure(f{7});
 
 %figure('Units', 'normalized', 'Position', [0.0000 0.7700 0.1 0.15]);
-image(img2);
-colormap(gray(256));
+image(color_img(r,c,:));
+%colormap(gray(256));
 axis('off');
 ax = gca;
 ax.Position = [0 0 1 1];
@@ -252,7 +288,7 @@ hold('off');
 % %pause(0.5);
 
 toc
-index = index + 1;
+%index = index + 1;
 end
 
 
