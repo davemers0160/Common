@@ -4,7 +4,7 @@ clc
 close all
 clearvars
 
-lib_path = 'D:\Projects\mnist_dll\build\Release\';
+lib_path = 'D:\Projects\mnist_dll\build_dll\Release\';
 lib_name = 'MNIST_DLL';
 hfile = 'D:\Projects\mnist_dll\include\mnist_dll.h';
 
@@ -62,20 +62,20 @@ map_length = 1000;
 cell_dim = [[7,19];[6,19];[6,19]];
 padding = [4, 4, 2];
 
-while(index<20)
+while(index<1)
 
 tic
 
-img = rgb2gray(imread('D:\Projects\mnist\data\test\wc_test.png'));
-[img_h, img_w] = size(img);
-c = find(img(floor(img_h/2),:) > threshold);
-r = find(img(:,floor(img_w/2)) > threshold);
-img2 = 255 - img(r(1):r(end), c(1):c(end));
+% img = rgb2gray(imread('D:\Projects\mnist\data\test\wc_test.png'));
+% [img_h, img_w] = size(img);
+% c = find(img(floor(img_h/2),:) > threshold);
+% r = find(img(:,floor(img_w/2)) > threshold);
+% img2 = 255 - img(r(1):r(end), c(1):c(end));
+% 
+% img_s = imresize(img2, [28, 28])';
 
-img_s = imresize(img2, [28, 28])';
-
-%img2 = rgb2gray(imread('D:\Projects\mnist\data\test\2_28.png'));
-%img_s = img2';
+img2 = rgb2gray(imread('D:\Projects\mnist\data\test\2_28.png'));
+img_s = img2';
 
 [res] = calllib(lib_name, 'run_net', img_s(:), 28, 28);
 
@@ -118,18 +118,18 @@ for idx=1:2:3
     ax.Position = [0 0 1 1];
 end
 % 
-% for idx=4:5
-%     
-%     figure(f{idx});
-%     %b1 = bar([0:1:layer_struct1.k-1], ld_01.Value, 'FaceColor', [0.5, 0.5, 0.5]);
-%     bar([0:1:ls{idx,1}.k-1], ld{idx,1}.Value, 'FaceColor', 'b');
-%     %hold('on');
-%     %b2 = bar(res, ld_01.Value(res+1), 'FaceColor','r');
-%     box('on');
-%     grid('on');
-%     %hold('off');
-%     
-% end
+for idx=4:5
+    
+    figure(f{idx});
+    %b1 = bar([0:1:layer_struct1.k-1], ld_01.Value, 'FaceColor', [0.5, 0.5, 0.5]);
+    bar([0:1:ls{idx,1}.k-1], ld{idx,1}.Value, 'FaceColor', 'b');
+    %hold('on');
+    %b2 = bar(res, ld_01.Value(res+1), 'FaceColor','r');
+    box('on');
+    grid('on');
+    %hold('off');
+    
+end
 
 idx = 6;
 figure(f{idx});
