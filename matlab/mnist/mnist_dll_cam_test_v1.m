@@ -8,12 +8,13 @@ lib_path = 'D:\Projects\mnist_dll\build\Release\';
 lib_name = 'MNIST_DLL';
 hfile = 'D:\Projects\mnist_dll\include\mnist_dll.h';
 
-[notfound, warnings] = loadlibrary(fullfile(lib_path, strcat(lib_name,'.dll')), hfile);
+if(~libisloaded(lib_name))
+    [notfound, warnings] = loadlibrary(fullfile(lib_path, strcat(lib_name,'.dll')), hfile);
+end
 
 if(~libisloaded(lib_name))
    fprintf('\nThe %s library did not load correctly!',  lib_name);    
 end
-
 
 % libfunctions(lib_name)
 % libfunctionsview(lib_name)
@@ -23,7 +24,7 @@ calllib('MNIST_DLL','init_net','D:/Projects/mnist_dll/nets/mnist_net_pso_14_97.d
 %% set up the graphs and locations
 
 % [0.1440 0.2700 0.5090 0.6600]
-f{1} = figure('Units', 'normalized', 'Position', [0.1440 0.2700 0.5090 0.6600], 'Name', 'Layer 12');
+f{1} = figure('Units', 'normalized', 'Position', [0.1440 0.2800 0.5090 0.6600], 'Name', 'Layer 12');
 % f{1} = figure('Units', 'normalized', 'Position', [0.0900 0.5100 0.3500 0.4200], 'Name', 'Layer 12');
 f{1}.ToolBar = 'none';
 
@@ -31,15 +32,15 @@ f{1}.ToolBar = 'none';
 % f{2}.ToolBar = 'none';
 
 % [0.6560 0.4465 0.3420 0.4843]
-f{3} = figure('Units', 'normalized', 'Position', [0.6560 0.4465 0.3420 0.4843], 'Name', 'Layer 08');
+f{3} = figure('Units', 'normalized', 'Position', [0.6560 0.4565 0.3420 0.4843], 'Name', 'Layer 08');
 % f{3} = figure('Units', 'normalized', 'Position', [0.7200 0.5300 0.2800 0.4000], 'Name', 'Layer 08');
 f{3}.ToolBar = 'none';
 
 % f{4} = figure('Units', 'normalized', 'Position', [0.0000 0.0400 0.3500 0.4100], 'Name', 'Layer 05');
 % f{4}.ToolBar = 'none';
-% 
-% f{5} = figure('Units', 'normalized', 'Position', [0.3500 0.0400 0.3500 0.4100], 'Name', 'Layer 02');
-% f{5}.ToolBar = 'none';
+
+f{5} = figure('Units', 'normalized', 'Position', [0.3500 0.0400 0.3500 0.4100], 'Name', 'Layer 02');
+f{5}.ToolBar = 'none';
 
 % [0.6560 0.03705 0.3420 0.3550]
 f{6} = figure('Units', 'normalized', 'Position', [0.6560 0.0370 0.3420 0.3550], 'Name', 'Layer 01');
@@ -47,9 +48,13 @@ f{6} = figure('Units', 'normalized', 'Position', [0.6560 0.0370 0.3420 0.3550], 
 f{6}.ToolBar = 'none';
 
 % [0.0197916666666667 0.673148148148148 0.120833333333333 0.241666666666667] 
-f{7} = figure('Units', 'normalized', 'Position', [0.0000 0.6650 0.1400 0.2400], 'Name', 'Input Image');
+f{7} = figure('Units', 'normalized', 'Position', [0.0000 0.7000 0.1400 0.2400], 'Name', 'Input Image');
 % f{7} = figure('Units', 'normalized', 'Position', [0.0000 0.7800 0.0900 0.1500], 'Name', 'Input Image');
 f{7}.ToolBar = 'none';
+
+f{8} = figure('Units', 'normalized', 'Position', [0.0000 0.4050 0.1400 0.2400], 'Name', 'Input Image');
+% f{7} = figure('Units', 'normalized', 'Position', [0.0000 0.7800 0.0900 0.1500], 'Name', 'Input Image');
+f{8}.ToolBar = 'none';
 
 layer_struct = struct('k', 0, 'n',0, 'nr', 0, 'nc', 0, 'size',0);
 %data = [];
@@ -57,8 +62,11 @@ layer_struct = struct('k', 0, 'n',0, 'nr', 0, 'nc', 0, 'size',0);
 %% get the camerra started
 
 cam = webcam(1);
+cam.Zoom = 200;
+cam.Focus = 10;
 
-
+% cam.Gain = 5;
+% cam.Resolution = '320x180';
 
 %% run the net
 threshold = 128;
@@ -94,7 +102,7 @@ max_img = max(img_s(:));
 
 while(true)
 
-tic
+%tic
 color_img = rot90(snapshot(cam),2);
 img = rgb2gray(color_img);
 % %img = rgb2gray(imread('D:\Projects\mnist\data\test\wc_test.png'));
@@ -117,14 +125,19 @@ img_s = uint8(255*(img_s - min_img)/(max_img - min_img));
 
 
 figure(f{7});
-
-%figure('Units', 'normalized', 'Position', [0.0000 0.7700 0.1 0.15]);
 image(color_img(r,c,:));
 %colormap(gray(256));
 axis('off');
 ax = gca;
 ax.Position = [0 0 1 1];
 
+
+figure(f{8});
+image(img_s');
+colormap(gray(256));
+axis('off');
+ax = gca;
+ax.Position = [0 0 1 1];
 
 %% get the data
 
@@ -153,19 +166,13 @@ for idx=1:2:3
     ax = gca;
     ax.Position = [0 0 1 1];
 end
-% 
-% for idx=4:5
-%     
-%     figure(f{idx});
-%     %b1 = bar([0:1:layer_struct1.k-1], ld_01.Value, 'FaceColor', [0.5, 0.5, 0.5]);
-%     bar([0:1:ls{idx,1}.k-1], ld{idx,1}.Value, 'FaceColor', 'b');
-%     %hold('on');
-%     %b2 = bar(res, ld_01.Value(res+1), 'FaceColor','r');
-%     box('on');
-%     grid('on');
-%     %hold('off');
-%     
-% end
+
+for idx=5:5
+    figure(f{idx});
+    bar([0:1:ls{idx,1}.k-1], ld{idx,1}.Value, 'FaceColor', 'b');
+    box('on');
+    grid('on');    
+end
 
 idx = 6;
 figure(f{idx});
@@ -287,7 +294,7 @@ hold('off');
 % hold('off');
 % %pause(0.5);
 
-toc
+%toc
 %index = index + 1;
 end
 
@@ -296,7 +303,7 @@ end
 
 % unloadlibrary(lib_name); 'MNIST_DLL'
 
-
+% clear('cam');
 
 
 
