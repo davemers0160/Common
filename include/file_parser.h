@@ -229,7 +229,7 @@ void parse_group_line(std::string line, const char open, const char close, std::
 
     if (g_stop < line.length())
     {
-        group = line.substr(g_start, g_stop - g_start + 1);
+        group = line.substr(g_start, g_stop - g_start + (uint8_t)1);
 
         stringstream gs(group);
         while (gs.good())
@@ -245,7 +245,7 @@ void parse_group_line(std::string line, const char open, const char close, std::
                 params.push_back(s2);
             }
         }
-        sec_end = line.substr(g_stop + 1, line.length() - 1);
+        sec_end = line.substr(g_stop + (uint8_t)1, line.length() - 1);
         parse_line(sec_end, ',', params);    
     }
 }
