@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstdint>
+#include <vector>
+#include <string>
+
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 
 #elif defined(__linux__) 
@@ -10,28 +14,31 @@
 
 // ----------------------------------------------------------------------------------------
 // https://stackoverflow.com/questions/612097/how-can-i-get-the-list-of-files-in-a-directory-using-c-or-c
-std::vector<std::string> get_directory_listing(std::string folder)
+std::vector<std::string> get_directory_listing(std::string folder, std::vector<std::string> filter)
 {
+    uint32_t idx=0;
     std::vector<std::string> file_names;
-    std::string search_path = folder + "*.*";
+    //std::string search_path = folder + "*.*";
 
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-
-    WIN32_FIND_DATA fd;
-    void* hFind = ::FindFirstFile(search_path.c_str(), &fd);
-
-    if (hFind != INVALID_HANDLE_VALUE)
+    for(idx=0; idx<filter.size(); ++idx)
     {
-        do
+        WIN32_FIND_DATA fd;
+        void* hFind = ::FindFirstFile((folder + "*" + filter[idx]).c_str(), &fd);
+
+        if (hFind != INVALID_HANDLE_VALUE)
         {
-            // read all (real) files in current folder
-            // , delete '!' read other 2 default folder . and ..
-            if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) 
+            do
             {
-                file_names.push_back(fd.cFileName);
-            }
-        } while (::FindNextFile(hFind, &fd));
-        ::FindClose(hFind);
+                // read all (real) files in current folder
+                // , delete '!' read other 2 default folder . and ..
+                if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) 
+                {
+                    file_names.push_back(fd.cFileName);
+                }
+            } while (::FindNextFile(hFind, &fd));
+            ::FindClose(hFind);
+        }
     }
 
 #elif defined(__linux__) 
@@ -49,15 +56,19 @@ std::vector<std::string> get_directory_listing(std::string folder)
         if (file_name[0] == '.')
             continue;
 
-        if (stat((search_path + file_name).c_str(), &st) == -1)
+        if (stat((folder + file_name).c_str(), &st) == -1)
             continue;
 
         const bool is_directory = (st.st_mode & S_IFDIR) != 0;
 
         if (is_directory)
             continue;
-
-        file_names.push_back(file_name); // returns just filename
+            
+        for(idx=0; idx<filter.size(); ++idx)
+        {
+            if(filter[idx].compare(file_name.substr(file_name.size()-filter[idx].size(), file_name.size())))
+                file_names.push_back(file_name); // returns just filename
+        }
     }
     closedir(dir);
 #endif
