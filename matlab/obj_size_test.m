@@ -10,8 +10,9 @@ plot_num = 1;
 
 %% set up some variables
 
-pix_size = 1.6e-6;
+pix_size = 1.4e-6;              % from the camera specs
 object_size = 2.390775/pi;      % c = pi*d
+f_num = 1.7;                    % from the camera specs
 
 %% get the folder
 
