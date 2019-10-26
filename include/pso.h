@@ -91,14 +91,12 @@ namespace dlib
     public:
 
         // the particles that will search the space 
-        //std::vector<dlib::matrix<T> > X;
         std::vector<T> X;
+
         // the velocity of of each particle
-        //std::vector<dlib::matrix<double> > V;
         std::vector<T> V;
 
         // the particles that contains the best results for each population member
-        //std::vector<dlib::matrix<T> > P;
         std::vector<T> P;
 
         // the single particle that contains the best results for all population members and interations
@@ -115,67 +113,28 @@ namespace dlib
 
         // ----------------------------------------------------------------------------------------
 
-        //void set_particle_limits(dlib::matrix<std::pair<T, T>> x_lim_)
+        //T get_P(uint32_t idx)
         //{
-        //    x_lim = x_lim_;
+        //    return P[idx];
         //}
 
-        //void set_velocity_limits(dlib::matrix<std::pair<double, double>> v_lim_) 
-        //{
-        //    v_lim = v_lim_;
-        //}
-
-        // ----------------------------------------------------------------------------------------
-
-        //dlib::matrix<double> get_p_best()
-        //{
-        //    return P_best;
-        //}
-
-        // ----------------------------------------------------------------------------------------
-
-        //dlib::matrix<double> get_P()
-        //{
-        //    return P;
-        //}
-
-        //void set_P(double val, uint64_t itr, uint64_t n)
-        //{
-        //    P(itr, n) = val;
-        //}
-
-        //void set_P_best(dlib::matrix<double>& X, uint64_t p_idx)
-        //{
-        //    P_best = dlib::colm(X, p_idx);
-        //}
-
-
-        //dlib::matrix<double> get_G_best()
+        //double get_G_best()
         //{
         //    return G_best;
         //}
 
-        //double get_G()
+        //T get_G()
         //{
         //    return G;
         //}
 
-        //void set_G_best(double G_, dlib::matrix<double> G_best_)
-        //{
-        //    G = G_;
-        //    G_best = G_best_;
-        //}
-
         // ----------------------------------------------------------------------------------------
 
-        //void init(dlib::matrix<std::pair<T, T>> x_lim_, dlib::matrix<std::pair<T, T>> v_lim_)
-        void init(std::pair<T, T> x_lim_, std::pair<T, T> v_lim_)
+        void init(std::pair<T, T> p_lim, std::pair<T, T> v_lim)
         {
 
-            //DLIB_CASSERT((x_lim_.nr() == v_lim_.nr()) && (x_lim_.nc() == v_lim_.nc()), "The size of the particle limits and velocity limits do not match");
-
-            particle_limits = x_lim_;
-            velocity_limits = v_lim_;
+            particle_limits = p_lim;
+            velocity_limits = v_lim;
 
             itr = 0;
 
@@ -191,12 +150,6 @@ namespace dlib
             P.resize(options.N);
             F.resize(options.N);
 
-            // get the number of elements within a single particle
-            // this is determined from the x limits provided to the initialization routine
-            //int64_t nr = particle_limits.nr();
-            //int64_t nc = particle_limits.nc();
-
-            //G.set_size(nr, nc);
             g_best = std::numeric_limits<double>::max();
 
             rnd = dlib::rand(time(NULL));
@@ -204,22 +157,10 @@ namespace dlib
             // initialize each particle and velocity with random values within the supplied limits
             for (uint64_t idx = 0; idx < options.N; ++idx)
             {
-
-                //X[idx].set_size(nr, nc);
-                //V[idx].set_size(nr, nc);
-                //P[idx].set_size(nr, nc);
                 F[idx] = std::numeric_limits<double>::max();
 
                 X[idx].rand_init(rnd, particle_limits);
                 V[idx].rand_init(rnd, velocity_limits);
-                //for (int64_t r = 0; r < nr; ++r)
-                //{
-                //    for (int64_t c = 0; c < nc; ++c)
-                //    {
-                        //X[idx](r, c) = (T)rnd.get_double_in_range(x_lim(r, c).first, x_lim(r, c).second);
-                        //V[idx](r, c) = rnd.get_double_in_range(v_lim(r, c).first, v_lim(r, c).second);
-                //    }
-                //}
 
             }
 
@@ -277,9 +218,7 @@ namespace dlib
         pso_options options;
         dlib::rand rnd;
 
-        //dlib::matrix<std::pair<T, T>> particle_limits;
         std::pair<T, T> particle_limits;
-        //dlib::matrix<std::pair<double, double>> velocity_limits;
         std::pair<T, T> velocity_limits;
 
         std::vector<double> F;
@@ -287,22 +226,7 @@ namespace dlib
 
         void print_iteration()
         {
-            std::cout << "Iteration: " << std::setfill('0') << std::setw(4)  << itr << ",    g_best: " << std::fixed << std::setprecision(6) << g_best << ",    G: " << G;
-        }
-
-
-    // ----------------------------------------------------------------------------------------
-
-        template<typename particle, typename T>
-        void limit_check(particle &p, dlib::matrix<std::pair<T,T>> lim)
-        {
-            for (int64_t r = 0; r < p.nr(); ++r)
-            {
-                for (int64_t c = 0; c < p.nc(); ++c)
-                {
-                    p(r, c) = std::max(std::min(lim(r, c).second, p(r, c)), lim(r, c).first);
-                }
-            }
+            std::cout << "Iteration: " << std::setfill('0') << std::setw(4) << itr << ",    g_best: " << std::fixed << std::setprecision(6) << g_best << ",    G: " << G << std::endl;
         }
 
     // ----------------------------------------------------------------------------------------
@@ -311,9 +235,10 @@ namespace dlib
         {
             for (uint32_t idx = 0; idx < options.N; ++idx)
             {
-                //dlib::set_colm(X, idx) = (dlib::colm(X, idx) + dlib::colm(V, idx));
+                // particle update function: X(k+1) = X(k) + V(k+1)
                 X[idx] = X[idx] + V[idx];
-                limit_check(X[idx], x_lim);
+
+                X[idx].limit_check(particle_limits);
             }
         }   // end of update_particle
 
@@ -322,19 +247,20 @@ namespace dlib
 
         void update_velocity()
         {
-            T R;
-            T S;
+            dlib::matrix<double> R;
+            dlib::matrix<double> S;
+
+            
 
             for (uint32_t idx = 0; idx < options.N; ++idx)
             {
-                //dlib::matrix<double> R = dlib::randm(X[idx].nr(), X[idx].nc(), rnd);
-                //dlib::matrix<double> S = dlib::randm(X[idx].nr(), X[idx].nc(), rnd);
-                //R.rand_init(rnd, T) 
+                R = options.c1 * dlib::randm(X[idx].get_params(), 1, rnd);
+                S = options.c2 * dlib::randm(X[idx].get_params(), 1, rnd);
 
-                // velocity update function
-                V[idx] = options.k * (options.w*V[idx] + dlib::pointwise_multiply(options.c1*R, P[idx]-X[idx]) + dlib::pointwise_multiply(options.c2*S, G-X[idx]));
-                
-                limit_check(V[idx], v_lim);
+                // velocity update function: V(k+1) = k*(w*V(k) + (c1*R)*(P(k) - X(k)) + (c2*S)*(G - X(k)))
+                V[idx] = options.k * ((options.w * V[idx]) + (R * (P[idx] - X[idx])) + (S * (G - X[idx])));
+
+                V[idx].limit_check(velocity_limits);
             
             }
         }   // end of update_velocity
