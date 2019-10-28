@@ -4,6 +4,7 @@
 #include <ctime>
 #include <cstdint>
 #include <cmath>
+#include <cstdlib>
 #include <vector>
 #include <algorithm>
 #include <limits>
@@ -30,20 +31,20 @@ namespace dlib
         double epsilon;             // used to check for convergence between a particle and the global best particle
 
         uint32_t N;                 // number of parameters in a population member
-        int32_t max_iterations;     // maximum number of iterations to perform
+        int64_t max_iterations;     // maximum number of iterations to perform
 
-        uint8_t mode;               // which velocity update equation should be used
+        uint32_t mode;               // which velocity update equation should be used
 
         pso_options() = default;
 
         pso_options(
             uint32_t N_,
-            int32_t max_iterations_,
+            int64_t max_iterations_,
             double c1_,
             double c2_,
             double w_,
-            uint8_t mode_ = 0,
-            double eph_ = 1e-6) : mode(mode_), epsilon(eph_)
+            uint32_t mode_ = 0,
+            double eph_ = 1e-4) : mode(mode_), epsilon(eph_)
         {
             DLIB_CASSERT(c1_ > 0.0, "c1 must be greater than 0");
             DLIB_CASSERT(c2_ > 0.0, "c2 must be greater than 0");
@@ -58,26 +59,40 @@ namespace dlib
 
             switch(mode)
             {
-                case  0:            // canonical form
-                    w = w_;
-                    k = 1.0;
-                    break;
-
                 case 1:             // velocity constriction form
                     w = 1.0;
 
                     // calculate the constriction factor based on the following formula:
-                    //      kap = 2/(abs(2 - phi - sqrt(phi^2 - 4*phi)))
+                    //   kap = 2/(abs(2 - phi - sqrt(phi^2 - 4*phi)))
                     phi = c1 + c2;
                     k = 2.0 / std::abs(2.0 - phi - std::sqrt(std::abs(phi * (phi - 4.0))));
                     break;
 
-                default:
+                default:            // canonical form
                     w = w_;
                     k = 1.0;
                     break;
             }
 
+        }
+
+        // ----------------------------------------------------------------------------------------
+        inline friend std::ostream& operator<< (
+            std::ostream& out,
+            const pso_options &item
+            )
+        {
+            //using std::endl;
+            out << "pso_options details: " << std::endl;
+            out << "  N:       " << item.N << std::endl;
+            out << "  c1:      " << item.c1 << std::endl;
+            out << "  c2:      " << item.c2 << std::endl;
+            out << "  w:       " << item.w << std::endl;
+            out << "  k:       " << item.k << std::endl;
+            out << "  epsilon: " << item.epsilon << std::endl;
+            out << "  max_itr: " << item.max_iterations << std::endl;
+            out << "  mode:    " << item.mode << std::endl;
+            return out;
         }
 
     };  // end of pso_options
@@ -112,24 +127,6 @@ namespace dlib
         const pso_options& get_options() const { return options; }
 
         // ----------------------------------------------------------------------------------------
-
-        //T get_P(uint32_t idx)
-        //{
-        //    return P[idx];
-        //}
-
-        //double get_G_best()
-        //{
-        //    return G_best;
-        //}
-
-        //T get_G()
-        //{
-        //    return G;
-        //}
-
-        // ----------------------------------------------------------------------------------------
-
         void init(std::pair<T, T> p_lim, std::pair<T, T> v_lim)
         {
 
@@ -161,7 +158,6 @@ namespace dlib
 
                 X[idx].rand_init(rnd, particle_limits);
                 V[idx].rand_init(rnd, velocity_limits);
-
             }
 
         }	// end of init	
@@ -173,33 +169,36 @@ namespace dlib
         {
 
             double f_res;
+            uint32_t idx;
 
             while (itr < options.max_iterations)
             {
-
                 // evaluate X in the objective function
-                for (uint32_t idx = 0; idx < options.N; ++idx)
-                {
+                //for (idx = 0; idx < options.N; ++idx)
+                dlib::parallel_for(0, options.N, [&](uint32_t idx) {
                     f_res = f(X[idx]);
 
                     if (f_res < F[idx])
                     {
                         F[idx] = f_res;
                         P[idx] = X[idx];
-
-                        if (f_res < g_best)
-                        {
-                            g_best = f_res;
-                            G = X[idx];
-                        }
-
                     }
 
+                    });
+
+                idx = std::min_element(F.begin(), F.end()) - F.begin();
+                if (F[idx] < g_best)
+                {
+                    g_best = F[idx];
+                    G = X[idx];
                 }
 
-                update_velocity();
 
-                update_particle();
+                // once the global best has been found we can know update the velocity 
+                //for (idx = 0; idx < options.N; ++idx)
+                dlib::parallel_for(0, options.N, [&](uint32_t idx) {
+                    update_particle(idx);
+                    });
 
                 print_iteration();
 
@@ -224,49 +223,30 @@ namespace dlib
         std::vector<double> F;
         double g_best;
 
+    // ----------------------------------------------------------------------------------------
         void print_iteration()
         {
-            std::cout << "Iteration: " << std::setfill('0') << std::setw(4) << itr << ",    g_best: " << std::fixed << std::setprecision(6) << g_best << ",    G: " << G << std::endl;
+            std::cout << "Iteration: " << std::setfill('0') << std::setw(4) << itr << ",  g_best: " << std::fixed << std::setprecision(6) << g_best << ",  G: " << G;
         }
 
     // ----------------------------------------------------------------------------------------
-
-        void update_particle()
+        void update_particle(uint32_t index)
         {
-            for (uint32_t idx = 0; idx < options.N; ++idx)
-            {
-                // particle update function: X(k+1) = X(k) + V(k+1)
-                X[idx] = X[idx] + V[idx];
+            // random 
+            T R = options.c1 * T::get_rand_particle(rnd);
+            T S = options.c2 * T::get_rand_particle(rnd);
 
-                X[idx].limit_check(particle_limits);
-            }
+            // velocity update function: V(k+1) = k*(w*V(k) + (c1*R)*(P(k) - X(k)) + (c2*S)*(G - X(k)))
+            V[index] = options.k * ((options.w * V[index]) + (R * (P[index] - X[index])) + (S * (G - X[index])));
+            V[index].limit_check(velocity_limits);
+
+            // particle update function: X(k+1) = X(k) + V(k+1)
+            X[index] = X[index] + V[index];
+            X[index].limit_check(particle_limits);
+            
         }   // end of update_particle
 
-
     // ----------------------------------------------------------------------------------------
-
-        void update_velocity()
-        {
-            dlib::matrix<double> R;
-            dlib::matrix<double> S;
-
-            
-
-            for (uint32_t idx = 0; idx < options.N; ++idx)
-            {
-                R = options.c1 * dlib::randm(X[idx].get_params(), 1, rnd);
-                S = options.c2 * dlib::randm(X[idx].get_params(), 1, rnd);
-
-                // velocity update function: V(k+1) = k*(w*V(k) + (c1*R)*(P(k) - X(k)) + (c2*S)*(G - X(k)))
-                V[idx] = options.k * ((options.w * V[idx]) + (R * (P[idx] - X[idx])) + (S * (G - X[idx])));
-
-                V[idx].limit_check(velocity_limits);
-            
-            }
-        }   // end of update_velocity
-
-    // ----------------------------------------------------------------------------------------
-
         double calc_convergence()
         {
             uint32_t count = 0;
@@ -274,18 +254,17 @@ namespace dlib
             for (uint32_t idx = 0; idx < options.N; ++idx)
             {
 
-                dlib::matrix<double> tmp = dlib::matrix_cast<double>(G) - dlib::matrix_cast<double>(X[idx]);
+                //dlib::matrix<double> tmp = dlib::matrix_cast<double>(G) - dlib::matrix_cast<double>(X[idx]);
 
-                double dist = std::sqrt(dlib::dot(tmp, tmp));
+                //double dist = std::sqrt(dlib::dot(tmp, tmp));
 
-                if (dist <= options.epsilon)
-                    ++count;
+                //if (dist <= options.epsilon)
+                //    ++count;
 
             }
 
             return (double)count/(double)options.N;
-        }
-
+        }   // end of calc_convergence
 
     };	// end of class
 
