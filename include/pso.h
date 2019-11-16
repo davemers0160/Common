@@ -30,20 +30,20 @@ namespace dlib
         double k;                   // velocity constriction factor
         double epsilon;             // used to check for convergence between a particle and the global best particle
 
-        uint32_t N;                 // number of parameters in a population member
-        int64_t max_iterations;     // maximum number of iterations to perform
+        unsigned int N;                 // number of parameters in a population member
+        long max_iterations;     // maximum number of iterations to perform
 
-        uint32_t mode;               // which velocity update equation should be used
+        unsigned int mode;               // which velocity update equation should be used
 
         pso_options() = default;
 
         pso_options(
-            uint32_t N_,
-            int64_t max_iterations_,
+            unsigned int N_,
+            long max_iterations_,
             double c1_,
             double c2_,
             double w_,
-            uint32_t mode_ = 0,
+            unsigned int mode_ = 0,
             double eph_ = 1e-4) : mode(mode_), epsilon(eph_)
         {
             DLIB_CASSERT(c1_ > 0.0, "c1 must be greater than 0");
@@ -120,6 +120,7 @@ namespace dlib
         // ----------------------------------------------------------------------------------------
 
         pso() {}
+
         pso(pso_options options_) : options(options_) {}
 
         // ----------------------------------------------------------------------------------------
@@ -152,7 +153,7 @@ namespace dlib
             rnd = dlib::rand(time(NULL));
 
             // initialize each particle and velocity with random values within the supplied limits
-            for (uint64_t idx = 0; idx < options.N; ++idx)
+            for (unsigned int idx = 0; idx < options.N; ++idx)
             {
                 F[idx] = std::numeric_limits<double>::max();
 
@@ -169,13 +170,13 @@ namespace dlib
         {
 
             double f_res;
-            uint32_t idx;
+            unsigned int idx;
 
             while (itr < options.max_iterations)
             {
                 // evaluate X in the objective function
                 //for (idx = 0; idx < options.N; ++idx)
-                dlib::parallel_for(0, options.N, [&](uint32_t idx) {
+                dlib::parallel_for(0, options.N, [&](unsigned int idx) {
                     f_res = f(X[idx]);
 
                     if (f_res < F[idx])
@@ -196,7 +197,7 @@ namespace dlib
 
                 // once the global best has been found we can know update the velocity 
                 //for (idx = 0; idx < options.N; ++idx)
-                dlib::parallel_for(0, options.N, [&](uint32_t idx) {
+                dlib::parallel_for(0, options.N, [&](unsigned int idx) {
                     update_particle(idx);
                     });
 
@@ -213,7 +214,7 @@ namespace dlib
 
     private:
 
-        uint32_t itr;
+        unsigned int itr;
         pso_options options;
         dlib::rand rnd;
 
@@ -230,7 +231,7 @@ namespace dlib
         }
 
     // ----------------------------------------------------------------------------------------
-        void update_particle(uint32_t index)
+        void update_particle(unsigned int index)
         {
             // random 
             T R = options.c1 * T::get_rand_particle(rnd);
@@ -249,9 +250,9 @@ namespace dlib
     // ----------------------------------------------------------------------------------------
         double calc_convergence()
         {
-            uint32_t count = 0;
+            unsigned int count = 0;
 
-            for (uint32_t idx = 0; idx < options.N; ++idx)
+            for (unsigned int idx = 0; idx < options.N; ++idx)
             {
 
                 //dlib::matrix<double> tmp = dlib::matrix_cast<double>(G) - dlib::matrix_cast<double>(X[idx]);
