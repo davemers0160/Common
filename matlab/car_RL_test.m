@@ -6,7 +6,7 @@ clearvars
 
 %% select the variables
 
-f.x = 70;
+f.x = 10;
 f.y = 20;
 
 b.x = f.x+5*cos(45*pi()/180);
@@ -25,12 +25,21 @@ commandwindow;
 
 %% run some things
 
+map_name = 'D:\Projects\Play_Ground\test_map.png';
 
-map = zeros(100,100);
-map(:,30) = 200;
-map(30,[1:40, 60:end]) = 200;
-map(60,1:60) = 200;
-[map_height,map_width] = size(map);
+map = imread(map_name);
+
+
+
+% map = zeros(100,100);
+% map(:,30) = 200;
+% map(30,[1:40, 60:end]) = 200;
+% map(60,1:60) = 200;
+[map_height,map_width, map_ch] = size(map);
+
+if(map_ch > 1)
+    map = map(:,:,1);
+end
 
 %% cycle through many bearings
 figure(1)
