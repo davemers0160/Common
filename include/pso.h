@@ -166,7 +166,7 @@ namespace dlib
     // ----------------------------------------------------------------------------------------
 
         template<typename objective_function>
-        void run(objective_function f(T))
+        void run(objective_function f)
         {
 
             double f_res;
@@ -265,6 +265,7 @@ namespace dlib
             }
 
             return (double)count/(double)options.N;
+
         }   // end of calc_convergence
 
     };	// end of class
