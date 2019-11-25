@@ -111,8 +111,64 @@ ylim([1,map_height+10])
 pause(0.1)
 hold off
 end
+
+return
 %% extra functions
 
 %fucntion [ranges, bearing] = get_ranges(map, f, b, laser_angles, max_range)
+d = cat(4, detection_range, detection_range, detection_range);
+m = [1,0,0]; %1,0,0];
+m = cat(4, m', m');
+m = categorical([1:3]');
+
+layers = [ ...
+    %imageInputLayer([28 28 1], 'Name','Input')
+    imageInputLayer([1 13], 'Name','Input', 'Normalization', 'None', 'DataAugmentation', 'None')
+%     sequenceInputLayer(1,'Name','seq1')
+    fullyConnectedLayer(10, 'Name','FC 1')
+    reluLayer('Name','ReLU 1')
+    fullyConnectedLayer(3, 'Name','FC 2')
+    softmaxLayer('Name','Softmax')
+    classificationLayer('Name','classOutput')]
+    %regressionLayer('Name','routput') ]
+    
+layers(2,1).Weights = randn(layers(2,1).OutputSize, prod(layers(1,1).InputSize))*.0001;   
+layers(2,1).Bias = randn(layers(2,1).OutputSize,1)*.0001;    
+
+layers(4,1).Weights = randn(layers(4,1).OutputSize, prod(layers(2,1).OutputSize))*.0001;   
+layers(4,1).Bias = randn(layers(4,1).OutputSize,1)*.0001;
+
+% layers(6,1).ClassNames = {'0','1','2','3','4','5','6','7','8','9'}
+
+n = SeriesNetwork(layers);
+lgraph = layerGraph(layers);
+figure
+plot(lgraph)
+
+options = trainingOptions('sgdm',...
+'MaxEpochs',1,...
+'Shuffle','every-epoch',...
+'ValidationFrequency',20,...
+'Verbose',false,...
+'Plots','training-progress');
+
+
+net = trainNetwork(d,m,lgraph,options);
+
+y = predict(net, detection_range)
+y = classify(n, detection_range)
+
+X = XTrain(:,:,1,1);
+y = predict(n, XTrain)
+
+features = activations(net,detection_range,'FC 2')
+
+
+net.Layers(2,1).Weights = randn(net.Layers(2,1).OutputSize, prod(net.Layers(1,1).InputSize))*.0001;   
+net.Layers(2,1).Bias = randn(net.Layers(2,1).OutputSize,1)*.0001; 
+
+net.Layers(4,1).Weights = randn(net.Layers(4,1).OutputSize, prod(net.Layers(2,1).OutputSize))*.0001;   
+net.Layers(4,1).Bias = randn(net.Layers(4,1).OutputSize,1)*.0001;
+
 
 
