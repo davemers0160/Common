@@ -16,18 +16,19 @@ from utils import label_map_util
 from utils import visualization_utils as vis_util
 
 
-MODEL_PATH = '/home/ros/ssd_mobilenet_v1_coco/'
-MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17'
- 
-PATH_TO_CKPT = MODEL_PATH + MODEL_NAME + '/frozen_inference_graph.pb'
+MODEL_PATH = '/home/ros/'
 
 # MSCOCO
+MODEL_NAME = 'ssd_resnet50_v1_fpn'
 PATH_TO_LABELS = os.path.join('/home/ros/models/research/object_detection/data', 'mscoco_label_map.pbtxt')
 NUM_CLASSES = 90
 
 #Open Image
+#MODEL_NAME = 'ssd_mobilenet_v2_oid'
 #PATH_TO_LABELS = os.path.join('/home/ros/models/research/object_detection/data', 'oid_v4_label_map.pbtxt')
 #NUM_CLASSES = 600
+
+PATH_TO_CKPT = MODEL_PATH + MODEL_NAME + '/frozen_inference_graph.pb'
 
 label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
 categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
