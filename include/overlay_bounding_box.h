@@ -31,7 +31,8 @@ void overlay_bounding_box(cv::Mat &img, cv::Rect box_rect, std::string label, cv
     // add some logic to place the text in the right location
     // check the x coord
     if ((box_rect.x + text_size.width - 1) > img.cols)
-        label_pos.x = box_rect.width - text_size.width;
+        //label_pos.x = box_rect.width - text_size.width;
+        label_pos.x = img.cols - text_size.width - 1;
     else
         label_pos.x = box_rect.x - 1;
 
