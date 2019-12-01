@@ -79,7 +79,7 @@ def run_detection():
   
   #image = cv2.resize(image, (800,600))
   
-  run_inference_for_single_image(image, detection_graph)
+  boxes, scores, classes, num_detections = run_inference_for_single_image(image, detection_graph)
 
   # Visualization of the results of a detection.
   vis_util.visualize_boxes_and_labels_on_image_array(
