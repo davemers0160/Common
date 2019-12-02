@@ -175,8 +175,8 @@ namespace dlib
             while (itr < options.max_iterations)
             {
                 // evaluate X in the objective function
-                //for (idx = 0; idx < options.N; ++idx)
-                dlib::parallel_for(0, options.N, [&](unsigned int idx) {
+                for (idx = 0; idx < options.N; ++idx) {
+                    //dlib::parallel_for(0, options.N, [&](unsigned int idx) {
                     f_res = f(X[idx]);
 
                     if (f_res < F[idx])
@@ -185,7 +185,8 @@ namespace dlib
                         P[idx] = X[idx];
                     }
 
-                    });
+                    //});
+                }
 
                 idx = std::min_element(F.begin(), F.end()) - F.begin();
                 if (F[idx] < g_best)
