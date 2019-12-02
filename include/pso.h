@@ -159,6 +159,7 @@ namespace dlib
 
                 X[idx].rand_init(rnd, particle_limits);
                 V[idx].rand_init(rnd, velocity_limits);
+                X[idx].set_number(idx);
             }
 
         }	// end of init	
@@ -245,6 +246,7 @@ namespace dlib
             // particle update function: X(k+1) = X(k) + V(k+1)
             X[index] = X[index] + V[index];
             X[index].limit_check(particle_limits);
+            X[index].set_number(index);
             
         }   // end of update_particle
 
