@@ -29,7 +29,7 @@ template <typename image_type, typename thresh_type>
 void threshold_to_zero(image_type& src, image_type& dst, thresh_type threshold, bool invert)
 {
     uint64_t r, c;
-    thresh_type value;
+    //thresh_type value;
 
     dst.set_size(src.nr(), src.nc());
 

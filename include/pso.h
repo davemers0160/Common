@@ -10,11 +10,13 @@
 #include <limits>
 #include <iostream>
 #include <iomanip>
+#include <istream>
 
 // dlib includes
-#include "dlib/rand.h"
-#include "dlib/threads.h"
-#include "dlib/matrix.h"
+#include <dlib/rand.h>
+#include <dlib/threads.h>
+#include <dlib/matrix.h>
+#include <dlib/serialize.h>
 
 
 namespace dlib
@@ -95,6 +97,36 @@ namespace dlib
             return out;
         }
 
+        // ----------------------------------------------------------------------------------------
+        friend inline void serialize(const pso_options& item, std::ostream& out)
+        {
+            dlib::serialize("pso_options", out);
+            dlib::serialize(item.N, out);
+            dlib::serialize(item.c1, out);
+            dlib::serialize(item.c2, out);
+            dlib::serialize(item.w, out);
+            dlib::serialize(item.k, out);
+            dlib::serialize(item.epsilon, out);
+            dlib::serialize(item.max_iterations, out);
+            dlib::serialize(item.mode, out);
+        }
+
+        // ----------------------------------------------------------------------------------------
+        friend inline void deserialize(pso_options& item, std::istream& in)
+        {
+            std::string version;
+            dlib::deserialize(version, in);
+            if (version != "pso_options")
+                throw dlib::serialization_error("Unexpected version found: " + version + " while deserializing pso_options.");
+            dlib::deserialize(item.N, in);
+            dlib::deserialize(item.c1, in);
+            dlib::deserialize(item.c2, in);
+            dlib::deserialize(item.w, in);
+            dlib::deserialize(item.k, in);
+            dlib::deserialize(item.epsilon, in);
+            dlib::deserialize(item.max_iterations, in);
+            dlib::deserialize(item.mode, in);
+        }
     };  // end of pso_options
 
     // ----------------------------------------------------------------------------------------
@@ -127,6 +159,11 @@ namespace dlib
 
         const pso_options& get_options() const { return options; }
 
+        void set_syncfile(std::string filename)
+        {
+            sync_filename = filename;
+        }
+
         // ----------------------------------------------------------------------------------------
         void init(std::pair<T, T> p_lim, std::pair<T, T> v_lim)
         {
@@ -134,7 +171,7 @@ namespace dlib
             particle_limits = p_lim;
             velocity_limits = v_lim;
 
-            itr = 0;
+            iteration = 0;
 
             // clear everything
             X.clear();
@@ -173,7 +210,7 @@ namespace dlib
             double f_res;
             unsigned int idx;
 
-            while (itr < options.max_iterations)
+            while (iteration < options.max_iterations)
             {
                 // evaluate X in the objective function
                 for (idx = 0; idx < options.N; ++idx) {
@@ -203,11 +240,12 @@ namespace dlib
                     update_particle(idx);
                     });
 
+                sync_to_disk();
                 print_iteration();
 
                 //std::cout << "conv: " << calc_convergence()*100 << "%" << std::endl;
 
-                ++itr;
+                ++iteration;
             }
 
         }   // end of run
@@ -216,12 +254,14 @@ namespace dlib
 
     private:
 
-        unsigned int itr;
+        unsigned int iteration;
         pso_options options;
         dlib::rand rnd;
 
         std::pair<T, T> particle_limits;
         std::pair<T, T> velocity_limits;
+
+        std::string sync_filename;
 
         std::vector<double> F;
         double g_best;
@@ -229,7 +269,7 @@ namespace dlib
     // ----------------------------------------------------------------------------------------
         void print_iteration()
         {
-            std::cout << "Iteration: " << std::setfill('0') << std::setw(4) << itr << ",  g_best: " << std::fixed << std::setprecision(6) << g_best << ",  G: " << G;
+            std::cout << "Iteration: " << std::setfill('0') << std::setw(4) << iteration << ",  g_best: " << std::fixed << std::setprecision(6) << g_best << ",  G: " << G;
         }
 
     // ----------------------------------------------------------------------------------------
@@ -270,6 +310,86 @@ namespace dlib
             return (double)count/(double)options.N;
 
         }   // end of calc_convergence
+
+    // ----------------------------------------------------------------------------------------
+        friend void serialize(const pso& item, std::ostream& out)
+        {
+            int version = 1;
+
+            serialize(version, out);
+            serialize(item.iteration, out);
+            serialize(item.options, out);
+            serialize(item.particle_limits.first, out);
+            serialize(item.particle_limits.second, out);
+            serialize(item.velocity_limits.first, out);
+            serialize(item.velocity_limits.second, out);
+            serialize(item.G, out);
+            serialize(item.g_best, out);
+
+            for (unsigned int idx = 0; idx < item.options.N; ++idx)
+            {
+                serialize(item.X[idx], out);
+                serialize(item.V[idx], out);
+                serialize(item.P[idx], out);
+                serialize(item.F[idx], out);
+            }
+
+        }
+
+    // ----------------------------------------------------------------------------------------
+
+        friend void deserialize(pso& item, std::istream& in)
+        {
+            int version = 0;
+            dlib::deserialize(version, in);
+            if (version != 1)
+                throw serialization_error("Unexpected version found while deserializing dlib::pso.");
+
+            dlib::deserialize(item.iteration, in);
+            dlib::deserialize(item.options, in);
+            dlib::deserialize(item.particle_limits.first, in);
+            dlib::deserialize(item.particle_limits.second, in);
+            dlib::deserialize(item.velocity_limits.first, in);
+            dlib::deserialize(item.velocity_limits.second, in);
+            dlib::deserialize(item.G, in);
+            dlib::deserialize(item.g_best, in);
+
+            X.clear();
+            V.clear();
+            P.clear();
+            F.clear();
+
+            T tmp;
+            double f_tmp;
+            for (unsigned int idx = 0; idx < item.optins.N; ++idx)
+            {
+                dlib::deserialize(tmp, in); // X
+                item.X.push_back(std::move(tmp));
+
+                dlib::deserialize(tmp, in); // V
+                item.V.push_back(std::move(tmp));
+
+                dlib::deserialize(tmp, in); // P
+                item.P.push_back(std::move(tmp));
+
+                dlib::deserialize(tmp, in); // F
+                item.F.push_back(f_tmp);
+            }
+
+
+        }
+
+    // ----------------------------------------------------------------------------------------
+        void sync_to_disk()
+        {
+            // If the sync file isn't set then don't save the progress
+            if (sync_filename.size() == 0)
+                return;
+
+            dlib::serialize(sync_filename) << *this;
+
+        }   // end of sync_to_disk
+        
 
     };	// end of class
 
