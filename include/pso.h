@@ -217,7 +217,7 @@ namespace dlib
                     //dlib::parallel_for(0, options.N, [&](unsigned int idx) {
                     f_res = f(X[idx]);
 
-                    if (f_res < F[idx])
+                    if (f_res <= F[idx])
                     {
                         F[idx] = f_res;
                         P[idx] = X[idx];
@@ -227,7 +227,7 @@ namespace dlib
                 }
 
                 idx = std::min_element(F.begin(), F.end()) - F.begin();
-                if (F[idx] < g_best)
+                if (F[idx] <= g_best)
                 {
                     g_best = F[idx];
                     G = X[idx];
@@ -269,7 +269,8 @@ namespace dlib
     // ----------------------------------------------------------------------------------------
         void print_iteration()
         {
-            std::cout << "Iteration: " << std::setfill('0') << std::setw(4) << iteration << ",  g_best: " << std::fixed << std::setprecision(6) << g_best << ",  G: " << G;
+            //std::cout << "Iteration: " << std::setfill('0') << std::setw(4) << iteration << ",  g_best: " << std::fixed << std::setprecision(6) << g_best << ",  G: " << G;
+            std::cout << "Iteration: " << std::setfill('0') << std::setw(4) << iteration << ",  g_best: " << std::fixed << std::setprecision(6) << g_best << std::endl;
         }
 
     // ----------------------------------------------------------------------------------------
