@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 import rospy
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
@@ -45,12 +46,15 @@ class RosTensorFlow():
         self._session = tf.Session(graph=self.detection_graph)        
 
         self._sub = rospy.Subscriber('image', Image, self.callback, queue_size=1)
-        self._pub = rospy.Publisher('obj_det/image', Image, queue_size=1)
+        self._img_pub = rospy.Publisher('obj_det/image', Image, queue_size=1)
+        self._box_pub = rospy.Publisher('obj_det/boxes', String, queue_size=1)
         #self.score_threshold = rospy.get_param('~score_threshold', 0.1)
         #self.use_top_k = rospy.get_param('~use_top_k', 5)
 
     def callback(self, image_msg):
         cv_image = self._cv_bridge.imgmsg_to_cv2(image_msg, "rgb8")
+        img_height = cv_image.shape[0]
+        img_width  = cv_image.shape[1]
                 
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(cv_image, axis=0)
@@ -70,6 +74,12 @@ class RosTensorFlow():
             [boxes, scores, classes, num_detections],
             feed_dict={image_tensor: image_np_expanded})
         
+        boxes = np.squeeze(boxes)
+        box_string = ""
+        for idx in range(num_detections):
+            box_string = box_string + "{" + "xmin={}, ymin={}, xmax={}, ymax={}".format(math.floor(boxes[idx][1]*img_width), math.floor(boxes[idx][0]*img_height), math.ceil(boxes[idx][3]*img_width), math.ceil(boxes[idx][2]*img_height))$
+
+        box_string = box_string[:-2]        
         
         # Visualization of the results of a detection.
         vis_util.visualize_boxes_and_labels_on_image_array(
@@ -81,8 +91,9 @@ class RosTensorFlow():
             use_normalized_coordinates=True,
             line_thickness=8)        
         
-        self._pub.publish(self._cv_bridge.cv2_to_imgmsg(cv_image, "rgb8"))
-        
+        self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(cv_image, "rgb8"))
+        self._box_pub.publish(box_string)
+      
                 
     ## load in the detection graph from the frozen checkpoint file    
     def load_graph(self):
