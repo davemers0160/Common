@@ -19,6 +19,8 @@ from object_detection.utils import ops as utils_ops
 from utils import label_map_util
 from utils import visualization_utils as vis_util
 
+min_score = 0.5
+
 MODEL_PATH = '/home/ros/'
 
 # MSCOCO
@@ -75,20 +77,25 @@ class RosTensorFlow():
             feed_dict={image_tensor: image_np_expanded})
         
         boxes = np.squeeze(boxes)
+        classes = np.squeeze(classes).astype(np.int32)
+        scores = np.squeeze(scores)
+
         box_string = ""
         for idx in range(num_detections):
-            box_string = box_string + "{" + "xmin={}, ymin={}, xmax={}, ymax={}".format(math.floor(boxes[idx][1]*img_width), math.floor(boxes[idx][0]*img_height), math.ceil(boxes[idx][3]*img_width), math.ceil(boxes[idx][2]*img_height))$
+            if scores[idx] >= min_score:
+                box_string = box_string + "{Class=" + self.category_index[classes[idx]]['name'] + "; xmin={}, ymin={}, xmax={}, ymax={}".format(math.floor(boxes[idx][1]*img_width), math.floor(boxes[idx][0]*img_height), math.ceil(boxes[idx][3]*img_width), math.ceil(boxes[idx][2]*img_height))$
 
         box_string = box_string[:-2]        
         
         # Visualization of the results of a detection.
         vis_util.visualize_boxes_and_labels_on_image_array(
             cv_image,
-            np.squeeze(boxes),
-            np.squeeze(classes).astype(np.int32),
-            np.squeeze(scores),
+            (boxes),
+            (classes),
+            (scores),
             self.category_index,
             use_normalized_coordinates=True,
+            min_score_thresh=min_score,
             line_thickness=8)        
         
         self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(cv_image, "rgb8"))
