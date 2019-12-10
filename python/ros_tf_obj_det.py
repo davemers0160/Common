@@ -33,8 +33,12 @@ NUM_CLASSES = 90
 #PATH_TO_LABELS = os.path.join('/home/ros/models/research/object_detection/data', 'oid_v4_label_map.pbtxt')
 #NUM_CLASSES = 600
 
-PATH_TO_CKPT = MODEL_PATH + MODEL_NAME + '/frozen_inference_graph.pb'
+#Open Image
+#MODEL_NAME = 'faster_rcnn_inception_resnet_v2_oid'
+#PATH_TO_LABELS = os.path.join('/home/ros/models/research/object_detection/data', 'oid_v4_label_map.pbtxt')
+#NUM_CLASSES = 600
 
+PATH_TO_CKPT = MODEL_PATH + MODEL_NAME + '/frozen_inference_graph.pb'
 
 class RosTensorFlow():
     def __init__(self):
