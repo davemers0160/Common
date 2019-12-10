@@ -83,7 +83,7 @@ class RosTensorFlow():
         box_string = ""
         for idx in range(num_detections):
             if scores[idx] >= min_score:
-                box_string = box_string + "{Class=" + self.category_index[classes[idx]]['name'] + "; xmin={}, ymin={}, xmax={}, ymax={}".format(math.floor(boxes[idx][1]*img_width), math.floor(boxes[idx][0]*img_height), math.ceil(boxes[idx][3]*img_width), math.ceil(boxes[idx][2]*img_height))$
+                box_string = box_string + "{Class=" + self.category_index[classes[idx]]['name'] + "; xmin={}, ymin={}, xmax={}, ymax={}".format(math.floor(boxes[idx][1]*img_width), math.floor(boxes[idx][0]*img_height), math.ceil(boxes[idx][3]*img_width), math.ceil(boxes[idx][2]*img_height)) + "}, "
 
         box_string = box_string[:-2]        
         
