@@ -109,7 +109,7 @@ class RosTensorFlow():
                     bp_image = depth_img[y_min:y_max, x_min:x_max]
                     img_crop = cv_image[y_min:y_max, x_min:x_max, :]
                     rng_obj = cv2.mean(bp_image)
-                    print("Range (m): %2.4f" % (rng_obj[0]))
+                    print("Range (m): %2.4f" % (bp_image[int((x_max-x_min)/2),int((y_max-y_min)/2)]))
 #                    self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(img_crop, "rgb8"))
                     self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(bp_image))
                 
