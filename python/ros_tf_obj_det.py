@@ -2,6 +2,7 @@ import os
 import sys
 import math
 import rospy
+import message_filters
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 from cv_bridge import CvBridge
@@ -51,14 +52,24 @@ class RosTensorFlow():
         self.load_graph()
         self._session = tf.Session(graph=self.detection_graph)        
 
-        self._sub = rospy.Subscriber('image', Image, self.callback, queue_size=1)
+        # self._sub = rospy.Subscriber('image', Image, self.callback, queue_size=1)
+        self.image_sub = message_filters.Subscriber('image', Image, queue_size=1)
+        self.depth_sub = message_filters.Subscriber('/zed/zed_node/depth/depth_registered', Image, queue_size=1)
+        
+        ts = message_filters.TimeSynchronizer([self.image_sub, self.depth_sub], 10)
+        ts.registerCallback(self.callback)
+        
         self._img_pub = rospy.Publisher('obj_det/image', Image, queue_size=1)
         self._box_pub = rospy.Publisher('obj_det/boxes', String, queue_size=1)
+        
+
         #self.score_threshold = rospy.get_param('~score_threshold', 0.1)
         #self.use_top_k = rospy.get_param('~use_top_k', 5)
 
-    def callback(self, image_msg):
+    def callback(self, image_msg, depth_msg):
         cv_image = self._cv_bridge.imgmsg_to_cv2(image_msg, "rgb8")
+        depth_img = self._cv_bridge.imgmsg_to_cv2(depth_msg)
+
         img_height = cv_image.shape[0]
         img_width  = cv_image.shape[1]
                 
@@ -87,8 +98,21 @@ class RosTensorFlow():
         box_string = ""
         for idx in range(num_detections):
             if scores[idx] >= min_score:
-                box_string = box_string + "{Class=" + self.category_index[classes[idx]]['name'] + "; xmin={}, ymin={}, xmax={}, ymax={}".format(math.floor(boxes[idx][1]*img_width), math.floor(boxes[idx][0]*img_height), math.ceil(boxes[idx][3]*img_width), math.ceil(boxes[idx][2]*img_height)) + "}, "
+                x_min = int(math.floor(boxes[idx][1]*img_width))
+                y_min = int(math.floor(boxes[idx][0]*img_height))
+                x_max = int(math.ceil(boxes[idx][3]*img_width))
+                y_max = int(math.ceil(boxes[idx][2]*img_height))
+                box_string = box_string + "{Class=" + self.category_index[classes[idx]]['name'] + "; xmin={}, ymin={}, xmax={}, ymax={}".format(x_min, y_min, x_max, y_max) + "}, "
 
+                #if(self.category_index[classes[idx]]['name'] == "Backpack"):
+                if(self.category_index[classes[idx]]['name'] == "Chair"):
+                    bp_image = depth_img[y_min:y_max, x_min:x_max]
+                    img_crop = cv_image[y_min:y_max, x_min:x_max, :]
+                    rng_obj = cv2.mean(bp_image)
+                    print("Range (m): %2.4f" % (rng_obj[0]))
+#                    self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(img_crop, "rgb8"))
+                    self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(bp_image))
+                
         box_string = box_string[:-2]        
         
         # Visualization of the results of a detection.
@@ -102,10 +126,10 @@ class RosTensorFlow():
             min_score_thresh=min_score,
             line_thickness=8)        
         
-        self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(cv_image, "rgb8"))
+#        self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(cv_image, "rgb8"))
         self._box_pub.publish(box_string)
-      
-                
+
+
     ## load in the detection graph from the frozen checkpoint file    
     def load_graph(self):
         self.detection_graph = tf.Graph()
