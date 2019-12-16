@@ -3,7 +3,7 @@ import sys
 import math
 import rospy
 import message_filters
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CameraInfo
 from std_msgs.msg import String
 from cv_bridge import CvBridge
 import cv2
@@ -56,7 +56,7 @@ class RosTensorFlow():
         #self.image_sub = message_filters.Subscriber('image', Image, queue_size=1)
         self.image_sub = message_filters.Subscriber('/zed/zed_node/rgb/image_rect_color', Image, queue_size=1)
         self.depth_sub = message_filters.Subscriber('/zed/zed_node/depth/depth_registered', Image, queue_size=1)
-        self.cam_info_sub = rospy.Subscriber('/zed/zed_node/rgb/camera_info', CameraInfo)
+        self.cam_info_sub = rospy.Subscriber('/zed/zed_node/rgb/camera_info', CameraInfo, self.camera_info, queue_size=1)
 
         ts = message_filters.TimeSynchronizer([self.image_sub, self.depth_sub], 10)
         ts.registerCallback(self.callback)
@@ -66,7 +66,7 @@ class RosTensorFlow():
 
         # get the camera info
         get_camera_info()
-        
+
         #self.score_threshold = rospy.get_param('~score_threshold', 0.1)
         #self.use_top_k = rospy.get_param('~use_top_k', 5)
 
@@ -108,8 +108,8 @@ class RosTensorFlow():
                 y_max = int(math.ceil(boxes[idx][2]*img_height))
                 box_string = box_string + "{Class=" + self.category_index[classes[idx]]['name'] + "; xmin={}, ymin={}, xmax={}, ymax={}".format(x_min, y_min, x_max, y_max) + "}, "
 
-                #if(self.category_index[classes[idx]]['name'] == "Backpack"):
-                if(self.category_index[classes[idx]]['name'] == "Chair"):
+                if(self.category_index[classes[idx]]['name'] == "Backpack"):
+                #if(self.category_index[classes[idx]]['name'] == "Chair"):
                     bp_image = depth_img[y_min:y_max, x_min:x_max]
                     avg_range = np.nanmean(bp_image)
                     det_x = int((x_max-x_min)/2.0)
@@ -124,7 +124,7 @@ class RosTensorFlow():
                     print("El: {}".format(el))
                     #print("Range (m): %2.4f" % (bp_image[int((x_max-x_min)/2),int((y_max-y_min)/2)]))
                     #self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(img_crop, "rgb8"))
-                    self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(bp_image))
+                    #self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(bp_image))
 
         box_string = box_string[:-2]
 
@@ -139,7 +139,7 @@ class RosTensorFlow():
             min_score_thresh=min_score,
             line_thickness=8)
 
-#        self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(cv_image, "rgb8"))
+        self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(cv_image, "rgb8"))
         self._box_pub.publish(box_string)
 
 
@@ -153,15 +153,18 @@ class RosTensorFlow():
             od_graph_def.ParseFromString(serialized_graph)
             tf.import_graph_def(od_graph_def, name='')
 
-    def get_camera_info(self):
-        self.img_h = self.cam_info_sub.height
-        self.img_w = self.cam_info_sub.width
+
+    def camera_info(self, data):
+        self.img_h = data.height
+        self.img_w = data.width
         self.h_res = 90.0/self.img_w
         self.v_res = 60.0/self.img_h
-        print("{} x {}".format(self.img_h, self.img_w))
-        print("{}, {}".format(self.h_res, self.v_res))
-        
-        
+        print("cam info:")
+        print("Image Size (h x w): {} x {}".format(self.img_h, self.img_w))
+        print("Angular Resolution (AZ, EL): {}, {}".format(self.h_res, self.v_res))
+        self.cam_info_sub.unregister()
+
+
     def main(self):
         rospy.spin()
 
