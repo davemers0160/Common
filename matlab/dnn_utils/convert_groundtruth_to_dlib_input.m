@@ -17,14 +17,29 @@ mat_file_filter = {'*.mat','Mat Files';'*.*','All Files' };
 
 % the input mat file should be a single table with all of the image file
 % names and rectangular bounding boxes
-[mat_save_file, mat_save_path] = uigetfile(mat_file_filter, 'Select Mat File', startpath);
-if(mat_save_path == 0)
+[mat_save_file, mat_path] = uigetfile(mat_file_filter, 'Select Mat File', startpath);
+if(mat_path == 0)
     return;
 end
-load(fullfile(mat_save_path,mat_save_file));
-%fields = fieldnames(data);
+load(fullfile(mat_path, mat_save_file));
 
-%label_data = data.(fields{1});
+startpath = mat_path;
+
+
+%% get the save location
+save_path = uigetdir(startpath, 'Select save directory');
+
+if(save_path == 0)
+    return;
+end
+
+%% get the input file base name
+file_filter = {'*.txt','Text Files';'*.*','All Files' };
+
+[base_save_file, input_save_path] = uiputfile(file_filter, 'Enter Base File Name', save_path);
+if(input_save_path == 0)
+    return;
+end
 
 commandwindow;
 
@@ -35,46 +50,73 @@ label_data = data.Variables;
 label_names = data.Properties.VariableNames;
 label_names = label_names(2:end);
 
-
-%% parse through the ground truth object detection table labels
-
-% get the filename to write the data to based on the input mat file
-[~, tmp_file, ~] = fileparts(mat_save_file);
-file_name = fullfile(mat_save_path, strcat(tmp_file, '_input.txt'));
-file_id = fopen(file_name, 'w');
-
-fprintf(file_id, '# Full data listing\n');
-fprintf(file_id, '# Data Directory:\n\n');
-fprintf(file_id, '# file location, {x,y,w,h,label}, {x,y,w,h,label}, ...\n');
-
 num_images = size(label_data,1);
 num_labels = numel(label_names);
 
-% write the data in the following format:
-% file location, {x,y,w,h,label}, {x,y,w,h,label},...
-for idx=1:num_images
-    
-    % print out the image file name
-    [~,image_name,ext] = fileparts(data{idx,1});
-    s_line = strcat(image_name, ext, ',');
-    
-    % print out the boxes
-    for jdx=2:num_labels
-        
-        if(~isempty(data{idx,jdx}))
-            
-            num_boxes = size(data{idx,jdx},1);
-            
-            for kdx = 1:num_boxes         
-                s_line = strcat(s_line, num2str(floor(data{idx,jdx}(kdx,1:2)), '{%d,%d,'), num2str(ceil(data{idx,jdx}(kdx,3:4)), '%d,%d,'), label_names{jdx}, '},');
-            end           
-        end        
-    end
-    
-    s_line = s_line(1:end-1);   
-    fprintf('%s\n', s_line);
-    fprintf(file_id, '%s\n', s_line);   
-end
+scale_folder_name = {'full','half','third','quarter'};
+scales = [1.0, 1/2, 1/3, 1/4];
+num_scales = numel(scale_folder_name);
 
-fclose(file_id);
+%% parse through the ground truth object detection table labels
+
+% get the filename to write the data to
+[~, tmp_file, file_ext] = fileparts(base_save_file);
+
+% cycle through
+for idx=1:num_scales
+    
+    data_directory = strcat(save_path,'/',scale_folder_name{idx},'/');
+    fprintf('Creating directory: %s\n', data_directory);
+    
+    mkdir(data_directory);
+    
+    file_name = fullfile(input_save_path, strcat(tmp_file, '_', scale_folder_name{idx}, '_input.txt'));
+    file_id = fopen(file_name, 'w');
+
+    
+    fprintf(file_id, '# Full data listing\n');
+    fprintf(file_id, '# Data Directory:\n');
+    fprintf(file_id, '%s\n\n', data_directory);
+    fprintf(file_id, '# file location, {x,y,w,h,label}, {x,y,w,h,label}, ...\n');
+
+
+    % write the data in the following format:
+    % file location, {x,y,w,h,label}, {x,y,w,h,label},...
+    for jdx=1:num_images
+        
+        % load the image and then resize based on the current scale setting
+        img = imread(data{jdx,1}{1});
+        img = imresize(img,scales(idx));
+        
+        % get the image file name
+        [~,image_name,ext] = fileparts(data{jdx,1}{1});
+        image_file_name = strcat(image_name, ext);
+        
+        % save the image resized image
+        imwrite(img, strcat(data_directory,image_file_name));
+        
+        s_line = strcat(image_file_name, ',');
+
+        % print out the boxes
+        for kdx=2:num_labels+1
+
+            if(~isempty(data{jdx,kdx}))
+
+                tmp_boxes = data{jdx,kdx}{:};
+                num_boxes = size(tmp_boxes,1);
+
+                for mdx = 1:num_boxes         
+                    s_line = strcat(s_line, num2str(floor(tmp_boxes(mdx,1:2)*scales(idx)), '{%d,%d,'), num2str(ceil(tmp_boxes(mdx,3:4)*scales(idx)), '%d,%d,'), label_names{kdx-1}, '},');
+                end           
+            end        
+        end
+
+        s_line = s_line(1:end-1);   
+        fprintf('%s\n', s_line);
+        fprintf(file_id, '%s\n', s_line);   
+    end
+
+    fclose(file_id);
+
+end
 
