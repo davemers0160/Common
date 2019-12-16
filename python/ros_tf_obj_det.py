@@ -117,9 +117,9 @@ class RosTensorFlow():
 
                     #img_crop = cv_image[y_min:y_max, x_min:x_max, :]
 
-                    print("Range: {}".format(avg_range))
-                    print("Az: {}".format(az))
-                    print("El: {}".format(el))
+                    #print("Range: {}".format(avg_range))
+                    #print("Az: {}".format(az))
+                    #print("El: {}".format(el))
                     
                     #razel_string = "{},{},{}".format(avg_range, az, el)
                     self._razel_pub.publish("{},{},{}".format(avg_range, az, el))
