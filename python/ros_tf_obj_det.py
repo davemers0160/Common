@@ -105,12 +105,12 @@ class RosTensorFlow():
                 y_max = int(math.ceil(boxes[idx][2]*img_height))
                 box_string = box_string + "{Class=" + self.category_index[classes[idx]]['name'] + "; xmin={}, ymin={}, xmax={}, ymax={}".format(x_min, y_min, x_max, y_max) + "}, "
 
-                if(self.category_index[classes[idx]]['name'] == "Backpack"):
-                #if(self.category_index[classes[idx]]['name'] == "Chair"):
+                if((self.category_index[classes[idx]]['name']).lower() == "backpack"):
+                #if((self.category_index[classes[idx]]['name']).lower() == "chair"):
                     bp_image = depth_img[y_min:y_max, x_min:x_max]
                     avg_range = np.nanmean(bp_image)
-                    det_x = int((x_max-x_min)/2.0)
-                    det_y = int((y_max-y_min)/2.0)
+                    det_x = int(x_min + (x_max-x_min)/2.0)
+                    det_y = int(y_min + (y_max-y_min)/2.0)
                     az = self.v_res*(det_x - int(self.img_w/2.0))
                     el = self.h_res*(det_y - int(self.img_h/2.0))
                     
