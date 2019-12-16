@@ -64,9 +64,6 @@ class RosTensorFlow():
         self._img_pub = rospy.Publisher('obj_det/image', Image, queue_size=1)
         self._box_pub = rospy.Publisher('obj_det/boxes', String, queue_size=1)
 
-        # get the camera info
-        get_camera_info()
-
         #self.score_threshold = rospy.get_param('~score_threshold', 0.1)
         #self.use_top_k = rospy.get_param('~use_top_k', 5)
 
