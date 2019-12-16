@@ -50,7 +50,7 @@ class RosTensorFlow():
         self._cv_bridge = CvBridge()
 
         self.load_graph()
-        self._session = tf.Session(graph=self.detection_graph)        
+        self._session = tf.Session(graph=self.detection_graph)
 
         # self._sub = rospy.Subscriber('image', Image, self.callback, queue_size=1)
         #self.image_sub = message_filters.Subscriber('image', Image, queue_size=1)
@@ -63,6 +63,7 @@ class RosTensorFlow():
 
         self._img_pub = rospy.Publisher('obj_det/image', Image, queue_size=1)
         self._box_pub = rospy.Publisher('obj_det/boxes', String, queue_size=1)
+        self._razel_pub = rospy.Publisher('obj_det/target_razel', String, queue_size=1)
 
         #self.score_threshold = rospy.get_param('~score_threshold', 0.1)
         #self.use_top_k = rospy.get_param('~use_top_k', 5)
@@ -91,7 +92,7 @@ class RosTensorFlow():
         (boxes, scores, classes, num_detections) = self._session.run(
             [boxes, scores, classes, num_detections],
             feed_dict={image_tensor: image_np_expanded})
-        
+
         boxes = np.squeeze(boxes)
         classes = np.squeeze(classes).astype(np.int32)
         scores = np.squeeze(scores)
@@ -111,15 +112,17 @@ class RosTensorFlow():
                     avg_range = np.nanmean(bp_image)
                     det_x = int(x_min + (x_max-x_min)/2.0)
                     det_y = int(y_min + (y_max-y_min)/2.0)
-                    az = self.v_res*(det_x - int(self.img_w/2.0))
-                    el = self.h_res*(det_y - int(self.img_h/2.0))
-                    
+                    az = self.h_res*(det_x - int(self.img_w/2.0))
+                    el = self.v_res*(int(self.img_h/2.0) - det_y)
+
                     #img_crop = cv_image[y_min:y_max, x_min:x_max, :]
-                    
+
                     print("Range: {}".format(avg_range))
                     print("Az: {}".format(az))
                     print("El: {}".format(el))
-                    #print("Range (m): %2.4f" % (bp_image[int((x_max-x_min)/2),int((y_max-y_min)/2)]))
+                    
+                    #razel_string = "{},{},{}".format(avg_range, az, el)
+                    self._razel_pub.publish("{},{},{}".format(avg_range, az, el))
                     #self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(img_crop, "rgb8"))
                     #self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(bp_image))
 
@@ -156,9 +159,9 @@ class RosTensorFlow():
         self.img_w = data.width
         self.h_res = 90.0/self.img_w
         self.v_res = 60.0/self.img_h
-        print("cam info:")
+        print("\ncam info:")
         print("Image Size (h x w): {} x {}".format(self.img_h, self.img_w))
-        print("Angular Resolution (AZ, EL): {}, {}".format(self.h_res, self.v_res))
+        print("Angular Resolution (AZ, EL): {}, {}\n".format(self.h_res, self.v_res))
         self.cam_info_sub.unregister()
 
 
@@ -171,5 +174,4 @@ if __name__ == '__main__':
     rospy.init_node('rostensorflow')
     tensor = RosTensorFlow()
     tensor.main()
-    
 
