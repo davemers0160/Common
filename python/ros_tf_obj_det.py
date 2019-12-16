@@ -72,8 +72,8 @@ class RosTensorFlow():
         cv_image = self._cv_bridge.imgmsg_to_cv2(image_msg, "rgb8")
         depth_img = self._cv_bridge.imgmsg_to_cv2(depth_msg)
 
-        img_height = cv_image.shape[0]
-        img_width  = cv_image.shape[1]
+        #img_height = cv_image.shape[0]
+        #img_width  = cv_image.shape[1]
 
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(cv_image, axis=0)
@@ -100,10 +100,10 @@ class RosTensorFlow():
         box_string = ""
         for idx in range(num_detections):
             if scores[idx] >= min_score:
-                x_min = int(math.floor(boxes[idx][1]*img_width))
-                y_min = int(math.floor(boxes[idx][0]*img_height))
-                x_max = int(math.ceil(boxes[idx][3]*img_width))
-                y_max = int(math.ceil(boxes[idx][2]*img_height))
+                x_min = int(math.floor(boxes[idx][1]*self.img_w))
+                y_min = int(math.floor(boxes[idx][0]*self.img_h))
+                x_max = int(math.ceil(boxes[idx][3]*self.img_w))
+                y_max = int(math.ceil(boxes[idx][2]*self.img_h))
                 box_string = box_string + "{Class=" + self.category_index[classes[idx]]['name'] + "; xmin={}, ymin={}, xmax={}, ymax={}".format(x_min, y_min, x_max, y_max) + "}, "
 
                 if((self.category_index[classes[idx]]['name']).lower() == "backpack"):
@@ -120,7 +120,7 @@ class RosTensorFlow():
                     #print("Range: {}".format(avg_range))
                     #print("Az: {}".format(az))
                     #print("El: {}".format(el))
-                    
+
                     #razel_string = "{},{},{}".format(avg_range, az, el)
                     self._razel_pub.publish("{},{},{}".format(avg_range, az, el))
                     #self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(img_crop, "rgb8"))
