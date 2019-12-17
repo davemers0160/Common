@@ -98,13 +98,15 @@ class RosTensorFlow():
         scores = np.squeeze(scores)
 
         box_string = ""
+        target_string = ""
+
         for idx in range(num_detections):
             if scores[idx] >= min_score:
                 x_min = int(math.floor(boxes[idx][1]*self.img_w))
                 y_min = int(math.floor(boxes[idx][0]*self.img_h))
                 x_max = int(math.ceil(boxes[idx][3]*self.img_w))
                 y_max = int(math.ceil(boxes[idx][2]*self.img_h))
-                box_string = box_string + "{Class=" + self.category_index[classes[idx]]['name'] + "; xmin={}, ymin={}, xmax={}, ymax={}".format(x_min, y_min, x_max, y_max) + "}, "
+                box_string = box_string + "{Class=" + self.category_index[classes[idx]]['name'] + "; xmin={}, ymin={}, xmax={}, ymax={}".format(x_min, y_min, x_max, y_max) + "},"
 
                 if((self.category_index[classes[idx]]['name']).lower() == "backpack"):
                 #if((self.category_index[classes[idx]]['name']).lower() == "chair"):
@@ -114,19 +116,17 @@ class RosTensorFlow():
                     det_y = int(y_min + (y_max-y_min)/2.0)
                     az = self.h_res*(det_x - int(self.img_w/2.0))
                     el = self.v_res*(int(self.img_h/2.0) - det_y)
-
-                    #img_crop = cv_image[y_min:y_max, x_min:x_max, :]
+                    target_string = target_string + "{" + "{},{},{}".format(avg_range, az, el) + "},"
 
                     #print("Range: {}".format(avg_range))
                     #print("Az: {}".format(az))
                     #print("El: {}".format(el))
 
-                    #razel_string = "{},{},{}".format(avg_range, az, el)
-                    self._razel_pub.publish("{},{},{}".format(avg_range, az, el))
-                    #self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(img_crop, "rgb8"))
+                    #self._razel_pub.publish("{},{},{}".format(avg_range, az, el))
                     #self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(bp_image))
 
-        box_string = box_string[:-2]
+        target_string = target_string[:-1]
+        self._razel_pub.publish(target_string)
 
         # Visualization of the results of a detection.
         vis_util.visualize_boxes_and_labels_on_image_array(
@@ -140,6 +140,8 @@ class RosTensorFlow():
             line_thickness=8)
 
         self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(cv_image, "rgb8"))
+
+        box_string = box_string[:-1]
         self._box_pub.publish(box_string)
 
 
