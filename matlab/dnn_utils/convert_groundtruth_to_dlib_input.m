@@ -33,6 +33,13 @@ if(save_path == 0)
     return;
 end
 
+%% get the location of the data
+data_path = uigetdir(startpath, 'Select directory where the data is stored');
+
+if(data_path == 0)
+    return;
+end
+
 %% get the input file base name
 file_filter = {'*.txt','Text Files';'*.*','All Files' };
 
@@ -72,24 +79,23 @@ for idx=1:num_scales
     
     file_name = fullfile(input_save_path, strcat(tmp_file, '_', scale_folder_name{idx}, '_input.txt'));
     file_id = fopen(file_name, 'w');
-
-    
+  
     fprintf(file_id, '# Full data listing\n');
     fprintf(file_id, '# Data Directory:\n');
     fprintf(file_id, '%s\n\n', data_directory);
     fprintf(file_id, '# file location, {x,y,w,h,label}, {x,y,w,h,label}, ...\n');
 
-
     % write the data in the following format:
     % file location, {x,y,w,h,label}, {x,y,w,h,label},...
     for jdx=1:num_images
         
-        % load the image and then resize based on the current scale setting
-        img = imread(data{jdx,1}{1});
-        img = imresize(img,scales(idx));
-        
         % get the image file name
         [~,image_name,ext] = fileparts(data{jdx,1}{1});
+        
+        % load the image and then resize based on the current scale setting
+        img = imread(fullfile(data_path, strcat(image_name, ext)));
+        img = imresize(img, scales(idx));
+        
         image_file_name = strcat(image_name, ext);
         
         % save the image resized image
