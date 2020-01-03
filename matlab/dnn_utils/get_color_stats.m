@@ -1,0 +1,71 @@
+format long g
+format compact
+clc
+close all
+clearvars
+
+% get the location of the script file to save figures
+full_path = mfilename('fullpath');
+[startpath,  filename, ext] = fileparts(full_path);
+plot_num = 1;
+
+
+%% select the data file with the images
+
+file_filter = {'*.txt','Text Files';'*.*','All Files' };
+startpath = 'D:\Projects\';
+
+[input_file, input_path] = uigetfile(file_filter, 'Select Data Input File', startpath);
+if(input_path == 0)
+    return;
+end
+
+commandwindow;
+
+%% check to see if the inputs are normal or grouped
+
+% Construct a questdlg with three options
+file_choice = questdlg('Select Input File Type:', 'File Type', 'Normal', 'Grouped', 'Cancel', 'Normal');
+
+switch file_choice
+    case 'Normal'
+        params = parse_input_parameters(fullfile(input_path, input_file));
+
+    case 'Grouped'
+        params = parse_grouped_input_paramters(fullfile(input_path, input_file), {'{', '}'});
+        
+    case 'Cancel'
+        return;
+end
+
+% get the directory for the data
+data_directory = params{1}{1};
+params(1) = [];
+
+%% parse through the data
+
+red = 0;
+green = 0;
+blue = 0;
+
+for idx=1:length(params)    
+
+    % this is expected to be a 3-channel color image
+    img = imread(fullfile(data_directory, params{idx}{1}));
+%     img = img(:,:,1:3);
+    
+    red = red + mean(mean(img(:,:,1)));
+    green = green + mean(mean(img(:,:,1)));
+    blue = blue + mean(mean(img(:,:,1)));
+
+end
+
+red = red/length(params);
+green = green/length(params);
+blue = blue/length(params);
+
+fprintf('red:   %3.5f\n', red);
+fprintf('green: %3.5f\n', green);
+fprintf('blue:  %3.5f\n', blue);
+
+
