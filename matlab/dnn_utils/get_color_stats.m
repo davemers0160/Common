@@ -25,9 +25,11 @@ commandwindow;
 %% check to see if the inputs are normal or grouped
 
 % Construct a questdlg with three options
-file_choice = questdlg('Select Input File Type:', 'File Type', 'Normal', 'Grouped', 'Cancel', 'Normal');
+%file_choice = questdlg('Select Input File Type:', 'File Type', 'Normal', 'Grouped', 'Cancel', 'Normal');
 
-switch file_choice
+[param_type, file_index] = file_params_dialog;
+
+switch param_type
     case 'Normal'
         params = parse_input_parameters(fullfile(input_path, input_file));
 
@@ -51,12 +53,18 @@ blue = 0;
 for idx=1:length(params)    
 
     % this is expected to be a 3-channel color image
-    img = imread(fullfile(data_directory, params{idx}{1}));
+    img = imread(fullfile(data_directory, params{idx}{file_index}));
 %     img = img(:,:,1:3);
+
+    r = mean(mean(img(:,:,1)));
+    g = mean(mean(img(:,:,2)));
+    b = mean(mean(img(:,:,3)));
     
-    red = red + mean(mean(img(:,:,1)));
-    green = green + mean(mean(img(:,:,1)));
-    blue = blue + mean(mean(img(:,:,1)));
+    red = red + r;
+    green = green + g; 
+    blue = blue + b;
+    
+    fprintf('%05d: %s - %3.4f, %3.4f, %3.4f\n', idx, params{idx}{file_index}, r, g, b);
 
 end
 
