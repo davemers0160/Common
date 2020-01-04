@@ -49,6 +49,7 @@ params(1) = [];
 red = 0;
 green = 0;
 blue = 0;
+gray = 0;
 
 for idx=1:length(params)    
 
@@ -59,10 +60,12 @@ for idx=1:length(params)
     r = mean(mean(img(:,:,1)));
     g = mean(mean(img(:,:,2)));
     b = mean(mean(img(:,:,3)));
+    gr = mean(mean(rgb2gray(img)));
     
     red = red + r;
     green = green + g; 
     blue = blue + b;
+    gray = gray + gr;
     
     fprintf('%05d: %s - %3.4f, %3.4f, %3.4f\n', idx, params{idx}{file_index}, r, g, b);
 
@@ -71,9 +74,11 @@ end
 red = red/length(params);
 green = green/length(params);
 blue = blue/length(params);
+gray = gray/length(params);
 
-fprintf('red:   %3.5f\n', red);
-fprintf('green: %3.5f\n', green);
-fprintf('blue:  %3.5f\n', blue);
+fprintf('red:   %3.4f\n', red);
+fprintf('green: %3.4f\n', green);
+fprintf('blue:  %3.4f\n', blue);
+fprintf('gray:  %3.4f\n', gray);
 
 
