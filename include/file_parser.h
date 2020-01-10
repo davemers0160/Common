@@ -291,12 +291,12 @@ void get_file_parts(std::string fullfilename, std::string &file_path, std::strin
 #endif
 
     file_path = fullfilename.substr(0, last_file_sep);
-    file_name = fullfilename.substr(last_file_sep + 1, (fullfilename.length() - file_ext_loc + 1));
+    file_name = fullfilename.substr(last_file_sep + 1, (file_ext_loc - last_file_sep - 1));
 
     if (file_ext_loc > fullfilename.length())
         file_ext = "";
     else
-        file_ext = fullfilename.substr((file_ext_loc + 1), (fullfilename.length() - file_ext_loc - 1));
+        file_ext = fullfilename.substr(file_ext_loc, (fullfilename.length() - file_ext_loc));
     
 }	// end of get_file_parts
 
