@@ -250,8 +250,6 @@ DfD_Analysis/.vscode/launch.json
 *.tgz
 *.7z
 
-
-
-
-
 *.dll
+
+/.idea
