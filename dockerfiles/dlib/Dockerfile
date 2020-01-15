@@ -12,7 +12,7 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
 RUN sudo python3 get-pip.py
 
-RUN pip install numpy bokeh launchpadlib pandas Cython contextlib2 pillow lxml jupyter matplotlib opencv-python cffi --user
+RUN pip install numpy bokeh launchpadlib pandas Cython contextlib2 pillow lxml jupyter matplotlib opencv-python cffi tqdm --user
 
 RUN cd ~ && \
     mkdir -p dlib && \
