@@ -13,51 +13,95 @@ plot_num = 1;
 startpath = 'D:\Projects\object_detection_data';
 file_filter = {'*.txt','Text Files';'*.*','All Files' };
 
-[input_filename, file_path] = uigetfile(file_filter, 'Select Input File', startpath);
-if(file_path == 0)
+[input_file, input_path] = uigetfile(file_filter, 'Select Input File', startpath);
+if(input_path == 0)
     return;
 end
 
-%% read the file
+%% check to see if the inputs are normal or grouped
 
-[params] = parse_input_parameters(fullfile(file_path, input_filename));
+[param_type, file_index] = file_params_dialog;
 
-data_directory = params{1}{1}; 
+switch param_type
+    case 'Normal'
+        params = parse_input_parameters(fullfile(input_path, input_file));
+
+    case 'Grouped'
+        params = parse_grouped_input_paramters(fullfile(input_path, input_file), {'{', '}'});
+        
+    case 'Cancel'
+        return;
+end
+
+% get the directory for the data
+data_directory = params{1}{1};
 params(1) = [];
-
+file_index = file_index + 1;
 
 %% run through the entries and build a groundTruth object
-imageFiles = cell(numel(params),1);
+image_files = cell(numel(params),1);
 box = cell(numel(params),1);
-T = table;
+label = cell(numel(params),1);
+ul = {};
 
 for idx=1:numel(params)
-    imageFiles{idx,1} = strcat(data_directory,params{idx}{1});
+    image_files{idx,1} = strcat(data_directory,params{idx}{1});
     
-    for jdx=3:5:numel(params{idx})
-        box{idx,1} = [str2double(params{idx}{jdx}), str2double(params{idx}{jdx+1}), str2double(params{idx}{jdx+2}), str2double(params{idx}{jdx+3})];
-        %label = params{idx}{jdx+4};
+    index = 1;
+    b = [];
+    l = {};
+    for jdx=file_index:numel(params{idx})
+        gp = parse_csv_line(params{idx}{jdx});
+%         box{idx,index} = [str2double(gp{1}), str2double(gp{2}), str2double(gp{3}), str2double(gp{4})];
+        b = cat(1,b,[str2double(gp{1}), str2double(gp{2}), str2double(gp{3}), str2double(gp{4})]);
+%         label{idx,index} = gp{5};
+        l = cat(1, l, gp{5});
+%         index = index + 1;
     end
-end
-
-T.biplane = box;
-
-Name = {'biplane'};
-Type = labelType({'Rectangle'});
-Description = {''};
-labelDescription = table(Name,Type,Description);
-
-gtSource = groundTruthDataSource(imageFiles);
-
-gt = groundTruth(gtSource,labelDescription,T);
-
-return;
-%% run this after using the image labeler to get the new labels
-
-
-for idx=1:numel(gTruth.LabelData)
-   
-    new_boxes(idx,:) = gTruth.LabelData.biplane{idx};
     
-   
+    box{idx} = b;
+    label{idx} = l;
+    
+    ul = cat(1, ul, unique(l));
 end
+
+% get the unique labels
+% lb = label(:);
+% lb = lb(~cellfun('isempty',lb));
+label_names = unique(ul);
+num_classes = numel(label_names);
+%label_names = cat(1,'imageFileName',ul);
+
+%% create the table
+
+C = cell(numel(image_files), numel(label_names));
+for idx=1:numel(image_files)
+    
+    %C{idx,1} = image_files{idx};
+    
+    for jdx=1:size(box{idx},1)
+        
+        index = find(contains(label_names, label{idx}{jdx}));
+        C{idx, index} = cat(1,C{idx, index}, box{idx}(jdx,:));
+        
+    end
+    
+end
+
+T = cell2table(C);
+T.Properties.VariableNames = label_names';
+
+ldc = labelDefinitionCreator();
+for idx=1:num_classes
+    addLabel(ldc, label_names{idx}, labelType.Rectangle);
+end
+label_description = create(ldc);
+
+% label_type = labelType(repmat({'Rectangle'}, num_classes, 1));
+% description = repmat({''}, num_classes, 1);
+% label_description = table(label_names, label_type, description);
+
+gtSource = groundTruthDataSource(image_files);
+gt = groundTruth(gtSource, label_description, T);
+
+imageLabeler;
