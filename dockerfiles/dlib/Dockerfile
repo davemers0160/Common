@@ -4,25 +4,38 @@
 FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu16.04
 
 ## ----------------------------------------------------------------------------
-## Add the user
 #RUN adduser --gecos "Main User" --home /home/owner --disabled-password owner && \
 #    usermod -a -G dialout owner && \
 #    echo "owner ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/99_aptget
-
-RUN adduser --gecos '' --home /home/owner --disabled-password owner && \
-    adduser owner sudo && \
-    adduser owner dialout
     
 ## ----------------------------------------------------------------------------
 RUN apt-get update -y && apt-get upgrade -y
-RUN apt-get install -y --fix-missing sudo build-essential cmake gfortran git wget curl nano libatlas-dev libavcodec-dev libavformat-dev libgtk2.0-dev libjpeg-dev liblapack-dev libswscale-dev pkg-config
+RUN apt-get install -y --fix-missing sudo build-essential gfortran git wget curl nano libatlas-dev libavcodec-dev libavformat-dev libgtk2.0-dev libjpeg-dev liblapack-dev libswscale-dev pkg-config
 RUN apt-get install -y --fix-missing iputils-ping libqt5xml5 libxmu-dev libxi-dev python3-dev python3-numpy
 RUN rm -rf /var/lib/apt/lists/*
 
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.16.3/cmake-3.16.3-Linux-x86_64.sh --no-check-certificate
+RUN chmod +x cmake-3.16.3-Linux-x86_64.sh
+RUN ./cmake-3.16.3-Linux-x86_64.sh --prefix /usr/local/cmake --exclude-subdir --skip-license
+
+## ----------------------------------------------------------------------------
+## Add the user
+RUN adduser --system --gecos '' --home /home/owner --disabled-password owner && \
+    addgroup owner && \
+    #usermod -a -G owner owner && \
+    adduser owner owner && \
+    adduser owner sudo && \
+    adduser owner dialout && \
+    echo "owner ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/owner && \
+    chmod 0440 /etc/sudoers.d/owner 
+
+RUN chown owner:owner -R /home/owner
+
+## ----------------------------------------------------------------------------
 RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
 RUN sudo python3 get-pip.py
 
-RUN pip install numpy bokeh launchpadlib pandas Cython contextlib2 pillow lxml jupyter matplotlib opencv-python cffi tqdm --user
+RUN pip3 install -U numpy bokeh launchpadlib pandas Cython contextlib2 pillow lxml jupyter matplotlib opencv-python cffi tqdm
 
 ## ----------------------------------------------------------------------------
 ## get the repos
@@ -58,3 +71,6 @@ CMD ["bash"]
 
 # To get into an existing/open conatainer while it is running execute the following
 # docker exec -it dlib_docker /bin/bash
+
+# 
+# docker container run --rm -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v $(HOME)/data:/home/owner/data dlib_docker
