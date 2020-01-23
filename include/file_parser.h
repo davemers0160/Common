@@ -9,6 +9,7 @@
 #include <utility>
 #include <cctype>
 #include <string>
+#include <sys/stat.h>
 
 #if defined(__linux__)
 #include <limits.h>
@@ -70,7 +71,6 @@ std::string get_linux_path()
 #endif
 
 // ----------------------------------------------------------------------------------------
-
 std::string path_check(std::string path)
 {
     if (path.empty())
@@ -87,7 +87,13 @@ std::string path_check(std::string path)
 }   // end of path_check
 
 // ----------------------------------------------------------------------------------------
+inline bool existence_check(const std::string &path)
+{
+    struct stat buffer;
+    return (stat(path.c_str(), &buffer) == 0);
+}   // end of existence_check
 
+// ----------------------------------------------------------------------------------------
 void parse_line(std::string input, const char delimiter, std::vector<std::string> &params)
 {
     //params.clear();
