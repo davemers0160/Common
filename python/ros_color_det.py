@@ -37,22 +37,43 @@ class color_detector():
         cv_image = self._cv_bridge.imgmsg_to_cv2(image_msg, "bgr8")
         depth_img = self._cv_bridge.imgmsg_to_cv2(depth_msg)
 
+        # converting from BGR to HSV color space
+        hsv = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
+
+        # Range for lower red
+        lower_red = np.array([0,120,70])
+        upper_red = np.array([10,255,255])
+        mask1 = cv2.inRange(hsv, lower_red, upper_red)
+ 
+        # Range for upper red
+        lower_red = np.array([170,120,70])
+        upper_red = np.array([180,255,255])
+        mask2 = cv2.inRange(hsv,lower_red,upper_red)
+ 
+        # Generating the final mask to detect red color
+        kernel = np.ones((5,5),np.uint8)
+        mask = mask1 + mask2
+#       mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_DILATE, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
 
         # loop over the boundaries
-        for (lower, upper) in self.boundaries:
-	        # create NumPy arrays from the boundaries
-	        lower = np.array(lower, dtype = "uint8")
-	        upper = np.array(upper, dtype = "uint8")
-         
-	        # find the colors within the specified boundaries and apply the mask
-	        mask = cv2.inRange(cv_image, lower, upper)
-	        output = cv2.bitwise_and(cv_image, cv_image, mask=mask)
-         
-	        # show the images
-	        cv2.imshow("images", np.hstack([cv_image, output]))
-	        cv2.waitKey(0)
+        #for (lower, upper) in self.boundaries:
+	#        # create NumPy arrays from the boundaries
+	#        lower = np.array(lower, dtype = "uint8")
+	#        upper = np.array(upper, dtype = "uint8")
 
-        self._mask_pub.publish(self._cv_bridge.cv2_to_imgmsg(output, "rgb8"))
+	        # find the colors within the specified boundaries and apply the mask
+	#        mask = cv2.inRange(cv_image, lower, upper)
+	#        output = cv2.bitwise_and(cv_image, cv_image, mask=mask)
+
+	        # show the images
+	#        cv2.imshow("images", np.hstack([cv_image, output]))
+	#        cv2.waitKey(0)
+		
+	output = cv2.bitwise_and(cv_image, cv_image, mask=mask)
+	output = np.hstack([cv_image, hsv, output])
+        self._mask_pub.publish(self._cv_bridge.cv2_to_imgmsg(output, "bgr8"))
 
 
     def camera_info(self, data):
