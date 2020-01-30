@@ -75,6 +75,7 @@ RUN adduser --gecos "ROS User" --home /home/ros --disabled-password ros && \
 ## Install some other packages
 RUN apt-get update -y
 RUN apt-get install libqt5xml5 libxmu-dev libxi-dev python-rosinstall python-rosinstall-generator python-wstool build-essential python3-dev -y
+RUN apt-get install -y ros-kinetic-moveit
 RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
 RUN sudo python get-pip.py
 RUN sudo python3 get-pip.py
@@ -103,19 +104,14 @@ RUN chown -R ros:ros /home/ros
 ## ----------------------------------------------------------------------------
 ## get the zed-ros-wrapper
 RUN cd /home/ros/catkin_ws/src && \
-    git clone https://github.com/stereolabs/zed-ros-wrapper.git /home/ros/catkin_ws/src/zed-ros-wrapper
+    git clone -b 'v2.x' --single-branch https://github.com/stereolabs/zed-ros-wrapper.git /home/ros/catkin_ws/src/zed-ros-wrapper
     
+## build the zed ros wrapper in the catkin work space
 RUN /bin/bash -c "source /opt/ros/kinetic/setup.bash; cd /home/ros/catkin_ws; catkin_make"
-
-#RUN /bin/bash -c "source /opt/ros/kinetic/setup.bash" && \
-    #cd /home/ros/catkin_ws && \
-    #catkin_make
-    # cd /home/ros/catkin_ws/devel/ && source setup.bash && cd /home/ros/
-    # sudo chmod 766 /dev/video0
 
 
 ## ----------------------------------------------------------------------------
-RUN sudo apt-get install iputils-ping -y
+RUN sudo apt-get install -y software-properties-common iputils-ping
 
 
 ## ----------------------------------------------------------------------------
@@ -169,6 +165,8 @@ RUN cd /home/ros && \
 ## put the tensorflow models into the PYTHONPATH
 RUN echo "export PYTHONPATH=$PYTHONPATH:/home/ros/models:/home/ros/models/research:/home/ros/models/research/slim:/home/ros/models/research/object_detection" >> /home/ros/.bashrc
 RUN echo "sudo chmod 766 /dev/video0" >> /home/ros/.bashrc
+RUN echo "PATH=$PATH:/home/ros/.local/bin" >> /home/ros/.bashrc
+RUN echo "source /home/ros/catkin_ws/devel/setup.bash" >> /home/ros/.bashrc
 
 ## ----------------------------------------------------------------------------
 # cd /home/ros default
