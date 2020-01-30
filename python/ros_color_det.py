@@ -45,11 +45,11 @@ class color_detector():
 	        upper = np.array(upper, dtype = "uint8")
          
 	        # find the colors within the specified boundaries and apply the mask
-	        mask = cv2.inRange(image, lower, upper)
-	        output = cv2.bitwise_and(image, image, mask=mask)
+	        mask = cv2.inRange(cv_image, lower, upper)
+	        output = cv2.bitwise_and(cv_image, cv_image, mask=mask)
          
 	        # show the images
-	        cv2.imshow("images", np.hstack([image, output]))
+	        cv2.imshow("images", np.hstack([cv_image, output]))
 	        cv2.waitKey(0)
 
         self._mask_pub.publish(self._cv_bridge.cv2_to_imgmsg(output, "rgb8"))
