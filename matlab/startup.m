@@ -3,18 +3,17 @@
 
 disp('Start Up...');
 if(ispc)
+    cd('D:/Projects/');
     dfd_root = 'D:/Projects/dfd_common/matlab/';
     common_root = 'D:/Common/matlab/';
-
 else
-    dfd_root = '~/DfD/MATLAB/';
+    cd('~/Projects/');
+    dfd_root = '~/Projects/dfd_common/matlab/';
     common_root = '~/Common/matlab/';
 end
 
-
-cd(dfd_root);
-
-listing = dir;
+%% dfd root path
+listing = dir(dfd_root);
 listing = listing(3:end);
 
 addpath(dfd_root,'-begin');
@@ -24,6 +23,7 @@ for idx=1:length(listing)
     end    
 end
 
+%% cOmmon root path
 listing = dir(common_root);
 listing = listing(3:end);
 
