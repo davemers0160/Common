@@ -20,7 +20,9 @@ This file contains the configures the routines for the Chameleon 3 camera.
 
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 	#include <windows.h>
+#ifdef USE_FC2
 	#include "FlyCapture2.h"
+#endif
 #else
 	#include <unistd.h>
 	#include <time.h>
@@ -31,8 +33,9 @@ This file contains the configures the routines for the Chameleon 3 camera.
 
 #include "sleep_ms.h"
 
+#ifdef USE_FC2
 namespace FC2 = FlyCapture2;
-using namespace std;
+#endif
 
 // Chameleon 3 registers
 const uint32_t TEMPERATURE = 0x082C;        // temperature register
@@ -87,14 +90,20 @@ struct cam_properties_struct {
 
 
 // ----------------------------------------------------------------------------------------
-
+#ifdef USE_FC2
 void print_error(FC2::Error error)
 {
 	error.PrintErrorTrace();
 }
+#else
+void print_error(long error)
+{
+    error = -1;
+}
+#endif
 
 // ----------------------------------------------------------------------------------------
-
+#ifdef USE_FC2
 inline std::ostream& operator<< (
     std::ostream& out,
     const FC2::CameraInfo& item
@@ -112,6 +121,7 @@ inline std::ostream& operator<< (
 	out << "  Firmware build time: " << item.firmwareBuildTime << std::endl;
     return out;
 }
+#endif
 
 // ----------------------------------------------------------------------------------------	
 
@@ -136,23 +146,18 @@ inline std::ostream& operator<< (
 
 void print_build_info(void)
 {
+#ifdef USE_FC2
 	FC2::FC2Version fc2Version;
 	FC2::Utilities::GetLibraryVersion(&fc2Version);
-
-	// std::ostringstream version;
-	// version << "FlyCapture2 library version: " << fc2Version.major << "." << fc2Version.minor << "." << fc2Version.type << "." << fc2Version.build;
-	// cout << version.str() << endl;
-
-	// ostringstream timeStamp;
-	// timeStamp << "Application build date: " << __DATE__ << " " << __TIME__;
-	// cout << timeStamp.str() << endl << endl;
     
     std::cout << "FlyCapture2 library version: " << fc2Version.major << "." << fc2Version.minor << "." << fc2Version.type << "." << fc2Version.build << std::endl;
     std::cout << "Application build date: " << __DATE__ << " " << __TIME__ << std::endl;
-    
+#endif
+
 }	// end of PrintBuildInfo
 
 // ----------------------------------------------------------------------------------------	
+#ifdef USE_FC2
 FC2::Error set_property(FC2::Camera &cam, FC2::Property &prop)
 {
 	FC2::Error error = cam.SetProperty(&prop);
@@ -606,6 +611,7 @@ void get_camera_temperature(FC2::Camera &cam, double &cam_temp)
     //return error;
 
 }	// end of get_camera_temperature
+#endif
 
 // ----------------------------------------------------------------------------------------
 
