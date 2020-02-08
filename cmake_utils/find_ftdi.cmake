@@ -6,8 +6,6 @@ find_path(FTDI_INCLUDE_DIRS ftd2xx.h
     PATHS /usr/local "D:/CDM v2.12.28 WHQL Certified" "C:/CDM v2.12.28 WHQL Certified" ENV CPATH 
     PATH_SUFFIXES include
     )
-    
-#get_filename_component(cudnn_hint_path "${CUDA_CUBLAS_LIBRARIES}" PATH)
 
 find_library(FTDI_LIBS ftd2xx
     HINTS ${FTDI_INCLUDE_DIRS}
