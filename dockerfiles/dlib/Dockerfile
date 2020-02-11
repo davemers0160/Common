@@ -18,6 +18,11 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.16.3/cmake-3.16.3
 RUN chmod +x cmake-3.16.3-Linux-x86_64.sh
 RUN ./cmake-3.16.3-Linux-x86_64.sh --prefix /usr/local/cmake --exclude-subdir --skip-license
 
+## These are for the FLIR camera
+RUN apt-get update -y && \
+    apt-get install -y --fix-missing libraw1394-11 libavcodec-dev libavformat-dev libswscale-dev libswresample-dev libavutil-dev \
+    libgtkmm-2.4-dev libglademm-2.4-dev libgtkglextmm-x11-1.2-dev libusb-dev libcanberra-gtk-module usbutils
+    
 ## ----------------------------------------------------------------------------
 ## Add the user
 RUN adduser --system --gecos '' --home /home/owner --disabled-password owner && \
@@ -53,6 +58,11 @@ RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib-contrib
 RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib_obj_detector
 
 ## ----------------------------------------------------------------------------
+## copy the flycapture install files from the PC to the image
+## This requires that the file be downloaded first and placed into the same directory as this
+ADD flycapture2-2.13.3.31-amd64-pkg_Ubuntu16.04.tgz /home/owner/
+
+## ----------------------------------------------------------------------------
 WORKDIR /home/owner
 CMD ["bash"]
 
@@ -69,8 +79,12 @@ CMD ["bash"]
 # docker container run --rm -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix dlib_docker
 # xhost -local:docker
 
+# This increase the file transfer ability to 1GB for the camera
+# sudo sh -c 'echo 1000 > /sys/module/usbcore/parameters/usbfs_memory_mb'
+# cat /sys/module/usbcore/parameters/usbfs_memory_mb
+
 # To get into an existing/open conatainer while it is running execute the following
 # docker exec -it dlib_docker /bin/bash
 
 # 
-# docker container run --rm -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v $(HOME)/data:/home/owner/data dlib_docker
+# docker container run --rm -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v $HOME/data:/home/owner/data dlib_docker
