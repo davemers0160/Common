@@ -1,6 +1,5 @@
-message(" ")
+message(STATUS "--------------------------------------------------------------------------------")
 message(STATUS "Looking for FTDI drivers...")
-# Look for FTDI Drivers
 
 find_path(FTDI_INCLUDE_DIRS ftd2xx.h
     PATHS /usr/local "D:/CDM v2.12.28 WHQL Certified" "C:/CDM v2.12.28 WHQL Certified" ENV CPATH 
@@ -16,7 +15,12 @@ mark_as_advanced(FTDI_LIBS FTDI_INCLUDE_DIRS)
 
 if (FTDI_LIBS AND FTDI_INCLUDE_DIRS)
     set(FTDI_FOUND TRUE)
+	add_compile_definitions(USE_FTDI)
+	message(STATUS "Found FTDI Library: " ${FTDI_LIBS})
 else()
     message("--- FTDI drivers were not found! ---")
     set(FTDI_FOUND FALSE)
 endif()
+
+message(STATUS "--------------------------------------------------------------------------------")
+message(STATUS " ")
