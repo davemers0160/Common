@@ -1,7 +1,8 @@
 ## ----------------------------------------------------------------------------
 ## Need nvidia-docker to run https://github.com/NVIDIA/nvidia-docker
 ## Image from https://gitlab.com/nvidia/cuda/
-FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu16.04
+#FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu16.04
+FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
 
 ## ----------------------------------------------------------------------------
 #RUN adduser --gecos "Main User" --home /home/owner --disabled-password owner && \
@@ -10,7 +11,7 @@ FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu16.04
     
 ## ----------------------------------------------------------------------------
 RUN apt-get update -y && apt-get upgrade -y
-RUN apt-get install -y --fix-missing sudo build-essential gfortran git wget curl nano libatlas-dev libavcodec-dev libavformat-dev libgtk2.0-dev libjpeg-dev liblapack-dev libswscale-dev pkg-config
+RUN apt-get install -y --fix-missing sudo build-essential gfortran git wget curl nano libatlas-base-dev libavcodec-dev libavformat-dev libgtk2.0-dev libjpeg-dev liblapack-dev libswscale-dev pkg-config
 RUN apt-get install -y --fix-missing iputils-ping libqt5xml5 libxmu-dev libxi-dev python3-dev python3-numpy
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -21,7 +22,9 @@ RUN ./cmake-3.16.3-Linux-x86_64.sh --prefix /usr/local/cmake --exclude-subdir --
 ## These are for the FLIR camera
 RUN apt-get update -y && \
     apt-get install -y --fix-missing libraw1394-11 libavcodec-dev libavformat-dev libswscale-dev libswresample-dev libavutil-dev \
-    libgtkmm-2.4-dev libglademm-2.4-dev libgtkglextmm-x11-1.2-dev libusb-dev libcanberra-gtk-module usbutils
+    libgtkmm-2.4-dev libglademm-2.4-dev libgtkglextmm-x11-1.2-dev libusb-dev libcanberra-gtk-module usbutils udev
+    
+#RUN echo "1000" > /sys/module/usbcore/parameters/usbfs_memory_mb
     
 ## ----------------------------------------------------------------------------
 ## Add the user
@@ -42,6 +45,9 @@ RUN sudo python3 get-pip.py
 
 RUN pip3 install -U numpy bokeh launchpadlib pandas Cython contextlib2 pillow lxml jupyter matplotlib opencv-python cffi tqdm
 
+RUN apt-get update -y && \
+    apt-get install -y --fix-missing putty
+    
 ## ----------------------------------------------------------------------------
 ## get the repos
 USER owner
@@ -60,7 +66,10 @@ RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib_obj_detector
 ## ----------------------------------------------------------------------------
 ## copy the flycapture install files from the PC to the image
 ## This requires that the file be downloaded first and placed into the same directory as this
-ADD flycapture2-2.13.3.31-amd64-pkg_Ubuntu16.04.tgz /home/owner/
+#ADD flycapture2-2.13.3.31-amd64-pkg_Ubuntu16.04.tgz /home/owner/
+#ADD flycapture2-2.13.3.31-amd64-pkg_Ubuntu18.04.tgz /home/owner/
+#ADD spinnaker-1.27.0.48-Ubuntu16.04-amd64-pkg.tar.gz /home/owner/
+ADD spinnaker-1.27.0.48-Ubuntu18.04-amd64-pkg.tar.gz /home/owner/
 
 ## ----------------------------------------------------------------------------
 WORKDIR /home/owner
@@ -87,4 +96,7 @@ CMD ["bash"]
 # docker exec -it dlib_docker /bin/bash
 
 # 
+# docker container run -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v $HOME/data:/home/owner/data dlib_docker
 # docker container run --rm -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v $HOME/data:/home/owner/data dlib_docker
+
+
