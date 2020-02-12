@@ -9,6 +9,7 @@
 
 #include "ftd2xx.h"
 
+//-----------------------------------------------------------------------------
 struct ftdiDeviceDetails //structure storage for FTDI device details
 {
     int32_t device_number;
@@ -19,7 +20,7 @@ struct ftdiDeviceDetails //structure storage for FTDI device details
 };
 
 
-
+//-----------------------------------------------------------------------------
 uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
 {
     FT_HANDLE ftHandleTemp; 
@@ -62,8 +63,6 @@ uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
 
 
 // ----------------------------------------------------------------------------------------
-
-//FT_HANDLE OpenComPort(ftdiDeviceDetails &device, std::string descript)
 FT_HANDLE open_com_port(ftdiDeviceDetails &device)
 {
     FT_HANDLE ftHandle = NULL;
@@ -93,14 +92,57 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device)
     }
 
     return ftHandle;
-}	// end of OpenComPort
+}	// end of open_com_port
 
 
+//-----------------------------------------------------------------------------
 FT_STATUS close_com_port(FT_HANDLE ftHandle)
 {
     FT_STATUS status = FT_Close(ftHandle);
     return status;
-}
+}	// end of close_com_port
+
+
+//-----------------------------------------------------------------------------
+bool send_data(FT_HANDLE driver, std::vector<uint8_t> data)
+{
+    bool status = true;
+    unsigned long bytes_written;
+    unsigned long ft_status;
+
+    ft_status = FT_Write(driver, data.data(), data.size(), &bytes_written);
+    if ((ft_status != FT_OK) || (bytes_written < data.size()))
+    {
+        status = false;
+    }
+
+    return status;
+
+}	// end of send_packet
+
+
+//-----------------------------------------------------------------------------
+bool receive_data(FT_HANDLE driver, uint32_t count, std::vector<uint8_t> &rx_data)
+{
+    bool status = true;
+    unsigned long read_count = 0;
+    unsigned long ft_status;
+
+    rx_data.clear();
+    rx_data.resize(count);
+
+    ft_status = FT_Read(driver, &rx_data[0], count, &read_count);
+
+    if(read_count < count)
+    {
+        std::cout << "No data received from Motor Controller!" << std::endl;
+        status = false;
+    }
+
+    return status;
+
+}   // end of receive_data
+
 
 // ----------------------------------------------------------------------------------------
 inline std::ostream& operator<< (
