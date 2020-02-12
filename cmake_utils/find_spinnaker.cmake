@@ -1,4 +1,4 @@
-message(" ")
+message(STATUS "--------------------------------------------------------------------------------")
 message(STATUS "Looking for Spinnaker installation...")
 
 find_path(SPIN_INCLUDE_DIRS Spinnaker.h
@@ -17,7 +17,11 @@ mark_as_advanced(SPIN_LIBS SPIN_INCLUDE_DIRS)
 if (SPIN_LIBS AND SPIN_INCLUDE_DIRS)
     set(SPIN_FOUND TRUE)
     add_compile_definitions(USE_SPINNAKER)
+	message(STATUS "Found Spinnaker Library: " ${SPIN_LIBS})
 else()
     message("--- Spinnaker drivers not found! ---")
     set(SPIN_FOUND FALSE)
 endif()
+
+message(STATUS "--------------------------------------------------------------------------------")
+message(STATUS " ")
