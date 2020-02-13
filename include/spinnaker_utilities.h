@@ -6,6 +6,18 @@
 #include <cstdint>
 #include <iostream>
 #include <iomanip>
+#include <string>
+
+#include "sleep_ms.h"
+
+enum trigger_type
+{
+    SOFTWARE = 0,
+    HARDWARE = 1
+};
+
+const std::vector<Spinnaker::GenICam::gcstring> trigger_name = {"Software", "Line0"};
+
 
 // ----------------------------------------------------------------------------------------
 inline std::ostream& operator<< (std::ostream& out, const Spinnaker::LibraryVersion& item)
@@ -46,7 +58,6 @@ inline std::ostream& operator<< (std::ostream& out, const Spinnaker::CameraPtr& 
 
 
 // ----------------------------------------------------------------------------------------
-//int print_device_info(std::ostream& out, Spinnaker::GenApi::INodeMap& node_map, unsigned int camNum)
 void print_device_info(std::ostream& out, Spinnaker::GenApi::INodeMap& node_map)
 {
     Spinnaker::GenApi::FeatureList_t features;
@@ -175,5 +186,152 @@ void query_interfaces(Spinnaker::InterfacePtr pi)
         std::cout << e.what() << std::endl;
     }
 }
+
+// ----------------------------------------------------------------------------------------
+int configure_trigger(Spinnaker::GenApi::INodeMap& node_map, const trigger_type source, bool on_off)
+{
+    int result = 0;
+
+    try
+    {
+        //
+        // Ensure trigger mode off
+        //
+        // *** NOTES ***
+        // The trigger must be disabled in order to configure whether the source
+        // is software or hardware.
+        //
+        Spinnaker::GenApi::CEnumerationPtr trigger_mode = node_map.GetNode("TriggerMode");
+        if (!Spinnaker::GenApi::IsAvailable(trigger_mode) || !Spinnaker::GenApi::IsReadable(trigger_mode))
+        {
+            std::cout << "Unable to disable trigger mode (node retrieval). Aborting..." << std::endl;
+            return -1;
+        }
+
+        Spinnaker::GenApi::CEnumEntryPtr trigger_status = trigger_mode->GetEntryByName("Off");
+        if (!Spinnaker::GenApi::IsAvailable(trigger_status) || !Spinnaker::GenApi::IsReadable(trigger_status))
+        {
+            std::cout << "Unable to disable trigger mode (enum entry retrieval). Aborting..." << std::endl;
+            return -1;
+        }
+        trigger_mode->SetIntValue(trigger_status->GetValue());
+        //std::cout << "Trigger mode disabled..." << std::endl;
+
+        //
+        // Select trigger source
+        //
+        // *** NOTES ***
+        // The trigger source must be set to hardware or software while trigger
+        // mode is off.
+        //
+        Spinnaker::GenApi::CEnumerationPtr trigger_source = node_map.GetNode("TriggerSource");
+        if (!Spinnaker::GenApi::IsAvailable(trigger_source) || !Spinnaker::GenApi::IsWritable(trigger_source))
+        {
+            std::cout << "Unable to set trigger mode (node retrieval). Aborting..." << std::endl;
+            return -1;
+        }
+
+        //if (source == SOFTWARE)
+        //{
+        //    // Set trigger mode to software
+        //    Spinnaker::GenApi::CEnumEntryPtr trigger_source_soft = trigger_source->GetEntryByName("Software");
+        //    if (!Spinnaker::GenApi::IsAvailable(trigger_source_soft) || !Spinnaker::GenApi::IsReadable(trigger_source_soft))
+        //    {
+        //        std::cout << "Unable to set trigger mode (enum entry retrieval). Aborting..." << std::endl;
+        //        return -1;
+        //    }
+        //    trigger_source->SetIntValue(trigger_source_soft->GetValue());
+        //    //std::cout << "Trigger source set to software..." << std::endl;
+        //}
+        //else if (source == HARDWARE)
+        //{
+        //    // Set trigger mode to hardware ('Line0')
+        //    Spinnaker::GenApi::CEnumEntryPtr trigger_source_hard = trigger_source->GetEntryByName("Line0");
+        //    if (!Spinnaker::GenApi::IsAvailable(trigger_source_hard) || !Spinnaker::GenApi::IsReadable(trigger_source_hard))
+        //    {
+        //        std::cout << "Unable to set trigger mode (enum entry retrieval). Aborting..." << std::endl;
+        //        return -1;
+        //    }
+        //    trigger_source->SetIntValue(trigger_source_hard->GetValue());
+        //    //std::cout << "Trigger source set to hardware..." << std::endl;
+        //}
+
+        Spinnaker::GenApi::CEnumEntryPtr ts = trigger_source->GetEntryByName(trigger_name[source]);
+        if (!Spinnaker::GenApi::IsAvailable(ts) || !Spinnaker::GenApi::IsReadable(ts))
+        {
+            std::cout << "Unable to set trigger mode (enum entry retrieval). Aborting..." << std::endl;
+            return -1;
+        }
+        trigger_source->SetIntValue(ts->GetValue());
+        std::cout << "Trigger source set to " << trigger_name[source] << std::endl;
+
+        //
+        // Turn trigger mode on
+        //
+        // *** LATER ***
+        // Once the appropriate trigger source has been set, turn trigger mode
+        // on in order to retrieve images using the trigger.
+        //
+        if (on_off)
+        {
+            //Spinnaker::GenApi::CEnumEntryPtr ptrTriggerModeOn = ptrTriggerMode->GetEntryByName("On");
+            trigger_status = trigger_mode->GetEntryByName("On");
+            if (!Spinnaker::GenApi::IsAvailable(trigger_status) || !Spinnaker::GenApi::IsReadable(trigger_status))
+            {
+                std::cout << "Unable to enable trigger mode (enum entry retrieval). Aborting..." << std::endl;
+                return -1;
+            }
+            trigger_mode->SetIntValue(trigger_status->GetValue());
+
+            sleep_ms(1000);         // Blackfly and Flea3 GEV cameras need 1 second delay after trigger mode is turned on
+            std::cout << "Trigger mode turned back on..." << std::endl << std::endl;
+        }
+    }
+    catch (Spinnaker::Exception & e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+        result = -1;
+    }
+    return result;
+
+}   // end of configure_trigger
+
+
+// ----------------------------------------------------------------------------------------
+int fire_software_trigger(Spinnaker::GenApi::INodeMap& node_map)
+{
+    int result = 0;
+    try
+    {
+        //
+        // Use trigger to capture image
+        //
+        // *** NOTES ***
+        // The software trigger only feigns being executed by the Enter key;
+        // what might not be immediately apparent is that there is not a
+        // continuous stream of images being captured; in other examples that
+        // acquire images, the camera captures a continuous stream of images.
+        // When an image is retrieved, it is plucked from the stream.
+
+        // Execute software trigger
+        Spinnaker::GenApi::CCommandPtr trigger_command = node_map.GetNode("TriggerSoftware");
+        if (!Spinnaker::GenApi::IsAvailable(trigger_command) || !Spinnaker::GenApi::IsWritable(trigger_command))
+        {
+            std::cout << "Unable to execute trigger. Aborting..." << std::endl;
+            return -1;
+        }
+        trigger_command->Execute();
+        sleep_ms(2000);         // Blackfly and Flea3 GEV cameras need 2 second delay after software trigger
+
+    }
+    catch (Spinnaker::Exception & e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+        result = -1;
+    }
+    return result;
+
+
+}	// end of fire_software_trigger
 
 #endif  // _SPINNAKER_UTILITIES_H
