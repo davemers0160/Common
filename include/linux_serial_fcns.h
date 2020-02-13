@@ -13,6 +13,7 @@
 #include <vector>
 #include <stdexcept>
 
+#include "num2string.h"
 
 //-----------------------------------------------------------------------------
 class serial_port
@@ -33,7 +34,7 @@ private:
         cfsetospeed(&settings, baud_rate);
 
         settings.c_cflag &= ~PARENB;        // No Parity
-        settings.c_cflag &= ~CSTOPB;        // Stop bits = 1 
+        settings.c_cflag &= ~CSTOPB;        // Stop bits = 1
         settings.c_cflag &= ~CSIZE;            // Clears the Mask
         settings.c_cflag |=  CS8;            // Set the data bits = 8
 
@@ -46,87 +47,87 @@ private:
         // Turn off software based flow control (XON/XOFF).
         settings.c_iflag &= ~(IXON | IXOFF | IXANY);
 
-        // Setting the mode of operation,the default mode of operation of serial port in 
-        // Linux is the Cannonical mode. For Serial communications with outside devices 
+        // Setting the mode of operation,the default mode of operation of serial port in
+        // Linux is the Cannonical mode. For Serial communications with outside devices
         // like serial modems, mice etc NON Cannonical mode is recommended.
         settings.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-        
+
         // Prevent special interpretation of output bytes (e.g. newline chars)
-        settings.c_oflag &= ~(OPOST | ONLCR); 
+        settings.c_oflag &= ~(OPOST | ONLCR);
 
         // set wait time
         settings.c_cc[VTIME] = wait_time;    // Wait for up to 1s (100ms increments), returning as soon as any data is received.
         settings.c_cc[VMIN] = 0;
-        
+
         // Save tty settings, also checking for error
         int res = tcsetattr(port, TCSANOW, &settings);
         if (res != 0) 
-            throw std::runtime_error("Error from tcsetattr: " + strerror(errno));
-        
+            throw std::runtime_error("Error from tcsetattr: " + std::string(strerror(errno)));
+
     }
 
 //-----------------------------------------------------------------------------
 public:
 
     serial_port() = default;
-    
+
 //-----------------------------------------------------------------------------
-    void open(std::string named_port, uint32_t baud_rate, uint32_t wait_time)
+    void open_port(std::string named_port, uint32_t baud_rate, uint32_t wait_time)
     {
         port = open(named_port.c_str(), O_RDWR | O_NOCTTY);
-        
+
         if(port == 1)
         {
             throw std::runtime_error("Error opening port: " + named_port);
             return;
         }
-        
+
         config(baud_rate, wait_time);
-        
+
     }
 
 //-----------------------------------------------------------------------------
-    void read(std::vector<uint8_t> &read_bufffer, uint64_t count)
+    void read_port(std::vector<uint8_t> &read_bufffer, uint64_t count)
     {
         read_bufffer.clear();
         read_bufffer.resize(count);
-        
+
         int num_bytes = read(port, &read_bufffer[0], count);
-        
+
         if(num_bytes != count)
         {
-            throw std::runtime_error("Wrong number of bytes received. Expected: " + count.to_string() + ", received: " + num_bytes.to_string());
+            throw std::runtime_error("Wrong number of bytes received. Expected: " + num2str(count,"%d") + ", received: " + num2str(num_bytes,"%d"));
             return;
         }
-            
     }
-    
-    void read(std::string &read_bufffer, uint64_t count)
+
+    void read_port(std::string &read_bufffer, uint64_t count)
     {
         std::vector<uint8_t> rb(count);
-        
-        read(rb,  count);
-                    
+
+        read_port(rb, count);
+
         read_bufffer.assign(rb.begin(), rb.end());
-                
     }
 
 //-----------------------------------------------------------------------------
-    void write(std::vector<uint8_t> write_buffer)
+    void write_port(std::vector<uint8_t> write_buffer)
     {
-        int bytes_written = write(port, write_buffer.data(), write_buffer.size());        
+        uint64_t write_size = write_buffer.size();
+        int bytes_written = write(port, write_buffer.data(), write_size);
     }
-    
-    void write(std::string write_buffer)
+
+    void write_port(std::string write_buffer)
     {
-        int bytes_written = write(port, write_buffer.c_str(), write_buffer.length());
+        uint64_t write_size = write_buffer.length();
+        int bytes_written = write(port, write_buffer.c_str(), write_size);
     }
-    
+
 //-----------------------------------------------------------------------------
-    void close()
+    void close_port()
     {
         close(port);
-        port = NULL;
+        port = 0;
     }
 
 };    // end of class
