@@ -249,6 +249,8 @@ DfD_Analysis/.vscode/launch.json
 *.tar
 *.tgz
 *.7z
+*.gz
+
 
 *.dll
 
