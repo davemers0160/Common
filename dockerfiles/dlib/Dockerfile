@@ -22,7 +22,7 @@ RUN ./cmake-3.16.3-Linux-x86_64.sh --prefix /usr/local/cmake --exclude-subdir --
 ## These are for the FLIR camera
 RUN apt-get update -y && \
     apt-get install -y --fix-missing libraw1394-11 libavcodec-dev libavformat-dev libswscale-dev libswresample-dev libavutil-dev \
-    libgtkmm-2.4-dev libglademm-2.4-dev libgtkglextmm-x11-1.2-dev libusb-dev libcanberra-gtk-module usbutils udev
+    libgtkmm-2.4-dev libglademm-2.4-dev libgtkglextmm-x11-1.2-dev libusb-dev libcanberra-gtk-module usbutils udev kmod
     
 #RUN echo "1000" > /sys/module/usbcore/parameters/usbfs_memory_mb
     
