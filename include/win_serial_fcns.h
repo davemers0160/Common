@@ -70,7 +70,7 @@ public:
 
 
 //-----------------------------------------------------------------------------
-    void read(std::vector<uint8_t> &read_bufffer, uint64_t count)
+    int64_t read(std::vector<uint8_t> &read_bufffer, uint64_t count)
     {
         DWORD num_bytes = 0;                        // Number of bytes read from the port
         DWORD event_mask = 0; 
@@ -90,26 +90,29 @@ public:
                 &num_bytes,                         //Number of bytes read
                 NULL);
              
-        if(num_bytes != count)
-        {
-            throw std::runtime_error("Wrong number of bytes received. Expected: " + count.to_string() + ", received: " + num_bytes.to_string());
-            return;
-        }        
+        // if(num_bytes != count)
+        // {
+            // throw std::runtime_error("Wrong number of bytes received. Expected: " + count.to_string() + ", received: " + num_bytes.to_string());
+            // return;
+        // }      
+
+		return num_bytes;		
     }
 
-    void read(std::string &read_bufffer, uint64_t count)
+    int64_t read(std::string &read_bufffer, uint64_t count)
     {
         std::vector<uint8_t> rb(count);
         
         read(rb,  count);
-                    
-        read_bufffer.assign(rb.begin(), rb.end());            
+
+        read_bufffer.assign(rb.begin(), rb.end());
+		return num_bytes;		
     }
   
 //-----------------------------------------------------------------------------
-    void write(std::vector<uint8_t> write_buffer)
+    int64_t write(std::vector<uint8_t> write_buffer)
     {
-        DWORD bytes_written = 0;                    // Number of bytes written to the port
+        int64_t bytes_written = 0;                  // Number of bytes written to the port
         
         bool Status = WriteFile(port,               // Handle to the Serial port
                         write_buffer.data(),        // Data to be written to the port
@@ -117,17 +120,20 @@ public:
                         &bytes_written,             // Bytes written
                         NULL);
 
+        return bytes_written;
     }
     
-    void write(std::string write_buffer)
+    int64_t write(std::string write_buffer)
     {
-        DWORD bytes_written = 0;                    // Number of bytes written to the port
+        int64_t bytes_written = 0;                  // Number of bytes written to the port
         
         bool Status = WriteFile(port,               // Handle to the Serial port
                         write_buffer.c_str(),       // Data to be written to the port
                         write_buffer.length(),      // No of bytes to write
                         &bytes_written,             // Bytes written
-                        NULL);    
+                        NULL); 
+                        
+        return bytes_written;
     }
   
 //-----------------------------------------------------------------------------
