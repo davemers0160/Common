@@ -18,6 +18,19 @@ enum trigger_type
 
 const std::vector<Spinnaker::GenICam::gcstring> trigger_name = {"Software", "Line0"};
 
+// ----------------------------------------------------------------------------------------
+template<typename T>
+class node_property
+{
+public:
+    T value;
+    Spinnaker::GenICam::gcstring property_name;
+
+    node_property() {}
+
+};
+
+//typedef struct node_property node_property;
 
 // ----------------------------------------------------------------------------------------
 inline std::ostream& operator<< (std::ostream& out, const Spinnaker::LibraryVersion& item)
@@ -185,6 +198,79 @@ void query_interfaces(Spinnaker::InterfacePtr pi)
     {
         std::cout << e.what() << std::endl;
     }
+}
+
+// ----------------------------------------------------------------------------------------
+int configure_exposure(Spinnaker::GenApi::INodeMap& node_map, double value)
+{
+    int result = 0;
+
+    try
+    {
+        //
+        // Turn off automatic exposure mode
+        //
+        // *** NOTES ***
+        // Automatic exposure prevents the manual configuration of exposure
+        // time and needs to be turned off.
+        //
+        // *** LATER ***
+        // Exposure time can be set automatically or manually as needed. This
+        // example turns automatic exposure off to set it manually and back
+        // on in order to return the camera to its default state.
+        //
+        Spinnaker::GenApi::CEnumerationPtr exposure_node = node_map.GetNode("ExposureAuto");
+        if (!Spinnaker::GenApi::IsAvailable(exposure_node) || !Spinnaker::GenApi::IsWritable(exposure_node))
+        {
+            std::cout << "Unable to disable automatic exposure (node retrieval). Aborting..." << std::endl << std::endl;
+            return -1;
+        }
+
+        Spinnaker::GenApi::CEnumEntryPtr exposure_mode = exposure_node->GetEntryByName("Off");
+        if (!Spinnaker::GenApi::IsAvailable(exposure_mode) || !Spinnaker::GenApi::IsReadable(exposure_mode))
+        {
+            std::cout << "Unable to disable automatic exposure (enum entry retrieval). Aborting..." << std::endl << std::endl;
+            return -1;
+        }
+
+        exposure_node->SetIntValue(exposure_mode->GetValue());
+
+
+        //
+        // Set exposure time manually; exposure time recorded in microseconds
+        //
+        // *** NOTES ***
+        // The node is checked for availability and writability prior to the
+        // setting of the node. Further, it is ensured that the desired exposure
+        // time does not exceed the maximum. Exposure time is counted in
+        // microseconds. This information can be found out either by
+        // retrieving the unit with the GetUnit() method or by checking SpinView.
+        //
+        Spinnaker::GenApi::CFloatPtr exposure_time = node_map.GetNode("ExposureTime");
+        if (!Spinnaker::GenApi::IsAvailable(exposure_time) || !Spinnaker::GenApi::IsWritable(exposure_time))
+        {
+            std::cout << "Unable to set exposure time. Aborting..." << std::endl << std::endl;
+            return -1;
+        }
+
+        // Ensure desired exposure time does not exceed the maximum
+        const double max_exposure_time = exposure_time->GetMax();
+
+        if (value > max_exposure_time)
+        {
+            value = max_exposure_time;
+        }
+
+        exposure_time->SetValue(value);
+
+    }
+    catch (Spinnaker::Exception & e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+        result = -1;
+    }
+
+    return result;
 }
 
 // ----------------------------------------------------------------------------------------
