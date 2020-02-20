@@ -19,8 +19,9 @@
 class serial_port
 {
 
+
 private:
-    int port;
+    //int port;
     struct termios settings;
 
 //-----------------------------------------------------------------------------
@@ -68,6 +69,7 @@ private:
 
 //-----------------------------------------------------------------------------
 public:
+    int port;
 
     serial_port() = default;
 
@@ -87,10 +89,10 @@ public:
     }
 
 //-----------------------------------------------------------------------------
-    int64_t read_port(std::vector<uint8_t> &read_bufffer, uint64_t count)
+    int64_t read_port(std::vector<char> &read_bufffer, uint64_t count)
     {
         read_bufffer.clear();
-        read_bufffer.resize(count);
+        read_bufffer.resize(count+1);
 
         int64_t num_bytes = read(port, &read_bufffer[0], count);
 
@@ -99,7 +101,23 @@ public:
             // throw std::runtime_error("Wrong number of bytes received. Expected: " + num2str(count,"%d") + ", received: " + num2str(num_bytes,"%d"));
             // return;
         // }
-		return num_bytes
+        return num_bytes;
+    }
+
+
+    int64_t read_port(std::vector<uint8_t> &read_bufffer, uint64_t count)
+    {
+        read_bufffer.clear();
+        read_bufffer.resize(count+1);
+
+        int64_t num_bytes = read(port, &read_bufffer[0], count);
+
+        // if(num_bytes != count)
+        // {
+            // throw std::runtime_error("Wrong number of bytes received. Expected: " + num2str(count,"%d") + ", received: " + num2str(num_bytes,"%d"));
+            // return;
+        // }
+        return num_bytes;
     }
 
     int64_t read_port(std::string &read_bufffer, uint64_t count)
@@ -109,23 +127,30 @@ public:
         int64_t num_bytes = read_port(rb, count);
 
         read_bufffer.assign(rb.begin(), rb.end());
-		
-		return num_bytes;
+
+        return num_bytes;
     }
 
 //-----------------------------------------------------------------------------
+    int64_t write_port(std::vector<char> write_buffer)
+    {
+        uint64_t write_size = write_buffer.size();
+        int64_t bytes_written = write(port, write_buffer.data(), write_size);
+        return bytes_written;
+    }
+
     int64_t write_port(std::vector<uint8_t> write_buffer)
     {
         uint64_t write_size = write_buffer.size();
         int64_t bytes_written = write(port, write_buffer.data(), write_size);
-		return bytes_written;
+        return bytes_written;
     }
 
     int64_t write_port(std::string write_buffer)
     {
         uint64_t write_size = write_buffer.length();
         int64_t bytes_written = write(port, write_buffer.c_str(), write_size);
-		return bytes_written;
+        return bytes_written;
     }
 
 //-----------------------------------------------------------------------------
