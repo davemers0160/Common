@@ -63,7 +63,7 @@ uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
 
 
 // ----------------------------------------------------------------------------------------
-FT_HANDLE open_com_port(ftdiDeviceDetails &device)
+FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint64_t read_timeout=10000, uint64_t write_timeout=1000)
 {
     FT_HANDLE ftHandle = NULL;
     long lComPortNumber;
@@ -81,7 +81,7 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device)
             //printf("ERROR: Baud rate not supported\n");
 
         FT_SetDataCharacteristics(ftHandle, FT_BITS_8, FT_STOP_BITS_2, FT_PARITY_NONE);
-        FT_SetTimeouts(ftHandle, 5000, 100);
+        FT_SetTimeouts(ftHandle, read_timeout, write_timeout);
         if (FT_GetComPortNumber(ftHandle, &lComPortNumber) == FT_OK)
         {
             if (lComPortNumber == -1) // No COM port assigned }
