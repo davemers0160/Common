@@ -30,18 +30,18 @@ private:
         settings.BaudRate = baud_rate;                              // Setting BaudRate
         settings.ByteSize = 8;                                      // Setting ByteSize = 8
         settings.StopBits = ONESTOPBIT;                             // Setting StopBits = 1
-        settings.Parity   = NOPARITY;                               // Setting Parity = None
+        settings.Parity = NOPARITY;                                 // Setting Parity = None
         
         COMMTIMEOUTS timeouts = { 0 };
-        timeouts.ReadIntervalTimeout         = wait_time*100;       // in milliseconds
-        timeouts.ReadTotalTimeoutConstant    = wait_time*100;       // in milliseconds
-        timeouts.ReadTotalTimeoutMultiplier  = wait_time*100;       // in milliseconds
-        timeouts.WriteTotalTimeoutConstant   = wait_time*100;       // in milliseconds
+        timeouts.ReadIntervalTimeout = wait_time*100;               // in milliseconds
+        timeouts.ReadTotalTimeoutConstant = wait_time*100;          // in milliseconds
+        timeouts.ReadTotalTimeoutMultiplier = wait_time*100;        // in milliseconds
+        timeouts.WriteTotalTimeoutConstant = wait_time*100;         // in milliseconds
         timeouts.WriteTotalTimeoutMultiplier = wait_time*100;       // in milliseconds
         SetCommTimeouts (port, &timeouts);
         
         SetCommState(port, &settings);
-    }    
+    }   // end of config
 
 //-----------------------------------------------------------------------------
 public:
@@ -69,7 +69,7 @@ public:
 
         config(baud_rate, wait_time);
 
-    }   // end of open
+    }   // end of open_port
 
 
 //-----------------------------------------------------------------------------
@@ -100,7 +100,7 @@ public:
         // }      
 
 		return num_bytes;		
-    }
+    }   // end of read_port
 
     uint64_t read_port(std::string &read_bufffer, uint64_t count)
     {
@@ -110,7 +110,7 @@ public:
 
         read_bufffer.assign(rb.begin(), rb.end());
 		return num_bytes;		
-    }
+    }   // end of read_port
   
 //-----------------------------------------------------------------------------
     uint64_t write_port(std::vector<char> write_buffer)
@@ -125,7 +125,7 @@ public:
             NULL);
 
         return bytes_written;
-    }
+    }   // end of write_port
 
     uint64_t write_port(std::vector<uint8_t> write_buffer)
     {
@@ -138,7 +138,7 @@ public:
                         NULL);
 
         return bytes_written;
-    }
+    }   // end of write_port
     
     uint64_t write_port(std::string write_buffer)
     {
@@ -151,14 +151,14 @@ public:
                         NULL); 
                         
         return bytes_written;
-    }
+    }   // end of write_port
   
 //-----------------------------------------------------------------------------
     void close_port()
     {
         CloseHandle(port);
         //port = NULL;
-    }
+    }   // end of close_port
 
 };    // end of class
     
