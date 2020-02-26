@@ -49,7 +49,7 @@ public:
     serial_port() = default;
     
 //-----------------------------------------------------------------------------
-    void open(std::string named_port, uint32_t baud_rate, uint32_t wait_time)
+    void open_port(std::string named_port, uint32_t baud_rate, uint32_t wait_time)
     {
         //  Open a handle to the specified com port: expect COMX
         named_port = "\\\\.\\" + named_port;
@@ -66,28 +66,31 @@ public:
             throw std::runtime_error("Error opening port: " + named_port);
             return;
         }
+
+        config(baud_rate, wait_time);
+
     }   // end of open
 
 
 //-----------------------------------------------------------------------------
-    int64_t read(std::vector<uint8_t> &read_bufffer, uint64_t count)
+    uint64_t read_port(std::vector<uint8_t> &read_bufffer, uint64_t count)
     {
-        DWORD num_bytes = 0;                        // Number of bytes read from the port
-        DWORD event_mask = 0; 
+        unsigned long num_bytes = 0;                        // Number of bytes read from the port
+        unsigned long event_mask = 0;
 
         read_bufffer.clear();
         read_bufffer.resize(count);
         
         // set the events to be monitored for a communication device: EV_TXTEMPTY|EV_RXCHAR
-        bool Status = SetCommMask(port, EV_RXCHAR);
+        //bool Status = SetCommMask(port, EV_RXCHAR);
         
         // wait for the events set by SetCommMask() to happen
-        Status = WaitCommEvent(port, &event_mask, NULL); 
+        //Status = WaitCommEvent(port, &event_mask, NULL); 
         
         ReadFile(port,                              // Handle of the Serial port
                 &read_bufffer[0],                   // Buffer to store the data
                 count,                              // Number of bytes to read in
-                &num_bytes,                         //Number of bytes read
+                &num_bytes,                         // Number of bytes actually read
                 NULL);
              
         // if(num_bytes != count)
@@ -99,20 +102,34 @@ public:
 		return num_bytes;		
     }
 
-    int64_t read(std::string &read_bufffer, uint64_t count)
+    uint64_t read_port(std::string &read_bufffer, uint64_t count)
     {
         std::vector<uint8_t> rb(count);
         
-        read(rb,  count);
+        uint64_t num_bytes = read_port(rb,  count);
 
         read_bufffer.assign(rb.begin(), rb.end());
 		return num_bytes;		
     }
   
 //-----------------------------------------------------------------------------
-    int64_t write(std::vector<uint8_t> write_buffer)
+    uint64_t write_port(std::vector<char> write_buffer)
     {
-        int64_t bytes_written = 0;                  // Number of bytes written to the port
+        unsigned long bytes_written = 0;                  // Number of bytes written to the port
+
+
+        bool Status = WriteFile(port,               // Handle to the Serial port
+            write_buffer.data(),        // Data to be written to the port
+            write_buffer.size(),        // No of bytes to write
+            &bytes_written,             // Bytes written
+            NULL);
+
+        return bytes_written;
+    }
+
+    uint64_t write_port(std::vector<uint8_t> write_buffer)
+    {
+        unsigned long bytes_written = 0;                  // Number of bytes written to the port
         
         bool Status = WriteFile(port,               // Handle to the Serial port
                         write_buffer.data(),        // Data to be written to the port
@@ -123,9 +140,9 @@ public:
         return bytes_written;
     }
     
-    int64_t write(std::string write_buffer)
+    uint64_t write_port(std::string write_buffer)
     {
-        int64_t bytes_written = 0;                  // Number of bytes written to the port
+        unsigned long bytes_written = 0;                  // Number of bytes written to the port
         
         bool Status = WriteFile(port,               // Handle to the Serial port
                         write_buffer.c_str(),       // Data to be written to the port
@@ -137,10 +154,10 @@ public:
     }
   
 //-----------------------------------------------------------------------------
-    void close()
+    void close_port()
     {
         CloseHandle(port);
-        port = NULL;
+        //port = NULL;
     }
 
 };    // end of class

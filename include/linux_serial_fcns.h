@@ -6,12 +6,13 @@
 
 #include <fcntl.h>             // Contains file controls like O_RDWR
 #include <errno.h>             // Error integer and strerror() function
-#include <termios.h>         // Contains POSIX terminal control definitions
-#include <unistd.h>         // write(), read(), close()
+#include <termios.h>           // Contains POSIX terminal control definitions
+#include <unistd.h>            // write(), read(), close()
 
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <iostream>
 
 #include "num2string.h"
 
@@ -89,35 +90,47 @@ public:
     }
 
 //-----------------------------------------------------------------------------
-    int64_t read_port(std::vector<char> &read_bufffer, uint64_t count)
+    uint64_t read_port(std::vector<char> &read_bufffer, uint64_t count)
     {
+        uint64_t idx;
+        uint64_t bytes_read = 0;
         read_bufffer.clear();
-        read_bufffer.resize(count+1);
+        read_bufffer.resize(count);
 
-        int64_t num_bytes = read(port, &read_bufffer[0], count);
+        for (idx = 0; idx < count; ++idx)
+        {
+            bytes_read += read(port, &read_bufffer[idx], 1);
+        }
 
-        // if(num_bytes != count)
-        // {
-            // throw std::runtime_error("Wrong number of bytes received. Expected: " + num2str(count,"%d") + ", received: " + num2str(num_bytes,"%d"));
-            // return;
-        // }
-        return num_bytes;
+        if(bytes_read != count)
+        {
+            //throw std::runtime_error("Wrong number of bytes received. Expected: " + num2str(count,"%d") + ", received: " + num2str(num_bytes,"%d"));
+            //return;
+            std::cout << "Wrong number of bytes received. Expected: " << num2str(count, "%d") << ", received: " << num2str(bytes_read, "%d") << std::endl;
+        }
+        return bytes_read;
     }
 
 
     int64_t read_port(std::vector<uint8_t> &read_bufffer, uint64_t count)
     {
+        uint64_t idx;
+        uint64_t bytes_read = 0;
         read_bufffer.clear();
         read_bufffer.resize(count+1);
 
-        int64_t num_bytes = read(port, &read_bufffer[0], count);
+        for (idx = 0; idx < count; ++idx)
+        {
+            bytes_read += read(port, &read_bufffer[idx], 1);
+        }
 
-        // if(num_bytes != count)
-        // {
-            // throw std::runtime_error("Wrong number of bytes received. Expected: " + num2str(count,"%d") + ", received: " + num2str(num_bytes,"%d"));
-            // return;
-        // }
-        return num_bytes;
+        if(bytes_read != count)
+        {
+            //throw std::runtime_error("Wrong number of bytes received. Expected: " + num2str(count,"%d") + ", received: " + num2str(num_bytes,"%d"));
+            //return;
+            std::cout << "Wrong number of bytes received. Expected: " << num2str(count, "%d") << ", received: " << num2str(bytes_read, "%d") << std::endl;
+        }
+        return bytes_read;
     }
 
     int64_t read_port(std::string &read_bufffer, uint64_t count)

@@ -205,6 +205,11 @@ void query_interfaces(Spinnaker::InterfacePtr pi)
     }
 }
 
+// ----------------------------------------------------------------------------------------
+void get_max_values(Spinnaker::CameraPtr& cam)
+{
+
+}
 
 // ----------------------------------------------------------------------------------------
 void set_image_size(Spinnaker::CameraPtr& cam, uint64_t &height, uint64_t &width, uint64_t &y_offset, uint64_t &x_offset)
@@ -336,7 +341,7 @@ void get_exposure(Spinnaker::CameraPtr& cam, double& value, Spinnaker::ExposureA
 }   // end of get_exposure
 
 // ----------------------------------------------------------------------------------------
-void set_acquisition(Spinnaker::CameraPtr& cam, double& value, Spinnaker::AcquisitionModeEnums& mode)
+void set_acquisition_mode(Spinnaker::CameraPtr& cam, double& value, Spinnaker::AcquisitionModeEnums& mode)
 {
 
     switch (mode)
@@ -366,7 +371,7 @@ void set_acquisition(Spinnaker::CameraPtr& cam, double& value, Spinnaker::Acquis
 }   // end of set_acquistion
 
 // ----------------------------------------------------------------------------------------
-void get_acquisition(Spinnaker::CameraPtr& cam, double& value, Spinnaker::AcquisitionModeEnums& mode)
+void get_acquisition_mode(Spinnaker::CameraPtr& cam, double& value, Spinnaker::AcquisitionModeEnums& mode)
 {
     mode = cam->AcquisitionMode.GetValue();
     switch (mode)
@@ -382,6 +387,13 @@ void get_acquisition(Spinnaker::CameraPtr& cam, double& value, Spinnaker::Acquis
     }
 
 }   // end of get_acquisition
+
+// ----------------------------------------------------------------------------------------
+void get_temperature(Spinnaker::CameraPtr& cam, double& value)
+{
+    value = cam->DeviceTemperature.GetValue();
+
+}   // end of get_temperature
 
 /*
 // ----------------------------------------------------------------------------------------
@@ -451,11 +463,13 @@ int configure_exposure(Spinnaker::GenApi::INodeMap& node_map, double value)
 
 
 // ----------------------------------------------------------------------------------------
-void set_trigger(Spinnaker::CameraPtr& cam, Spinnaker::TriggerSourceEnums &source, Spinnaker::TriggerModeEnums& mode)
+//void set_trigger(Spinnaker::CameraPtr& cam, Spinnaker::TriggerSourceEnums& source, Spinnaker::TriggerModeEnums& mode)
+void set_trigger_source(Spinnaker::CameraPtr& cam, Spinnaker::TriggerSourceEnums& source)
 {
-    cam->TriggerMode.SetValue(mode);
+    cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_Off);
     sleep_ms(1000);
     cam->TriggerSource.SetValue(source);
+    cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_On);
 
 }   // end of set_trigger
 

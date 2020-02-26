@@ -47,8 +47,8 @@ uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
                 {
                     tmp_dev.device_number = idx;
                     tmp_dev.type = type;
-                    tmp_dev.description = (std::string)description;
-                    tmp_dev.serial_number = (std::string)serial_number;
+                    tmp_dev.description = std::string(description);
+                    tmp_dev.serial_number = std::string(serial_number);
 
                     device.push_back(tmp_dev);
                 }
