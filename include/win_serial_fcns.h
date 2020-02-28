@@ -53,7 +53,7 @@ public:
     {
         //  Open a handle to the specified com port: expect COMX
         named_port = "\\\\.\\" + named_port;
-        port = ::CreateFile(named_port.c_str(),
+        port = CreateFile(named_port.c_str(),
               GENERIC_READ | GENERIC_WRITE,
               0,                            //  must be opened with exclusive-access
               NULL,                         //  default security attributes

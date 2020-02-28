@@ -4,7 +4,7 @@ import math
 import rospy
 import message_filters
 from sensor_msgs.msg import Image, CameraInfo
-from std_msgs.msg import String
+from std_msgs.msg import String, Float32MultiArray
 from cv_bridge import CvBridge
 import cv2
 import numpy as np
@@ -63,7 +63,9 @@ class RosTensorFlow():
 
         self._img_pub = rospy.Publisher('obj_det/image', Image, queue_size=1)
         self._box_pub = rospy.Publisher('obj_det/boxes', String, queue_size=1)
-        self._razel_pub = rospy.Publisher('obj_det/target_razel', String, queue_size=1)
+        self._razel_str = rospy.Publisher('obj_det/target_razel', String, queue_size=1)
+        self._razel = rospy.Publisher('obj_det/target_razel_f', Float32MultiArray, queue_size=1)
+        
 
         #self.score_threshold = rospy.get_param('~score_threshold', 0.1)
         #self.use_top_k = rospy.get_param('~use_top_k', 5)
@@ -99,6 +101,7 @@ class RosTensorFlow():
 
         box_string = ""
         target_string = ""
+        razel = []
 
         for idx in range(num_detections):
             if scores[idx] >= min_score:
@@ -117,7 +120,8 @@ class RosTensorFlow():
                     az = self.h_res*(det_x - int(self.img_w/2.0))
                     el = self.v_res*(int(self.img_h/2.0) - det_y)
                     target_string = target_string + "{" + "{},{},{}".format(avg_range, az, el) + "},"
-
+                    razel.append([avg_range, az, el])
+                    
                     #print("Range: {}".format(avg_range))
                     #print("Az: {}".format(az))
                     #print("El: {}".format(el))
@@ -126,7 +130,8 @@ class RosTensorFlow():
                     #self._img_pub.publish(self._cv_bridge.cv2_to_imgmsg(bp_image))
 
         target_string = target_string[:-1]
-        self._razel_pub.publish(target_string)
+        self._razel_str.publish(target_string)
+        self._razel.publish(np.asarray(razel, dtype=numpy.float32))
 
         # Visualization of the results of a detection.
         vis_util.visualize_boxes_and_labels_on_image_array(
