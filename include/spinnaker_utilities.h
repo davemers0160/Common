@@ -10,33 +10,17 @@
 
 #include "sleep_ms.h"
 
-//enum trigger_type
-//{
-//    SOFTWARE = 0,
-//    HARDWARE = 1
-//};
-//
-//const std::vector<Spinnaker::GenICam::gcstring> trigger_name = {"Software", "Line0"};
-
+// ----------------------------------------------------------------------------------------
+// GLOBALS
+// ----------------------------------------------------------------------------------------
 const uint64_t width_mod = 16;
 const uint64_t x_offset_mod = 4;
 
 const uint64_t height_mod = 2;
 const uint64_t y_offset_mod = 2;
 
-// ----------------------------------------------------------------------------------------
-//template<typename T>
-//class node_property
-//{
-//public:
-//    T value;
-//    Spinnaker::GenICam::gcstring property_name;
-//
-//    node_property() {}
-//
-//};
+double max_exp_time = 0;
 
-//typedef struct node_property node_property;
 
 // ----------------------------------------------------------------------------------------
 inline std::ostream& operator<< (std::ostream& out, const Spinnaker::LibraryVersion& item)
@@ -208,7 +192,14 @@ void query_interfaces(Spinnaker::InterfacePtr pi)
 // ----------------------------------------------------------------------------------------
 void get_max_values(Spinnaker::CameraPtr& cam)
 {
+    max_exp_time = cam->ExposureTime.GetMax();
+}
 
+// ----------------------------------------------------------------------------------------
+void init_camera(Spinnaker::CameraPtr& cam)
+{
+    cam->Init();
+    get_max_values(cam);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -268,14 +259,12 @@ void get_image_size(Spinnaker::CameraPtr& cam, uint64_t &height, uint64_t &width
 void set_pixel_format(Spinnaker::CameraPtr& cam, Spinnaker::PixelFormatEnums &mode)
 {
     cam->PixelFormat.SetValue(mode);
-
 }   // end of set_pixel_format
 
 // ----------------------------------------------------------------------------------------
 void get_pixel_format(Spinnaker::CameraPtr& cam, Spinnaker::PixelFormatEnums& mode)
 {
     mode = cam->PixelFormat.GetValue();
-
 }   // end of get_pixel_format
 
 // ----------------------------------------------------------------------------------------
@@ -312,33 +301,31 @@ void get_gain(Spinnaker::CameraPtr& cam, double& value, Spinnaker::GainAutoEnums
 
 
 // ----------------------------------------------------------------------------------------
-void set_exposure(Spinnaker::CameraPtr& cam, double& value, Spinnaker::ExposureAutoEnums& mode)
+void set_exposure_mode(Spinnaker::CameraPtr& cam, Spinnaker::ExposureAutoEnums& mode)
 {
-    switch (mode)
-    {
-    case Spinnaker::ExposureAutoEnums::ExposureAuto_Continuous:
-        cam->ExposureAuto.SetValue(mode);
-        break;
-
-    case Spinnaker::ExposureAutoEnums::ExposureAuto_Off:
-    case Spinnaker::ExposureAutoEnums::ExposureAuto_Once:
-        cam->ExposureAuto.SetValue(mode);
-        sleep_ms(500);
-        value = (value > cam->ExposureTime.GetMax()) ? cam->ExposureTime.GetMax() : value;
-        cam->ExposureTime.SetValue(value);
-        break;
-    }
-
-}   // end of set_exposure
-
+    cam->ExposureAuto.SetValue(mode);
+    sleep_ms(500);
+}   // end of set_exposure_mode
 
 // ----------------------------------------------------------------------------------------
-void get_exposure(Spinnaker::CameraPtr& cam, double& value, Spinnaker::ExposureAutoEnums& mode)
+void get_exposure_mode(Spinnaker::CameraPtr& cam, Spinnaker::ExposureAutoEnums& mode)
 {
     mode = cam->ExposureAuto.GetValue();
-    value = cam->ExposureTime.GetValue();
+}   // end of set_exposure_mode
 
-}   // end of get_exposure
+// ----------------------------------------------------------------------------------------
+void set_exposure_time(Spinnaker::CameraPtr& cam, double& value) 
+{
+    //value = (value > cam->ExposureTime.GetMax()) ? cam->ExposureTime.GetMax() : value;
+    value = (value > max_exp_time) ? max_exp_time : value;
+    cam->ExposureTime.SetValue(value);
+}   // end of set_exposure_time
+
+// ----------------------------------------------------------------------------------------
+void get_exposure_time(Spinnaker::CameraPtr& cam, double& value)
+{
+    value = cam->ExposureTime.GetValue();
+}   // end of get_exposure_time
 
 // ----------------------------------------------------------------------------------------
 void set_acquisition_mode(Spinnaker::CameraPtr& cam, double& value, Spinnaker::AcquisitionModeEnums& mode)
