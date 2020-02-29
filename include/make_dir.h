@@ -3,7 +3,8 @@
 
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 	#include <Windows.h>
-#else
+#else defined(__linux__)
+    #define ERROR_ALREADY_EXISTS 183L
 	#include <sys/stat.h>
 #endif
 
@@ -17,7 +18,7 @@ int32_t make_dir(std::string directory_path, std::string new_folder)
 {
 
     int32_t status = -1;
-    path_check(directory_path);
+    directory_path = path_check(directory_path);
     
 	std::string temp_path = directory_path + new_folder;
 

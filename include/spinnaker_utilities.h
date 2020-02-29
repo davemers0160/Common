@@ -19,7 +19,12 @@ const uint64_t x_offset_mod = 4;
 const uint64_t height_mod = 2;
 const uint64_t y_offset_mod = 2;
 
+double min_exp_time = 0;
 double max_exp_time = 0;
+
+double min_gain = 0;
+double max_gain = 0;
+
 
 
 // ----------------------------------------------------------------------------------------
@@ -190,17 +195,30 @@ void query_interfaces(Spinnaker::InterfacePtr pi)
 }
 
 // ----------------------------------------------------------------------------------------
-void get_max_values(Spinnaker::CameraPtr& cam)
+void get_bounds(Spinnaker::CameraPtr& cam)
 {
+    min_exp_time = cam->ExposureTime.GetMin();
     max_exp_time = cam->ExposureTime.GetMax();
+
+    min_gain = cam->Gain.GetMin();
+    max_gain = cam->Gain.GetMax();
 }
 
 // ----------------------------------------------------------------------------------------
 void init_camera(Spinnaker::CameraPtr& cam)
 {
+    // initialize the camera
     cam->Init();
-    get_max_values(cam);
-}
+
+    // set the ADC bit depth
+    if (cam->AdcBitDepth.GetAccessMode() == Spinnaker::GenApi::EAccessMode::RW)
+        cam->AdcBitDepth.SetValue(Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12);
+    //else
+        //std::cout << "can't set bit depth" << std::endl;
+
+    // get the upper and lower bounds for certain camera parameters
+    get_bounds(cam);
+}   // end of init_camera
 
 // ----------------------------------------------------------------------------------------
 void set_image_size(Spinnaker::CameraPtr& cam, uint64_t &height, uint64_t &width, uint64_t &y_offset, uint64_t &x_offset)
@@ -268,8 +286,11 @@ void get_pixel_format(Spinnaker::CameraPtr& cam, Spinnaker::PixelFormatEnums& mo
 }   // end of get_pixel_format
 
 // ----------------------------------------------------------------------------------------
-void set_gain(Spinnaker::CameraPtr& cam, double &value, Spinnaker::GainAutoEnums &mode)
+void set_gain_mode(Spinnaker::CameraPtr& cam, Spinnaker::GainAutoEnums& mode)
 {
+    cam->GainAuto.SetValue(mode);
+
+    /*
     switch (mode)
     {
     case Spinnaker::GainAutoEnums::GainAuto_Continuous:
@@ -287,18 +308,30 @@ void set_gain(Spinnaker::CameraPtr& cam, double &value, Spinnaker::GainAutoEnums
         cam->Gain.SetValue(value);
         break;           
     }
+    */
+}   // end of set_gain_mode
 
-}   // end of set_gain
+// ----------------------------------------------------------------------------------------
+void get_gain_mode(Spinnaker::CameraPtr& cam, Spinnaker::GainAutoEnums& mode)
+{
+    mode = cam->GainAuto.GetValue();
+}   // end of get_gain_mode
 
 
 // ----------------------------------------------------------------------------------------
-void get_gain(Spinnaker::CameraPtr& cam, double& value, Spinnaker::GainAutoEnums& mode)
+void set_gain_value(Spinnaker::CameraPtr& cam, double& value)
 {
-    mode = cam->GainAuto.GetValue();
+    value = (value > max_gain) ? max_gain : value;
+    value = (value < min_gain) ? min_gain : value;
+    cam->Gain.SetValue(value);
+
+}   // end of set_gain_value
+
+// ----------------------------------------------------------------------------------------
+void get_gain_value(Spinnaker::CameraPtr& cam, double& value)
+{
     value = cam->Gain.GetValue();
-
-}   // end of get_gain
-
+}   // end of get_gain_value
 
 // ----------------------------------------------------------------------------------------
 void set_exposure_mode(Spinnaker::CameraPtr& cam, Spinnaker::ExposureAutoEnums& mode)
@@ -328,9 +361,11 @@ void get_exposure_time(Spinnaker::CameraPtr& cam, double& value)
 }   // end of get_exposure_time
 
 // ----------------------------------------------------------------------------------------
-void set_acquisition_mode(Spinnaker::CameraPtr& cam, double& value, Spinnaker::AcquisitionModeEnums& mode)
+//void set_acquisition_mode(Spinnaker::CameraPtr& cam, double& value, Spinnaker::AcquisitionModeEnums& mode)
+void set_acquisition_mode(Spinnaker::CameraPtr& cam, Spinnaker::AcquisitionModeEnums& mode)
 {
-
+    cam->AcquisitionMode.SetValue(mode);
+/*
     switch (mode)
     {
     case Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous:
@@ -354,13 +389,15 @@ void set_acquisition_mode(Spinnaker::CameraPtr& cam, double& value, Spinnaker::A
         cam->AcquisitionFrameCount.SetValue((int64_t)value);
         break;
     }
-
-}   // end of set_acquistion
+    */
+}   // end of set_acquistion_mode
 
 // ----------------------------------------------------------------------------------------
-void get_acquisition_mode(Spinnaker::CameraPtr& cam, double& value, Spinnaker::AcquisitionModeEnums& mode)
+//void get_acquisition_mode(Spinnaker::CameraPtr& cam, double& value, Spinnaker::AcquisitionModeEnums& mode)
+void get_acquisition_mode(Spinnaker::CameraPtr& cam, Spinnaker::AcquisitionModeEnums& mode)
 {
     mode = cam->AcquisitionMode.GetValue();
+    /*
     switch (mode)
     {
         case Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous:
@@ -372,8 +409,36 @@ void get_acquisition_mode(Spinnaker::CameraPtr& cam, double& value, Spinnaker::A
             value = (double)cam->AcquisitionFrameCount.GetValue();
             break;
     }
-
+    */
 }   // end of get_acquisition
+
+// ----------------------------------------------------------------------------------------
+void set_frame_rate(Spinnaker::CameraPtr& cam, double& value)
+{
+    value = (value > cam->AcquisitionFrameRate.GetMax()) ? cam->AcquisitionFrameRate.GetMax() : value;
+    value = (value > cam->AcquisitionFrameRate.GetMin()) ? cam->AcquisitionFrameRate.GetMin() : value;
+    cam->AcquisitionFrameRate.SetValue(value);
+}   // end of set_frame_rate
+
+// ----------------------------------------------------------------------------------------
+void get_frame_rate(Spinnaker::CameraPtr& cam, double& value)
+{
+    value = cam->AcquisitionFrameRate.GetValue();
+}   // end of get_frame_rate
+
+// ----------------------------------------------------------------------------------------
+void set_frame_count(Spinnaker::CameraPtr& cam, double& value)
+{
+    value = (value > cam->AcquisitionFrameCount.GetMax()) ? cam->AcquisitionFrameCount.GetMax() : value;
+    value = (value > cam->AcquisitionFrameCount.GetMin()) ? cam->AcquisitionFrameCount.GetMin() : value;
+    cam->AcquisitionFrameRate.SetValue(value);
+}   // end of set_frame_count
+
+// ----------------------------------------------------------------------------------------
+void get_frame_count(Spinnaker::CameraPtr& cam, double& value)
+{
+    value = cam->AcquisitionFrameCount.GetValue();
+}   // end of get_frame_count
 
 // ----------------------------------------------------------------------------------------
 void get_temperature(Spinnaker::CameraPtr& cam, double& value)
@@ -448,17 +513,26 @@ int configure_exposure(Spinnaker::GenApi::INodeMap& node_map, double value)
 }   // end of configure_exposure
 */
 
+// ----------------------------------------------------------------------------------------
+void config_trigger(Spinnaker::CameraPtr& cam, bool value)
+{
+    if(value == false)
+        cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_Off);
+    else
+        cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_On);
+}   // end of config_trigger
 
 // ----------------------------------------------------------------------------------------
 //void set_trigger(Spinnaker::CameraPtr& cam, Spinnaker::TriggerSourceEnums& source, Spinnaker::TriggerModeEnums& mode)
 void set_trigger_source(Spinnaker::CameraPtr& cam, Spinnaker::TriggerSourceEnums& source)
 {
+    // The trigger must be disabled in order to configure the source
     cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_Off);
-    sleep_ms(1000);
     cam->TriggerSource.SetValue(source);
     cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_On);
+    sleep_ms(1000);
 
-}   // end of set_trigger
+}   // end of set_trigger_source
 
 /*
 // ----------------------------------------------------------------------------------------
@@ -569,8 +643,10 @@ int configure_trigger(Spinnaker::GenApi::INodeMap& node_map, const trigger_type 
 void fire_software_trigger(Spinnaker::CameraPtr& cam)
 {
     cam->TriggerSoftware.Execute();
-    sleep_ms(2000);
-}
+
+    // Blackfly and Flea3 GEV cameras need 2 second delay after software trigger
+    //sleep_ms(2000);
+}   // end of fire_software_trigger
 
 /*
 // ----------------------------------------------------------------------------------------
@@ -679,7 +755,65 @@ int acquire_image(Spinnaker::CameraPtr &cam, Spinnaker::ImagePtr &image)//, Spin
     //cam->EndAcquisition();
 
     return result;
-}
+
+}   // end of acquire_image
+
+// ----------------------------------------------------------------------------------------
+void acquire_single_image(Spinnaker::CameraPtr& cam, Spinnaker::ImagePtr& image)
+{
+
+    cam->BeginAcquisition();
+
+    Spinnaker::ImagePtr ptr_img = cam->GetNextImage();
+    
+    // Ensure image completion
+    if (ptr_img->IsIncomplete())
+    {
+        // Retrieve and print the image status description
+        std::cout << "Image incomplete: " << Spinnaker::Image::GetImageStatusDescription(ptr_img->GetImageStatus())
+            << "..." << std::endl << std::endl;
+    }
+
+    // convert image
+    image = ptr_img->Convert(Spinnaker::PixelFormat_BGR8);
+
+    // Release image
+    ptr_img->Release();
+    cam->EndAcquisition();
+
+}   // end of acquire_single_image
+
+// ----------------------------------------------------------------------------------------
+void acquire_multiple_images(Spinnaker::CameraPtr& cam, uint32_t avg_count, std::vector<Spinnaker::ImagePtr>& image)
+{
+    uint32_t idx;
+
+    image.clear();
+
+    cam->BeginAcquisition();
+
+
+    for (uint32_t idx = 0; idx < avg_count; idx++)
+    {
+        Spinnaker::ImagePtr ptr_img = cam->GetNextImage();
+
+        // Ensure image completion
+        if (ptr_img->IsIncomplete())
+        {
+            // Retrieve and print the image status description
+            std::cout << "Image incomplete: " << Spinnaker::Image::GetImageStatusDescription(ptr_img->GetImageStatus())
+                << "..." << std::endl << std::endl;
+        }
+
+        // convert image
+        image.push_back(std::move(ptr_img->Convert(Spinnaker::PixelFormat_BGR8)));
+
+        // Release image
+        ptr_img->Release();
+    }
+    cam->EndAcquisition();
+
+}   // end of acquire_multiple_images
 
 
 #endif  // _SPINNAKER_UTILITIES_H
