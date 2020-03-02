@@ -1,13 +1,18 @@
 #ifndef _LINUX_SERIAL_CTRL_H_
 #define _LINUX_SERIAL_CTRL_H_
 
-
+#include <ctime>
 #include <cstdint>
+#include <cstring>
+#include <cerrno>
 
 #include <fcntl.h>             // Contains file controls like O_RDWR
 #include <errno.h>             // Error integer and strerror() function
 #include <termios.h>           // Contains POSIX terminal control definitions
 #include <unistd.h>            // write(), read(), close()
+#include <sys/ioctl.h> 
+#include <linux/serial.h> 
+
 
 #include <string>
 #include <vector>
@@ -28,6 +33,15 @@ private:
 //-----------------------------------------------------------------------------
     void config(uint32_t baud_rate, uint32_t wait_time)
     {
+        struct serial_struct serial; 
+        //ioctl(fd, TIOCGSERIAL, &serial); 
+        
+        //serial.flags |= ASYNC_LOW_LATENCY; 
+        
+        //serial.xmit_fifo_size = 20;
+        //ioctl(fd, TIOCSSERIAL, &serial); 
+        
+        
         // get the current port configuration
         tcgetattr(port, &settings);
 
@@ -59,7 +73,7 @@ private:
 
         // set wait time
         settings.c_cc[VTIME] = wait_time;    // Wait for up to 1s (100ms increments), returning as soon as any data is received.
-        settings.c_cc[VMIN] = 0;
+        settings.c_cc[VMIN] = 1;
 
         // Save tty settings, also checking for error
         int res = tcsetattr(port, TCSANOW, &settings);
@@ -77,8 +91,9 @@ public:
 //-----------------------------------------------------------------------------
     void open_port(std::string named_port, uint32_t baud_rate, uint32_t wait_time)
     {
+        //port = open(named_port.c_str(), O_RDWR | O_NOCTTY);
         port = open(named_port.c_str(), O_RDWR | O_NOCTTY);
-
+        
         if(port == 1)
         {
             throw std::runtime_error("Error opening port: " + named_port);
@@ -86,6 +101,8 @@ public:
         }
 
         config(baud_rate, wait_time);
+        
+        flush_port();
 
     }
 
@@ -164,6 +181,20 @@ public:
         uint64_t write_size = write_buffer.length();
         int64_t bytes_written = write(port, write_buffer.c_str(), write_size);
         return bytes_written;
+    }
+
+//-----------------------------------------------------------------------------
+    void flush_port()
+    {
+        usleep(2);
+        tcflush(port, TCIOFLUSH);
+    }
+    
+    inline int64_t bytes_available()
+    {
+        int64_t bytes_avail = 0;
+        ioctl(port, FIONREAD, &bytes_avail);
+        return bytes_avail;
     }
 
 //-----------------------------------------------------------------------------
