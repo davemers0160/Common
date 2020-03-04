@@ -793,7 +793,7 @@ void acquire_multiple_images(Spinnaker::CameraPtr& cam, uint32_t avg_count, std:
     cam->BeginAcquisition();
 
 
-    for (uint32_t idx = 0; idx < avg_count; idx++)
+    for (idx = 0; idx < avg_count; idx++)
     {
         Spinnaker::ImagePtr ptr_img = cam->GetNextImage();
 
