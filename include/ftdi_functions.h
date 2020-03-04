@@ -73,8 +73,7 @@ uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
 FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, uint32_t write_timeout=1000)
 {
     FT_HANDLE ftHandle = NULL;
-    long comm_port_num;
-    ULONG t;
+    LONG comm_port_num;
 
     //if (FT_OpenEx((void *)device.serial_number.c_str(), FT_OPEN_BY_SERIAL_NUMBER, &ftHandle) == FT_OK)
     if (FT_Open(device.device_number, &ftHandle) == FT_OK)
