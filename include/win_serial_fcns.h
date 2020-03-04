@@ -152,7 +152,26 @@ public:
                         
         return bytes_written;
     }   // end of write_port
-  
+
+//-----------------------------------------------------------------------------
+    void flush_port()
+    {
+        sleep_ms(1);
+        PurgeComm(port, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
+    }   // end of flush_port
+
+    inline int64_t bytes_available()
+    {
+        int64_t bytes_avail = -1;
+        COMSTAT cs;
+        unsigned long error;
+
+        if (ClearCommError(port, &error, &cs))
+            bytes_avail = (int64_t)cs.cbInQue;
+
+        return bytes_avail;
+    }   // end of bytes_available
+
 //-----------------------------------------------------------------------------
     void close_port()
     {

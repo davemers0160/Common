@@ -111,8 +111,20 @@ public:
     {
         uint64_t idx;
         uint64_t bytes_read = 0;
+        int64_t bytes_avail = 0;
         read_bufffer.clear();
         read_bufffer.resize(count);
+
+        do
+        {
+            bytes_avail = bytes_available();
+        } while (bytes_avail == 0);
+
+        if (bytes_avail == -1)
+        {
+            std::cout << "Error process bytes available: " << std::string(strerror(errno)) << std::endl;
+            return bytes_read;
+        }
 
         for (idx = 0; idx < count; ++idx)
         {
@@ -133,8 +145,20 @@ public:
     {
         uint64_t idx;
         uint64_t bytes_read = 0;
+        int64_t bytes_avail = 0;
         read_bufffer.clear();
         read_bufffer.resize(count+1);
+
+        do
+        {
+            bytes_avail = bytes_available();
+        } while (bytes_avail == 0);
+
+        if (bytes_avail == -1)
+        {
+            std::cout << "Error process bytes available: " << std::string(strerror(errno)) << std::endl;
+            return bytes_read;
+        }
 
         for (idx = 0; idx < count; ++idx)
         {
@@ -188,14 +212,18 @@ public:
     {
         usleep(2);
         tcflush(port, TCIOFLUSH);
-    }
+    }   // end of flush_port
     
     inline int64_t bytes_available()
     {
         int64_t bytes_avail = 0;
-        ioctl(port, FIONREAD, &bytes_avail);
+        int result = ioctl(port, FIONREAD, &bytes_avail);
+
+        if (result < 0)
+            bytes_avail = result;
+
         return bytes_avail;
-    }
+    }   // end of bytes_available
 
 //-----------------------------------------------------------------------------
     void close_port()
