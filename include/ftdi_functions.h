@@ -9,6 +9,12 @@
 
 #include "ftd2xx.h"
 
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+
+#elif defined(__linux__)
+
+#endif
+
 //-----------------------------------------------------------------------------
 struct ftdiDeviceDetails //structure storage for FTDI device details
 {
@@ -26,8 +32,8 @@ uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
     FT_HANDLE ftHandleTemp; 
     FT_DEVICE_LIST_INFO_NODE dev_info[32];
     uint32_t dev_number = 0, dev_found = 0;
-    unsigned int num_devices = 0;
-    unsigned int flags, type, id, loc_id;
+    DWORD num_devices = 0;
+    DWORD flags, type, id, loc_id;
     char serial_number[16];
     char description[64];
     ftdiDeviceDetails tmp_dev;
@@ -64,10 +70,11 @@ uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
 
 
 // ----------------------------------------------------------------------------------------
-FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint64_t read_timeout=10000, uint64_t write_timeout=1000)
+FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, uint32_t write_timeout=1000)
 {
     FT_HANDLE ftHandle = NULL;
-    unsigned int comm_port_num;
+    long comm_port_num;
+    ULONG t;
 
     //if (FT_OpenEx((void *)device.serial_number.c_str(), FT_OPEN_BY_SERIAL_NUMBER, &ftHandle) == FT_OK)
     if (FT_Open(device.device_number, &ftHandle) == FT_OK)
@@ -108,7 +115,7 @@ FT_STATUS close_com_port(FT_HANDLE ftHandle)
 bool send_data(FT_HANDLE driver, std::vector<uint8_t> data)
 {
     bool status = true;
-    unsigned int bytes_written;
+    DWORD bytes_written;
     unsigned long ft_status;
 
     ft_status = FT_Write(driver, data.data(), data.size(), &bytes_written);
@@ -126,7 +133,7 @@ bool send_data(FT_HANDLE driver, std::vector<uint8_t> data)
 bool receive_data(FT_HANDLE driver, uint32_t count, std::vector<uint8_t> &rx_data)
 {
     bool status = true;
-    unsigned int read_count = 0;
+    DWORD read_count = 0;
     unsigned long ft_status;
 
     rx_data.clear();
