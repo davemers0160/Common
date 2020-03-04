@@ -26,11 +26,12 @@ uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
     FT_HANDLE ftHandleTemp; 
     FT_DEVICE_LIST_INFO_NODE dev_info[32];
     uint32_t dev_number = 0, dev_found = 0;
-    unsigned long num_devices = 0;
-    unsigned long flags, id, type, loc_id;
+    unsigned int num_devices = 0;
+    unsigned int flags, type, id, loc_id;
     char serial_number[16];
     char description[64];
     ftdiDeviceDetails tmp_dev;
+    
     // search for devices connected to the USB port
     FT_CreateDeviceInfoList(&num_devices);
 
@@ -66,7 +67,7 @@ uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
 FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint64_t read_timeout=10000, uint64_t write_timeout=1000)
 {
     FT_HANDLE ftHandle = NULL;
-    long lComPortNumber;
+    unsigned int comm_port_num;
 
     //if (FT_OpenEx((void *)device.serial_number.c_str(), FT_OPEN_BY_SERIAL_NUMBER, &ftHandle) == FT_OK)
     if (FT_Open(device.device_number, &ftHandle) == FT_OK)
@@ -82,12 +83,12 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint64_t read_timeout=10000, 
 
         FT_SetDataCharacteristics(ftHandle, FT_BITS_8, FT_STOP_BITS_2, FT_PARITY_NONE);
         FT_SetTimeouts(ftHandle, read_timeout, write_timeout);
-        if (FT_GetComPortNumber(ftHandle, &lComPortNumber) == FT_OK)
+        if (FT_GetComPortNumber(ftHandle, &comm_port_num) == FT_OK)
         {
-            if (lComPortNumber == -1) // No COM port assigned }
+            if (comm_port_num == -1) // No COM port assigned }
                 std::cout << "The device selected does not have a Comm Port assigned!" << std::endl << std::endl;
             else
-                std::cout << "FTDI device " << device.description << " found on COM:" << std::setw(2) << std::setfill('0') << lComPortNumber << std::endl << std::endl;
+                std::cout << "FTDI device " << device.description << " found on COM:" << std::setw(2) << std::setfill('0') << comm_port_num << std::endl << std::endl;
         }
     }
 
@@ -107,7 +108,7 @@ FT_STATUS close_com_port(FT_HANDLE ftHandle)
 bool send_data(FT_HANDLE driver, std::vector<uint8_t> data)
 {
     bool status = true;
-    unsigned long bytes_written;
+    unsigned int bytes_written;
     unsigned long ft_status;
 
     ft_status = FT_Write(driver, data.data(), data.size(), &bytes_written);
@@ -125,7 +126,7 @@ bool send_data(FT_HANDLE driver, std::vector<uint8_t> data)
 bool receive_data(FT_HANDLE driver, uint32_t count, std::vector<uint8_t> &rx_data)
 {
     bool status = true;
-    unsigned long read_count = 0;
+    unsigned int read_count = 0;
     unsigned long ft_status;
 
     rx_data.clear();

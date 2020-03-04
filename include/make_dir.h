@@ -3,7 +3,7 @@
 
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 	#include <Windows.h>
-#else defined(__linux__)
+#elif defined(__linux__)
     #define ERROR_ALREADY_EXISTS 183L
 	#include <sys/stat.h>
 #endif
@@ -30,7 +30,7 @@ int32_t make_dir(std::string directory_path, std::string new_folder)
     {
         status = GetLastError();
     }
-#else
+#elif defined(__linux__)
 
 	mode_t mode = 0766;
 	status = mkdir(temp_path.c_str(), mode);
