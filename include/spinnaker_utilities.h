@@ -262,7 +262,7 @@ void set_image_size(Spinnaker::CameraPtr& cam, uint64_t &height, uint64_t &width
 
 
 // ----------------------------------------------------------------------------------------
-void get_image_size(Spinnaker::CameraPtr& cam, uint64_t &height, uint64_t &width, uint64_t &y_offset, uint64_t &x_offset)
+void get_image_size(Spinnaker::CameraPtr& cam, uint32_t &height, uint32_t &width, uint32_t &y_offset, uint32_t &x_offset)
 {
 
     width = cam->Width.GetValue();
@@ -435,7 +435,7 @@ void set_frame_count(Spinnaker::CameraPtr& cam, double& value)
 }   // end of set_frame_count
 
 // ----------------------------------------------------------------------------------------
-void get_frame_count(Spinnaker::CameraPtr& cam, double& value)
+void get_frame_count(Spinnaker::CameraPtr& cam, int64_t& value)
 {
     value = cam->AcquisitionFrameCount.GetValue();
 }   // end of get_frame_count
