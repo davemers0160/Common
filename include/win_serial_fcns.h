@@ -73,13 +73,13 @@ public:
 
 
 //-----------------------------------------------------------------------------
-    uint64_t read_port(std::vector<uint8_t> &read_bufffer, uint64_t count)
+    uint64_t read_port(std::vector<uint8_t> &read_bufffer, uint64_t bytes_to_read)
     {
         unsigned long num_bytes = 0;                        // Number of bytes read from the port
         unsigned long event_mask = 0;
 
         read_bufffer.clear();
-        read_bufffer.resize(count);
+        read_bufffer.resize(bytes_to_read);
         
         // set the events to be monitored for a communication device: EV_TXTEMPTY|EV_RXCHAR
         //bool Status = SetCommMask(port, EV_RXCHAR);
@@ -89,7 +89,7 @@ public:
         
         ReadFile(port,                              // Handle of the Serial port
                 &read_bufffer[0],                   // Buffer to store the data
-                count,                              // Number of bytes to read in
+                bytes_to_read,                      // Number of bytes to read in
                 &num_bytes,                         // Number of bytes actually read
                 NULL);
              
@@ -102,11 +102,11 @@ public:
 		return num_bytes;		
     }   // end of read_port
 
-    uint64_t read_port(std::string &read_bufffer, uint64_t count)
+    uint64_t read_port(std::string &read_bufffer, uint64_t bytes_to_read)
     {
-        std::vector<uint8_t> rb(count);
+        std::vector<uint8_t> rb(bytes_to_read);
         
-        uint64_t num_bytes = read_port(rb,  count);
+        uint64_t num_bytes = read_port(rb, bytes_to_read);
 
         read_bufffer.assign(rb.begin(), rb.end());
 		return num_bytes;		
@@ -156,7 +156,7 @@ public:
 //-----------------------------------------------------------------------------
     void flush_port()
     {
-        sleep_ms(1);
+        Sleep(2);
         PurgeComm(port, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
     }   // end of flush_port
 
