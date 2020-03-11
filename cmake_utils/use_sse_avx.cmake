@@ -6,11 +6,11 @@ if (POLICY CMP0054)
 endif()
 
 # Setup some options to allow a user to enable SSE and AVX instruction use.  
-if ((";${gcc_like_compilers};" MATCHES ";${CMAKE_CXX_COMPILER_ID};")  AND
-    (";${intel_archs};"        MATCHES ";${CMAKE_SYSTEM_PROCESSOR};") AND NOT USE_AUTO_VECTOR)
-    option(USE_SSE2_INSTRUCTIONS "Compile your program with SSE2 instructions" OFF)
-    option(USE_SSE4_INSTRUCTIONS "Compile your program with SSE4 instructions" OFF)
-    option(USE_AVX_INSTRUCTIONS  "Compile your program with AVX instructions"  OFF)
+if (("GNU" MATCHES "${CMAKE_CXX_COMPILER_ID}")  AND
+    ("x86_64" MATCHES "${CMAKE_SYSTEM_PROCESSOR}") AND NOT USE_AUTO_VECTOR)
+    option(USE_SSE2_INSTRUCTIONS "Compile your program with SSE2 instructions" ON)
+    option(USE_SSE4_INSTRUCTIONS "Compile your program with SSE4 instructions" ON)
+    option(USE_AVX_INSTRUCTIONS  "Compile your program with AVX instructions"  ON)
     if(USE_AVX_INSTRUCTIONS)
         add_definitions(-mavx)
         message(STATUS "Enabling AVX instructions")
@@ -21,16 +21,17 @@ if ((";${gcc_like_compilers};" MATCHES ";${CMAKE_CXX_COMPILER_ID};")  AND
         add_definitions(-msse2)
         message(STATUS "Enabling SSE2 instructions")
     endif()
+    
 elseif (MSVC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") # else if using Visual Studio 
     # Use SSE2 by default when using Visual Studio.
     option(USE_SSE2_INSTRUCTIONS "Compile your program with SSE2 instructions" ON)
     # Visual Studio 2005 didn't support SSE4 
     if (NOT MSVC80)
-        option(USE_SSE4_INSTRUCTIONS "Compile your program with SSE4 instructions" OFF)
+        option(USE_SSE4_INSTRUCTIONS "Compile your program with SSE4 instructions" ON)
     endif()
     # Visual Studio 2005 and 2008 didn't support AVX
     if (NOT MSVC80 AND NOT MSVC90)
-        option(USE_AVX_INSTRUCTIONS  "Compile your program with AVX instructions"  OFF)
+        option(USE_AVX_INSTRUCTIONS  "Compile your program with AVX instructions"  ON)
     endif() 
     include(CheckTypeSize)
     check_type_size( "void*" SIZE_OF_VOID_PTR)

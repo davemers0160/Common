@@ -59,6 +59,10 @@ uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
 
                     device.push_back(tmp_dev);
                 }
+                else
+                {
+                    std::cout << "Error getting the FTDI device info!" << std::endl;
+                }   
 
             }
         }
@@ -74,9 +78,11 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, 
 {
     FT_HANDLE ftHandle = NULL;
     LONG comm_port_num;
-
-    //if (FT_OpenEx((void *)device.serial_number.c_str(), FT_OPEN_BY_SERIAL_NUMBER, &ftHandle) == FT_OK)
-    if (FT_Open(device.device_number, &ftHandle) == FT_OK)
+    FT_STATUS status;
+    
+    status = FT_Open(device.device_number, &ftHandle);
+    
+    if (status == FT_OK)
     {
 
         if (FT_SetBaudRate(ftHandle, device.baud_rate) != FT_OK)
@@ -96,6 +102,10 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, 
             else
                 std::cout << "FTDI device " << device.description << " found on COM:" << std::setw(2) << std::setfill('0') << comm_port_num << std::endl << std::endl;
         }
+    }
+    else
+    {
+        std::cout << "Error opening port: FT_STATUS = " << status << std::endl;
     }
 
     return ftHandle;
