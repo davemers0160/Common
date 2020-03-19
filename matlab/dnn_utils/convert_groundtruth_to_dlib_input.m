@@ -17,14 +17,30 @@ mat_file_filter = {'*.mat','Mat Files';'*.*','All Files' };
 
 % the input mat file should be a single table with all of the image file
 % names and rectangular bounding boxes
-[mat_save_file, mat_path] = uigetfile(mat_file_filter, 'Select Mat File', startpath);
+[mat_save_file, mat_path] = uigetfile(mat_file_filter, 'Select ground truth mat file', startpath);
 if(mat_path == 0)
     return;
 end
-load(fullfile(mat_path, mat_save_file));
+
+% load in the ground truth mat file into a struct and then list it out to
+% select the right ground truth table
+gt_tmp = load(fullfile(mat_path, mat_save_file));
+gt_names = fieldnames(gt_tmp);
+
+
+[gt_idx, tf] = listdlg('PromptString','Select a GroundTruth Table:',...
+                           'SelectionMode','single',...
+                           'ListString',gt_names);
+
+if(tf == 0)
+    fprintf('No ground truth table was selected!\n');
+    return;
+end
+
+data = eval(strcat('gt_tmp(gt_idx).',gt_names{gt_idx}));
 
 startpath = mat_path;
-
+clear gt_tmp
 
 %% get the save location
 save_path = uigetdir(startpath, 'Select save directory');
@@ -52,7 +68,8 @@ commandwindow;
 
 %% convert the ground truth table to cell array and get the label names
 
-label_data = data.Variables;
+%label_data = data.Variables;
+label_data = table2cell(data);
 
 label_names = data.Properties.VariableNames;
 label_names = label_names(2:end);
@@ -70,7 +87,7 @@ num_scales = numel(scale_folder_name);
 [~, tmp_file, file_ext] = fileparts(base_save_file);
 
 % cycle through
-for idx=1:num_scales
+parfor idx=1:num_scales
     
     data_directory = strcat(save_path,'/',scale_folder_name{idx},'/');
     fprintf('Creating directory: %s\n', data_directory);

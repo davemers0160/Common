@@ -81,4 +81,6 @@ fprintf('green: %3.4f\n', green);
 fprintf('blue:  %3.4f\n', blue);
 fprintf('gray:  %3.4f\n', gray);
 
+fprintf('%3.4f, %3.4f, %3.4f, %3.4f\n', red, green, blue, gray);
+
 
