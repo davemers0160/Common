@@ -163,12 +163,23 @@ RUN cd /home/ros && \
 
 RUN sudo usermod -a -G video ros
 
+RUN cd /home/ros/catkin_ws/src && \
+    git clone https://github.com/davemers0160/robot.git
+    
+RUN cd /home/ros && \
+    mkdir Projects && \
+    cd Projects && \
+    git clone https://github.com/davemers0160/Common.git
+    
+RUN sudo apt-get install -y cmake-gui putty
+
 ## ----------------------------------------------------------------------------
 ## put the tensorflow models into the PYTHONPATH
 RUN echo "export PYTHONPATH=\$PYTHONPATH:/home/ros/models:/home/ros/models/research:/home/ros/models/research/slim:/home/ros/models/research/object_detection" >> /home/ros/.bashrc
 #RUN echo "sudo chmod 766 /dev/video0" >> /home/ros/.bashrc
 RUN echo "PATH=\$PATH:/home/ros/.local/bin" >> /home/ros/.bashrc
 RUN echo "source /home/ros/catkin_ws/devel/setup.bash" >> /home/ros/.bashrc
+RUN echo "export PLATFORM=docker" >> /home/ros/.bashrc
 
 ## ----------------------------------------------------------------------------
 # cd /home/ros default
