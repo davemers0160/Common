@@ -6,15 +6,15 @@ FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu16.04
 
 ## ----------------------------------------------------------------------------
 ## set up the ability to get out to the rest of the world for app user
-RUN echo 'http_proxy="http://130.163.13.200:8080"' >> /etc/environment
-RUN echo 'https_proxy="http://130.163.13.200:8080"' >> /etc/environment
+#RUN echo 'http_proxy="http://130.163.13.200:8080"' >> /etc/environment
+#RUN echo 'https_proxy="http://130.163.13.200:8080"' >> /etc/environment
 
 
 ## ----------------------------------------------------------------------------
 ## copy the certs forrdtecndproxy01v2.crt the proxies
-ADD rdtecndproxy01v2.crt /usr/local/share/ca-certificates/
-RUN chmod 644 /usr/local/share/ca-certificates/rdtecndproxy01v2.crt
-RUN update-ca-certificates
+#ADD rdtecndproxy01v2.crt /usr/local/share/ca-certificates/
+#RUN chmod 644 /usr/local/share/ca-certificates/rdtecndproxy01v2.crt
+#RUN update-ca-certificates
 
 
 ## ----------------------------------------------------------------------------
@@ -78,7 +78,7 @@ RUN apt-get install libqt5xml5 libxmu-dev libxi-dev python-rosinstall python-ros
 RUN apt-get install -y ros-kinetic-moveit
 RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
 RUN sudo python get-pip.py
-RUN sudo python3 get-pip.py
+#RUN sudo python3 get-pip.py
 
 
 ## ----------------------------------------------------------------------------
@@ -159,13 +159,15 @@ RUN cd /home/ros && \
     mkdir tf_obj_det && \
     cd tf_obj_det && \
     #wget https://raw.githubusercontent.com/davemers0160/Common/master/python/tf_obj_det_v2.py --no-check-certificate && \
-    wget https://raw.githubusercontent.com/davemers0160/Common/master/python/ros_tf_obj_det.py --no-check-certificate
+    wget https://raw.githubusercontent.com/davemers0160/robot/master/python_code/ros_tf_obj_det.py --no-check-certificate
+
+RUN sudo usermod -a -G video ros
 
 ## ----------------------------------------------------------------------------
 ## put the tensorflow models into the PYTHONPATH
-RUN echo "export PYTHONPATH=$PYTHONPATH:/home/ros/models:/home/ros/models/research:/home/ros/models/research/slim:/home/ros/models/research/object_detection" >> /home/ros/.bashrc
-RUN echo "sudo chmod 766 /dev/video0" >> /home/ros/.bashrc
-RUN echo "PATH=$PATH:/home/ros/.local/bin" >> /home/ros/.bashrc
+RUN echo "export PYTHONPATH=\$PYTHONPATH:/home/ros/models:/home/ros/models/research:/home/ros/models/research/slim:/home/ros/models/research/object_detection" >> /home/ros/.bashrc
+#RUN echo "sudo chmod 766 /dev/video0" >> /home/ros/.bashrc
+RUN echo "PATH=\$PATH:/home/ros/.local/bin" >> /home/ros/.bashrc
 RUN echo "source /home/ros/catkin_ws/devel/setup.bash" >> /home/ros/.bashrc
 
 ## ----------------------------------------------------------------------------
@@ -203,6 +205,7 @@ CMD ["bash"]
 ## to run the main ROS zed launch execute the following
 # cd /home/ros/catkin_ws/src/zed-ros-wrapper/zed_wrapper
 # roslaunch launch/zed.launch
+# roslaunch /home/ros/catkin_ws/src/zed-ros-wrapper/zed_wrapper/launch/zed.launch
 
 ## ----------------------------------------------------------------------------
 ## ZED Tools
