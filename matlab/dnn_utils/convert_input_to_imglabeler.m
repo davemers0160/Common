@@ -10,7 +10,7 @@ full_path = mfilename('fullpath');
 plot_num = 1;
 
 %% get the data file
-startpath = 'D:\Projects\object_detection_data';
+startpath = 'D:\Projects\';
 file_filter = {'*.txt','Text Files';'*.*','All Files' };
 
 [input_file, input_path] = uigetfile(file_filter, 'Select Input File', startpath);
@@ -91,11 +91,20 @@ end
 T = cell2table(C);
 T.Properties.VariableNames = label_names';
 
-ldc = labelDefinitionCreator();
-for idx=1:num_classes
-    addLabel(ldc, label_names{idx}, labelType.Rectangle);
+if(verLessThan('matlab','9.6'))
+    label_types = [];
+    for idx=1:numel(label_names)
+        label_types = [label_types; labelType('Rectangle')];
+    end
+
+    label_description = table(label_names,label_types,'VariableNames',{'Name','Type'});
+else
+    ldc = labelDefinitionCreator();
+    for idx=1:num_classes
+        addLabel(ldc, label_names{idx}, labelType.Rectangle);
+    end
+    label_description = create(ldc);
 end
-label_description = create(ldc);
 
 % label_type = labelType(repmat({'Rectangle'}, num_classes, 1));
 % description = repmat({''}, num_classes, 1);
