@@ -211,14 +211,44 @@ void init_camera(Spinnaker::CameraPtr& cam)
     cam->Init();
 
     // set the ADC bit depth
-    if (cam->AdcBitDepth.GetAccessMode() == Spinnaker::GenApi::EAccessMode::RW)
-        cam->AdcBitDepth.SetValue(Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12);
+    //if (Spinnaker::GenApi::IsAvailable(cam->AdcBitDepth) && Spinnaker::GenApi::IsWritable(cam->AdcBitDepth))
+    //{
+    //    cam->AdcBitDepth.SetValue(Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12);
+    //}
+    //if (cam->AdcBitDepth.GetAccessMode() == Spinnaker::GenApi::EAccessMode::RW)
+    //    cam->AdcBitDepth.SetValue(Spinnaker::AdcBitDepthEnums::AdcBitDepth_Bit12);
     //else
         //std::cout << "can't set bit depth" << std::endl;
 
     // get the upper and lower bounds for certain camera parameters
     get_bounds(cam);
 }   // end of init_camera
+
+// ----------------------------------------------------------------------------------------
+void set_adc_bit_depth(Spinnaker::CameraPtr& cam, Spinnaker::AdcBitDepthEnums& bit_depth)
+{
+    if (Spinnaker::GenApi::IsAvailable(cam->AdcBitDepth) && Spinnaker::GenApi::IsWritable(cam->AdcBitDepth))
+    {
+        cam->AdcBitDepth.SetValue(bit_depth);
+    }
+    else
+    {
+        std::cout << "ADC Bit Depth is not available..." << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------------------
+void get_adc_bit_depth(Spinnaker::CameraPtr& cam, Spinnaker::AdcBitDepthEnums& bit_depth)
+{
+    if (Spinnaker::GenApi::IsAvailable(cam->AdcBitDepth) && Spinnaker::GenApi::IsReadable(cam->AdcBitDepth))
+    {
+        bit_depth = cam->AdcBitDepth.GetValue();
+    }
+    else
+    {
+        std::cout << "ADC Bit Depth is not available..." << std::endl;
+    }
+}
 
 // ----------------------------------------------------------------------------------------
 void set_image_size(Spinnaker::CameraPtr& cam, uint64_t &height, uint64_t &width, uint64_t &y_offset, uint64_t &x_offset)
@@ -276,95 +306,151 @@ void get_image_size(Spinnaker::CameraPtr& cam, uint32_t &height, uint32_t &width
 // ----------------------------------------------------------------------------------------
 void set_pixel_format(Spinnaker::CameraPtr& cam, Spinnaker::PixelFormatEnums &mode)
 {
-    cam->PixelFormat.SetValue(mode);
+    if (Spinnaker::GenApi::IsAvailable(cam->PixelFormat) && Spinnaker::GenApi::IsWritable(cam->PixelFormat))
+    {
+        cam->PixelFormat.SetValue(mode);
+    }
+    else
+    {
+        std::cout << "Pixel Format is not available..." << std::endl;
+    }
 }   // end of set_pixel_format
 
 // ----------------------------------------------------------------------------------------
 void get_pixel_format(Spinnaker::CameraPtr& cam, Spinnaker::PixelFormatEnums& mode)
 {
-    mode = cam->PixelFormat.GetValue();
+    if (Spinnaker::GenApi::IsAvailable(cam->PixelFormat) && Spinnaker::GenApi::IsReadable(cam->PixelFormat))
+    {
+        mode = cam->PixelFormat.GetValue();
+    }
+    else
+    {
+        std::cout << "Pixel Format is not available..." << std::endl;
+    }
 }   // end of get_pixel_format
 
 // ----------------------------------------------------------------------------------------
 void set_gain_mode(Spinnaker::CameraPtr& cam, Spinnaker::GainAutoEnums& mode)
 {
-    cam->GainAuto.SetValue(mode);
-
-    /*
-    switch (mode)
+    if (Spinnaker::GenApi::IsAvailable(cam->GainAuto) && Spinnaker::GenApi::IsWritable(cam->GainAuto))
     {
-    case Spinnaker::GainAutoEnums::GainAuto_Continuous:
         cam->GainAuto.SetValue(mode);
-        break;
-
-    case Spinnaker::GainAutoEnums::GainAuto_Off:
-    case Spinnaker::GainAutoEnums::GainAuto_Once:
-        cam->GainAuto.SetValue(mode);
-        sleep_ms(500);
-
-        value = (value > cam->Gain.GetMax()) ? cam->Gain.GetMax() : value;
-        value = (value < cam->Gain.GetMin()) ? cam->Gain.GetMin() : value;
-
-        cam->Gain.SetValue(value);
-        break;           
     }
-    */
+    else
+    {
+        std::cout << "Gain Mode is not available..." << std::endl;
+    }
 }   // end of set_gain_mode
 
 // ----------------------------------------------------------------------------------------
 void get_gain_mode(Spinnaker::CameraPtr& cam, Spinnaker::GainAutoEnums& mode)
 {
-    mode = cam->GainAuto.GetValue();
+    if (Spinnaker::GenApi::IsAvailable(cam->GainAuto) && Spinnaker::GenApi::IsReadable(cam->GainAuto))
+    {
+        mode = cam->GainAuto.GetValue();
+    }
+    else
+    {
+        std::cout << "Gain Mode is not available..." << std::endl;
+    }
 }   // end of get_gain_mode
 
 
 // ----------------------------------------------------------------------------------------
 void set_gain_value(Spinnaker::CameraPtr& cam, double& value)
 {
-    value = (value > max_gain) ? max_gain : value;
-    value = (value < min_gain) ? min_gain : value;
-    cam->Gain.SetValue(value);
-
+    if (Spinnaker::GenApi::IsAvailable(cam->Gain) && Spinnaker::GenApi::IsWritable(cam->Gain))
+    {
+        value = (value > max_gain) ? max_gain : value;
+        value = (value < min_gain) ? min_gain : value;
+        cam->Gain.SetValue(value);
+    }
+    else
+    {
+        std::cout << "Gain Value is not available..." << std::endl;
+    }
 }   // end of set_gain_value
 
 // ----------------------------------------------------------------------------------------
 void get_gain_value(Spinnaker::CameraPtr& cam, double& value)
 {
-    value = cam->Gain.GetValue();
+    if (Spinnaker::GenApi::IsAvailable(cam->Gain) && Spinnaker::GenApi::IsReadable(cam->Gain))
+    {
+        value = cam->Gain.GetValue();
+    }
+    else
+    {
+        std::cout << "Gain Value is not available..." << std::endl;
+    }
 }   // end of get_gain_value
 
 // ----------------------------------------------------------------------------------------
 void set_exposure_mode(Spinnaker::CameraPtr& cam, Spinnaker::ExposureAutoEnums& mode)
 {
-    cam->ExposureAuto.SetValue(mode);
-    sleep_ms(500);
+    if (Spinnaker::GenApi::IsAvailable(cam->ExposureAuto) && Spinnaker::GenApi::IsWritable(cam->ExposureAuto))
+    {
+        cam->ExposureAuto.SetValue(mode);
+        sleep_ms(500);
+    }
+    else
+    {
+        std::cout << "Exposure Mode is not available..." << std::endl;
+    }
 }   // end of set_exposure_mode
 
 // ----------------------------------------------------------------------------------------
 void get_exposure_mode(Spinnaker::CameraPtr& cam, Spinnaker::ExposureAutoEnums& mode)
 {
-    mode = cam->ExposureAuto.GetValue();
+    if (Spinnaker::GenApi::IsAvailable(cam->ExposureAuto) && Spinnaker::GenApi::IsReadable(cam->ExposureAuto))
+    {
+        mode = cam->ExposureAuto.GetValue();
+    }
+    else
+    {
+        std::cout << "Exposure Mode is not available..." << std::endl;
+    }
 }   // end of set_exposure_mode
 
 // ----------------------------------------------------------------------------------------
 void set_exposure_time(Spinnaker::CameraPtr& cam, double& value) 
 {
-    //value = (value > cam->ExposureTime.GetMax()) ? cam->ExposureTime.GetMax() : value;
-    value = (value > max_exp_time) ? max_exp_time : value;
-    cam->ExposureTime.SetValue(value);
+    if (Spinnaker::GenApi::IsAvailable(cam->ExposureTime) && Spinnaker::GenApi::IsWritable(cam->ExposureTime))
+    {
+        //value = (value > cam->ExposureTime.GetMax()) ? cam->ExposureTime.GetMax() : value;
+        value = (value > max_exp_time) ? max_exp_time : value;
+        cam->ExposureTime.SetValue(value);
+    }
+    else
+    {
+        std::cout << "Exposure Time is not available..." << std::endl;
+    }
 }   // end of set_exposure_time
 
 // ----------------------------------------------------------------------------------------
 void get_exposure_time(Spinnaker::CameraPtr& cam, double& value)
 {
-    value = cam->ExposureTime.GetValue();
+    if (Spinnaker::GenApi::IsAvailable(cam->ExposureTime) && Spinnaker::GenApi::IsReadable(cam->ExposureTime))
+    {
+        value = cam->ExposureTime.GetValue();
+    }
+    else
+    {
+        std::cout << "Exposure Time is not available..." << std::endl;
+    }
 }   // end of get_exposure_time
 
 // ----------------------------------------------------------------------------------------
 //void set_acquisition_mode(Spinnaker::CameraPtr& cam, double& value, Spinnaker::AcquisitionModeEnums& mode)
 void set_acquisition_mode(Spinnaker::CameraPtr& cam, Spinnaker::AcquisitionModeEnums& mode)
 {
-    cam->AcquisitionMode.SetValue(mode);
+    if (Spinnaker::GenApi::IsAvailable(cam->AcquisitionMode) && Spinnaker::GenApi::IsWritable(cam->AcquisitionMode))
+    {
+        cam->AcquisitionMode.SetValue(mode);
+    }
+    else
+    {
+        std::cout << "Acquisition Mode is not available..." << std::endl;
+    }
 /*
     switch (mode)
     {
@@ -396,55 +482,83 @@ void set_acquisition_mode(Spinnaker::CameraPtr& cam, Spinnaker::AcquisitionModeE
 //void get_acquisition_mode(Spinnaker::CameraPtr& cam, double& value, Spinnaker::AcquisitionModeEnums& mode)
 void get_acquisition_mode(Spinnaker::CameraPtr& cam, Spinnaker::AcquisitionModeEnums& mode)
 {
-    mode = cam->AcquisitionMode.GetValue();
-    /*
-    switch (mode)
+    if (Spinnaker::GenApi::IsAvailable(cam->AcquisitionMode) && Spinnaker::GenApi::IsReadable(cam->AcquisitionMode))
     {
-        case Spinnaker::AcquisitionModeEnums::AcquisitionMode_Continuous:
-        case Spinnaker::AcquisitionModeEnums::AcquisitionMode_SingleFrame:
-            value = cam->AcquisitionFrameRate.GetValue();
-            break;
-
-        case Spinnaker::AcquisitionModeEnums::AcquisitionMode_MultiFrame:
-            value = (double)cam->AcquisitionFrameCount.GetValue();
-            break;
+        mode = cam->AcquisitionMode.GetValue();
     }
-    */
+    else
+    {
+        std::cout << "Acquisition Mode is not available..." << std::endl;
+    }
 }   // end of get_acquisition
 
 // ----------------------------------------------------------------------------------------
 void set_frame_rate(Spinnaker::CameraPtr& cam, double& value)
 {
-    value = (value > cam->AcquisitionFrameRate.GetMax()) ? cam->AcquisitionFrameRate.GetMax() : value;
-    value = (value > cam->AcquisitionFrameRate.GetMin()) ? cam->AcquisitionFrameRate.GetMin() : value;
-    cam->AcquisitionFrameRate.SetValue(value);
+    if (Spinnaker::GenApi::IsAvailable(cam->AcquisitionFrameRate) && Spinnaker::GenApi::IsWritable(cam->AcquisitionFrameRate))
+    {
+        value = (value > cam->AcquisitionFrameRate.GetMax()) ? cam->AcquisitionFrameRate.GetMax() : value;
+        value = (value > cam->AcquisitionFrameRate.GetMin()) ? cam->AcquisitionFrameRate.GetMin() : value;
+        cam->AcquisitionFrameRate.SetValue(value);
+    }
+    else
+    {
+        std::cout << "Acquisition Frame Rate is not available..." << std::endl;
+    }
 }   // end of set_frame_rate
 
 // ----------------------------------------------------------------------------------------
 void get_frame_rate(Spinnaker::CameraPtr& cam, double& value)
 {
-    value = cam->AcquisitionFrameRate.GetValue();
+    if (Spinnaker::GenApi::IsAvailable(cam->AcquisitionFrameRate) && Spinnaker::GenApi::IsReadable(cam->AcquisitionFrameRate))
+    {
+        value = cam->AcquisitionFrameRate.GetValue();
+    }
+    else
+    {
+        std::cout << "Acquisition Frame Rate is not available..." << std::endl;
+    }
 }   // end of get_frame_rate
 
 // ----------------------------------------------------------------------------------------
 void set_frame_count(Spinnaker::CameraPtr& cam, double& value)
 {
-    value = (value > cam->AcquisitionFrameCount.GetMax()) ? cam->AcquisitionFrameCount.GetMax() : value;
-    value = (value > cam->AcquisitionFrameCount.GetMin()) ? cam->AcquisitionFrameCount.GetMin() : value;
-    cam->AcquisitionFrameRate.SetValue(value);
+    if (Spinnaker::GenApi::IsAvailable(cam->AcquisitionFrameCount) && Spinnaker::GenApi::IsWritable(cam->AcquisitionFrameCount))
+    {
+        value = (value > cam->AcquisitionFrameCount.GetMax()) ? cam->AcquisitionFrameCount.GetMax() : value;
+        value = (value > cam->AcquisitionFrameCount.GetMin()) ? cam->AcquisitionFrameCount.GetMin() : value;
+        cam->AcquisitionFrameRate.SetValue(value);
+    }
+    else
+    {
+        std::cout << "Acquisition Frame Count is not available..." << std::endl;
+    }
 }   // end of set_frame_count
 
 // ----------------------------------------------------------------------------------------
 void get_frame_count(Spinnaker::CameraPtr& cam, int64_t& value)
 {
-    value = cam->AcquisitionFrameCount.GetValue();
+    if (Spinnaker::GenApi::IsAvailable(cam->AcquisitionFrameCount) && Spinnaker::GenApi::IsReadable(cam->AcquisitionFrameCount))
+    {
+        value = cam->AcquisitionFrameCount.GetValue();
+    }
+    else
+    {
+        std::cout << "Acquisition Frame Count is not available..." << std::endl;
+    }
 }   // end of get_frame_count
 
 // ----------------------------------------------------------------------------------------
 void get_temperature(Spinnaker::CameraPtr& cam, double& value)
 {
-    value = cam->DeviceTemperature.GetValue();
-
+    if (Spinnaker::GenApi::IsAvailable(cam->DeviceTemperature) && Spinnaker::GenApi::IsReadable(cam->DeviceTemperature))
+    {
+        value = cam->DeviceTemperature.GetValue();
+    }
+    else
+    {
+        std::cout << "Device Temperature is not available..." << std::endl;
+    }
 }   // end of get_temperature
 
 /*
