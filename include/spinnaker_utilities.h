@@ -25,7 +25,8 @@ double max_exp_time = 0;
 double min_gain = 0;
 double max_gain = 0;
 
-
+const bool OFF = false;
+const bool ON = true;
 
 // ----------------------------------------------------------------------------------------
 inline std::ostream& operator<< (std::ostream& out, const Spinnaker::LibraryVersion& item)
@@ -630,21 +631,33 @@ int configure_exposure(Spinnaker::GenApi::INodeMap& node_map, double value)
 // ----------------------------------------------------------------------------------------
 void config_trigger(Spinnaker::CameraPtr& cam, bool value)
 {
-    if(value == false)
+    if (value == false)
+    {
         cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_Off);
+    }
     else
+    {
         cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_On);
+        //sleep_ms(1000);
+    }
 }   // end of config_trigger
 
 // ----------------------------------------------------------------------------------------
 //void set_trigger(Spinnaker::CameraPtr& cam, Spinnaker::TriggerSourceEnums& source, Spinnaker::TriggerModeEnums& mode)
 void set_trigger_source(Spinnaker::CameraPtr& cam, Spinnaker::TriggerSourceEnums& source)
 {
-    // The trigger must be disabled in order to configure the source
-    cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_Off);
-    cam->TriggerSource.SetValue(source);
-    cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_On);
-    sleep_ms(1000);
+    if (Spinnaker::GenApi::IsAvailable(cam->TriggerMode) && Spinnaker::GenApi::IsWritable(cam->TriggerMode))
+    {
+        // The trigger must be disabled in order to configure the source
+        cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_Off);
+        cam->TriggerSource.SetValue(source);
+        cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_On);
+        //sleep_ms(1000);
+    }
+    else
+    {
+        std::cout << "Trigger Mode is not available..." << std::endl;
+    }
 
 }   // end of set_trigger_source
 
