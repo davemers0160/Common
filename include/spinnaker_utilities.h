@@ -273,11 +273,11 @@ void set_image_size(Spinnaker::CameraPtr& cam, uint64_t &height, uint64_t &width
     if (rem != 0)
         x_offset = x_offset - rem;
 
-    width = (width > cam->Width.GetMax()) ? cam->Width.GetMax() : width;
-    height = (height > cam->Height.GetMax()) ? cam->Height.GetMax() : height;
+    width = (width > (uint64_t)cam->Width.GetMax()) ? (uint64_t)cam->Width.GetMax() : width;
+    height = (height > (uint64_t)cam->Height.GetMax()) ? (uint64_t)cam->Height.GetMax() : height;
 
-    uint64_t x_max = cam->Width.GetMax() - width;
-    uint64_t y_max = cam->Height.GetMax() - height;
+    uint64_t x_max = (uint64_t)cam->Width.GetMax() - width;
+    uint64_t y_max = (uint64_t)cam->Height.GetMax() - height;
 
     x_offset = (x_offset > x_max) ? x_max : x_offset;
     y_offset = (y_offset > y_max) ? y_max : y_offset;
@@ -296,10 +296,10 @@ void set_image_size(Spinnaker::CameraPtr& cam, uint64_t &height, uint64_t &width
 void get_image_size(Spinnaker::CameraPtr& cam, uint32_t &height, uint32_t &width, uint32_t &y_offset, uint32_t &x_offset)
 {
 
-    width = cam->Width.GetValue();
-    height = cam->Height.GetValue();
-    x_offset = cam->OffsetX.GetValue();
-    y_offset = cam->OffsetY.GetValue();
+    width = (uint32_t)cam->Width.GetValue();
+    height = (uint32_t)cam->Height.GetValue();
+    x_offset = (uint32_t)cam->OffsetX.GetValue();
+    y_offset = (uint32_t)cam->OffsetY.GetValue();
 
 }   // end of get_image_size
 

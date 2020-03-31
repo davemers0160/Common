@@ -124,11 +124,11 @@ FT_STATUS close_com_port(FT_HANDLE ftHandle)
 bool send_data(FT_HANDLE driver, std::vector<uint8_t> data)
 {
     bool status = true;
-    DWORD bytes_written;
+    unsigned long bytes_written;
     unsigned long ft_status;
 
-    ft_status = FT_Write(driver, data.data(), data.size(), &bytes_written);
-    if ((ft_status != FT_OK) || (bytes_written < data.size()))
+    ft_status = FT_Write(driver, data.data(), (unsigned long)data.size(), &bytes_written);
+    if ((ft_status != FT_OK) || (bytes_written < (unsigned long)data.size()))
     {
         status = false;
     }
