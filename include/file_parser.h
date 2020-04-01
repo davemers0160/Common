@@ -44,54 +44,54 @@ static inline void trim(std::string &s) {
 
 // ----------------------------------------------------------------------------------------
 
-std::string get_path(std::string filename, std::string sep)
-{
-    int prog_loc = (int)(filename.rfind(sep));
-    return filename.substr(0, prog_loc);    // does not return the last separator
-}
+//std::string get_path(std::string filename, std::string sep)
+//{
+//    int prog_loc = (int)(filename.rfind(sep));
+//    return filename.substr(0, prog_loc);    // does not return the last separator
+//}
+
+//// ----------------------------------------------------------------------------------------
+//#if defined(__linux__)
+//std::string get_linux_path()
+//{
+//    std::string path = "/";
+//    char result[PATH_MAX+1];
+//    memset(result, 0, sizeof(result)); 
+//    
+//    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+//    
+//    if (count != -1) 
+//    {
+//        path = get_path(dirname(result), "/") + "/";
+//    }
+//
+//    return (path);
+//
+//}
+//#endif
 
 // ----------------------------------------------------------------------------------------
-#if defined(__linux__)
-std::string get_linux_path()
-{
-    std::string path = "/";
-    char result[PATH_MAX+1];
-    memset(result, 0, sizeof(result)); 
-    
-    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-    
-    if (count != -1) 
-    {
-        path = get_path(dirname(result), "/") + "/";
-    }
-
-    return (path);
-
-}
-#endif
+//std::string path_check(std::string path)
+//{
+//    if (path.empty())
+//        return path;
+//
+//    std::string path_sep = path.substr(path.length() - 1, 1);
+//    if (path_sep != "\\" & path_sep != "/")
+//    {
+//        return path + "/";
+//    }
+//
+//    return path;
+//
+//}   // end of path_check
 
 // ----------------------------------------------------------------------------------------
-std::string path_check(std::string path)
-{
-    if (path.empty())
-        return path;
-
-    std::string path_sep = path.substr(path.length() - 1, 1);
-    if (path_sep != "\\" & path_sep != "/")
-    {
-        return path + "/";
-    }
-
-    return path;
-
-}   // end of path_check
-
-// ----------------------------------------------------------------------------------------
-inline bool existence_check(const std::string &path)
+/*inline bool existence_check(const std::string &path)
 {
     struct stat buffer;
     return (stat(path.c_str(), &buffer) == 0);
-}   // end of existence_check
+}  */ // end of existence_check
 
 // ----------------------------------------------------------------------------------------
 void parse_line(std::string input, const char delimiter, std::vector<std::string> &params)
@@ -169,7 +169,6 @@ void parse_input_range(std::string input, std::vector<T> &range)
 }	// end of parse_input_range
 
 // ----------------------------------------------------------------------------------------
-
 void parse_csv_line(std::string line, std::vector<std::string> &line_params)
 {
     stringstream ss(line);
@@ -187,7 +186,6 @@ void parse_csv_line(std::string line, std::vector<std::string> &line_params)
 }   // end of parseCSVLine
 
 // ----------------------------------------------------------------------------------------
-
 void parse_csv_file(std::string parse_filename, std::vector<std::vector<std::string>> &params)
 {
 	std::ifstream csv_file(parse_filename);
@@ -213,8 +211,6 @@ void parse_csv_file(std::string parse_filename, std::vector<std::vector<std::str
 
 
 // ----------------------------------------------------------------------------------------
-
-
 //void parse_group_line(std::string line, const char open, const char close, std::vector<std::string> &params, std::vector<std::string> &group_params)
 void parse_group_line(std::string line, const char open, const char close, std::vector<std::string> &params)
 {
@@ -257,7 +253,6 @@ void parse_group_line(std::string line, const char open, const char close, std::
 }
 
 // ----------------------------------------------------------------------------------------
-
 //void parse_group_csv_file(std::string parse_filename, const char open, const char close, std::vector<std::vector<std::string>> &params, std::vector < std::vector<std::string>> &group_params)
 void parse_group_csv_file(std::string parse_filename, const char open, const char close, std::vector<std::vector<std::string>> &params)
 {
@@ -282,29 +277,28 @@ void parse_group_csv_file(std::string parse_filename, const char open, const cha
 }
 
 // ----------------------------------------------------------------------------------------
-
-void get_file_parts(std::string fullfilename, std::string &file_path, std::string &file_name, std::string &file_ext)
-{
-    // get the extension location
-    std::size_t file_ext_loc = fullfilename.rfind('.');
-    std::size_t last_file_sep;
-
-    // get the last file separator location depending on OS
-#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-    last_file_sep = fullfilename.find_last_of("/\\");
-#else
-    last_file_sep = fullfilename.find_last_of("/\\");
-#endif
-
-    file_path = fullfilename.substr(0, last_file_sep);
-    file_name = fullfilename.substr(last_file_sep + 1, (file_ext_loc - last_file_sep - 1));
-
-    if (file_ext_loc > fullfilename.length())
-        file_ext = "";
-    else
-        file_ext = fullfilename.substr(file_ext_loc, (fullfilename.length() - file_ext_loc));
-    
-}	// end of get_file_parts
+//void get_file_parts(std::string fullfilename, std::string &file_path, std::string &file_name, std::string &file_ext)
+//{
+//    // get the extension location
+//    std::size_t file_ext_loc = fullfilename.rfind('.');
+//    std::size_t last_file_sep;
+//
+//    // get the last file separator location depending on OS
+//#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+//    last_file_sep = fullfilename.find_last_of("/\\");
+//#else
+//    last_file_sep = fullfilename.find_last_of("/\\");
+//#endif
+//
+//    file_path = fullfilename.substr(0, last_file_sep);
+//    file_name = fullfilename.substr(last_file_sep + 1, (file_ext_loc - last_file_sep - 1));
+//
+//    if (file_ext_loc > fullfilename.length())
+//        file_ext = "";
+//    else
+//        file_ext = fullfilename.substr(file_ext_loc, (fullfilename.length() - file_ext_loc));
+//    
+//}	// end of get_file_parts
 
 
 #endif	// FILE_PARSER_H_
