@@ -153,7 +153,7 @@ void separate_paths(std::string full_path, std::vector<std::string>& path_list)
 int32_t make_dir(std::string directory_path, std::string new_folder)
 {
 
-    int32_t status = -1;
+    int32_t status = 0;
     directory_path = path_check(directory_path);
     
     
@@ -188,7 +188,7 @@ int32_t make_dir(std::string directory_path, std::string new_folder)
 // ----------------------------------------------------------------------------
 int32_t mkdir(std::string full_path)
 {
-    int32_t status = -1;
+    int32_t status = 0;
     bool check;
     std::string test_path = "";
     std::vector<std::string> path_list;
