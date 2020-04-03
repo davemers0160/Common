@@ -60,16 +60,18 @@ std::string get_path(std::string filename, std::string sep)
 }
 
 // ----------------------------------------------------------------------------
+
 #if defined(__linux__)
-std::string get_linux_path()
+// this may or may not work.  There is some dicussion about elevated privileges required for readlink
+std::string get_ubuntu_path()
 {
     std::string path = "/";
     char result[PATH_MAX+1];
-    memset(result, 0, sizeof(result)); 
-    
+    memset(result, 0, sizeof(result));
+
     ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
     
-    if (count != -1) 
+    if (count != -1)
     {
         path = get_path(dirname(result), "/") + "/";
     }
