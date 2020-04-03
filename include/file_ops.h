@@ -155,8 +155,7 @@ int32_t make_dir(std::string directory_path, std::string new_folder)
 
     int32_t status = 0;
     directory_path = path_check(directory_path);
-    
-    
+        
     bool check = existence_check(directory_path);
     
     if(check)
@@ -206,8 +205,10 @@ int32_t mkdir(std::string full_path)
 
             wstring w_tp = wstring(test_path.begin(), test_path.end());
             //status = (int32_t)CreateDirectoryW(w_tp.c_str(), NULL);
-            CreateDirectoryW(w_tp.c_str(), NULL);
-            status = GetLastError();
+            bool res = CreateDirectoryW(w_tp.c_str(), NULL);
+
+            if(!res)
+                status = GetLastError();
             
 #elif defined(__linux__)
 
