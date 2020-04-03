@@ -172,7 +172,7 @@ int32_t make_dir(std::string directory_path, std::string new_folder)
 #elif defined(__linux__)
 
         mode_t mode = 0766;
-        status = mkdir(test_path.c_str(), mode);
+        status = mkdir(full_path.c_str(), mode);
 #endif 
     }
     else
