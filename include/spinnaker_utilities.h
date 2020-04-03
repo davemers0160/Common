@@ -775,6 +775,31 @@ void fire_software_trigger(Spinnaker::CameraPtr& cam)
     //sleep_ms(2000);
 }   // end of fire_software_trigger
 
+
+void aquire_software_trigger_image(Spinnaker::CameraPtr& cam, Spinnaker::ImagePtr& image)
+{
+
+    cam->BeginAcquisition();
+    cam->TriggerSoftware.Execute();
+
+    Spinnaker::ImagePtr ptr_img = cam->GetNextImage();
+
+    // Ensure image completion
+    if (ptr_img->IsIncomplete())
+    {
+        // Retrieve and print the image status description
+        std::cout << "Image incomplete: " << Spinnaker::Image::GetImageStatusDescription(ptr_img->GetImageStatus())
+            << "..." << std::endl << std::endl;
+    }
+
+    // convert image
+    image = ptr_img->Convert(Spinnaker::PixelFormat_BGR8);
+
+    // Release image
+    ptr_img->Release();
+    cam->EndAcquisition();
+
+}
 /*
 // ----------------------------------------------------------------------------------------
 int fire_software_trigger(Spinnaker::GenApi::INodeMap& node_map)
