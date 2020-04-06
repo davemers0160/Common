@@ -1,8 +1,8 @@
-function create_movie(filename, data, fps)
+function create_movie(filename, data, fps, video_type)
 
     wb = waitbar(0,'Building Movie...');
     % create the video write object and set the properties
-    v = VideoWriter(filename, 'MPEG-4');
+    v = VideoWriter(filename, video_type);
     v.Quality = 100;
     %v.LosslessCompression = 'true';
     v.FrameRate = fps;
