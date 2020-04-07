@@ -12,7 +12,7 @@
 
 // ----------------------------------------------------------------------------------------
 
-inline void overlay_bounding_box(cv::Mat &img, cv::Rect box_rect, std::string label, cv::Scalar color, bool show_label = true)
+void overlay_bounding_box(cv::Mat &img, cv::Rect box_rect, std::string label, cv::Scalar color, bool show_label = true)
 {
 
     //int font_face = cv::FONT_HERSHEY_SIMPLEX;
@@ -56,13 +56,15 @@ inline void overlay_bounding_box(cv::Mat &img, cv::Rect box_rect, std::string la
 // ----------------------------------------------------------------------------------------
 
 template<typename image_type>
-inline void overlay_bounding_box(image_type &img, dlib::mmod_rect box_label, dlib::rgb_pixel color, bool show_label=true)
+void overlay_bounding_box(image_type &img, dlib::mmod_rect box_label, dlib::rgb_pixel color, bool show_label=true)
 {
 
     cv::Scalar c(color.blue, color.green, color.red);
     cv::Rect r(box_label.rect.left(), box_label.rect.top(), box_label.rect.width(), box_label.rect.height());
+    
+    cv::Mat tmp_img = dlib::toMat(img);
 
-    overlay_bounding_box(dlib::toMat(img), r, box_label.label, c, show_label);
+    overlay_bounding_box(tmp_img, r, box_label.label, c, show_label);
 
 }
 
