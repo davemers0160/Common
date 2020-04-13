@@ -93,8 +93,8 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, 
             //			if (FT_SetBaudRate(ftHandle, 230400l) != FT_OK)
             //printf("ERROR: Baud rate not supported\n");
 
-        FT_SetDataCharacteristics(ftHandle, FT_BITS_8, FT_STOP_BITS_2, FT_PARITY_NONE);
-        FT_SetTimeouts(ftHandle, read_timeout, write_timeout);
+        status |= FT_SetDataCharacteristics(ftHandle, FT_BITS_8, FT_STOP_BITS_2, FT_PARITY_NONE);
+        status |= FT_SetTimeouts(ftHandle, read_timeout, write_timeout);
         if (FT_GetComPortNumber(ftHandle, &comm_port_num) == FT_OK)
         {
             if (comm_port_num == -1) // No COM port assigned }
@@ -152,7 +152,7 @@ bool receive_data(FT_HANDLE driver, uint32_t count, std::vector<uint8_t> &rx_dat
 
     if(read_count < count)
     {
-        std::cout << "No data received from Motor Controller!" << std::endl;
+        std::cout << "No data received from FTDI device!" << std::endl;
         status = false;
     }
 
