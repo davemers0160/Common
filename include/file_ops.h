@@ -25,7 +25,7 @@
 #include <sstream>
 #include <fstream>
 //#include <utility>
-//#include <cctype>
+#include <cctype>
 #include <string>
 #include <sys/stat.h>
 
@@ -165,7 +165,7 @@ int32_t make_dir(std::string directory_path, std::string new_folder)
         std::string full_path = directory_path + new_folder;
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 
-        wstring w_tp = wstring(full_path.begin(), full_path.end());
+        std::wstring w_tp = std::wstring(full_path.begin(), full_path.end());
         //status = (int32_t)CreateDirectoryW(w_tp.c_str(), NULL);
         CreateDirectoryW(w_tp.c_str(), NULL);
         status = GetLastError();
@@ -205,7 +205,7 @@ int32_t mkdir(std::string full_path)
         {
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 
-            wstring w_tp = wstring(test_path.begin(), test_path.end());
+            std::wstring w_tp = std::wstring(test_path.begin(), test_path.end());
             //status = (int32_t)CreateDirectoryW(w_tp.c_str(), NULL);
             bool res = CreateDirectoryW(w_tp.c_str(), NULL);
 
