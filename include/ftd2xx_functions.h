@@ -18,9 +18,9 @@
 //-----------------------------------------------------------------------------
 struct ftdiDeviceDetails //structure storage for FTDI device details
 {
-    int32_t device_number;
-    uint32_t type;
-    uint32_t baud_rate;
+    int32_t device_number = 0;
+    uint32_t type = 0;
+    uint32_t baud_rate = 0;
     std::string description;
     std::string serial_number;
 };
@@ -34,8 +34,8 @@ uint32_t get_device_list(std::vector<ftdiDeviceDetails> &device)
     uint32_t dev_number = 0, dev_found = 0;
     DWORD num_devices = 0;
     DWORD flags, type, id, loc_id;
-    char serial_number[16];
-    char description[64];
+    char serial_number[16] = { 0 };
+    char description[64] = { 0 };
     ftdiDeviceDetails tmp_dev;
     
     // search for devices connected to the USB port

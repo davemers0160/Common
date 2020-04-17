@@ -222,8 +222,8 @@ void parse_group_line(std::string line, const char open, const char close, std::
     // parse the lines - find the first instance of a group and then the last one
     // then separate the two sections
     // this assumes that there are no non-group section between groups
-    uint32_t g_start = (uint32_t)line.find(open);
-    uint32_t g_stop = (uint32_t)line.rfind(close);
+    size_t g_start = line.find(open);
+    size_t g_stop = line.rfind(close);
 
     // get the substrings
     sec_start = line.substr(0, g_start);
@@ -231,7 +231,7 @@ void parse_group_line(std::string line, const char open, const char close, std::
 
     if (g_stop < line.length())
     {
-        group = line.substr(g_start, g_stop - g_start + (uint8_t)1);
+        group = line.substr(g_start, g_stop - g_start + (size_t)1);
 
         stringstream gs(group);
         while (gs.good())
@@ -247,7 +247,7 @@ void parse_group_line(std::string line, const char open, const char close, std::
                 params.push_back(s2);
             }
         }
-        sec_end = line.substr(g_stop + (uint8_t)1, line.length() - 1);
+        sec_end = line.substr(g_stop + (uint32_t)1, line.length() - 1);
         parse_line(sec_end, ',', params);    
     }
 }
