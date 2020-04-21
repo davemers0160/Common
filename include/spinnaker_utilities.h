@@ -252,7 +252,7 @@ void get_adc_bit_depth(Spinnaker::CameraPtr& cam, Spinnaker::AdcBitDepthEnums& b
 }
 
 // ----------------------------------------------------------------------------------------
-void set_image_size(Spinnaker::CameraPtr& cam, uint64_t &height, uint64_t &width, uint64_t &y_offset, uint64_t &x_offset)
+void set_image_size(Spinnaker::CameraPtr& cam, uint64_t&height, uint64_t&width, uint64_t&y_offset, uint64_t&x_offset)
 {
     uint64_t rem = 0;
 
@@ -293,13 +293,13 @@ void set_image_size(Spinnaker::CameraPtr& cam, uint64_t &height, uint64_t &width
 
 
 // ----------------------------------------------------------------------------------------
-void get_image_size(Spinnaker::CameraPtr& cam, uint32_t &height, uint32_t &width, uint32_t &y_offset, uint32_t &x_offset)
+void get_image_size(Spinnaker::CameraPtr& cam, uint64_t&height, uint64_t&width, uint64_t&y_offset, uint64_t&x_offset)
 {
 
-    width = (uint32_t)cam->Width.GetValue();
-    height = (uint32_t)cam->Height.GetValue();
-    x_offset = (uint32_t)cam->OffsetX.GetValue();
-    y_offset = (uint32_t)cam->OffsetY.GetValue();
+    width = (uint64_t)cam->Width.GetValue();
+    height = (uint64_t)cam->Height.GetValue();
+    x_offset = (uint64_t)cam->OffsetX.GetValue();
+    y_offset = (uint64_t)cam->OffsetY.GetValue();
 
 }   // end of get_image_size
 
@@ -644,14 +644,29 @@ void config_trigger(Spinnaker::CameraPtr& cam, bool value)
 
 // ----------------------------------------------------------------------------------------
 //void set_trigger(Spinnaker::CameraPtr& cam, Spinnaker::TriggerSourceEnums& source, Spinnaker::TriggerModeEnums& mode)
-void set_trigger_source(Spinnaker::CameraPtr& cam, Spinnaker::TriggerSourceEnums& source)
+void set_trigger_source(Spinnaker::CameraPtr& cam, 
+    Spinnaker::TriggerSourceEnums source, 
+    Spinnaker::TriggerActivationEnums activation = Spinnaker::TriggerActivationEnums::TriggerActivation_RisingEdge
+)
 {
     if (Spinnaker::GenApi::IsAvailable(cam->TriggerMode) && Spinnaker::GenApi::IsWritable(cam->TriggerMode))
     {
         // The trigger must be disabled in order to configure the source
+        auto current_trigger_mode = cam->TriggerMode.GetValue();
+
+        // turn the trigger off
         cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_Off);
         cam->TriggerSource.SetValue(source);
-        cam->TriggerMode.SetValue(Spinnaker::TriggerModeEnums::TriggerMode_On);
+
+        // if the source is a physical connection then set the triggering edge
+        if ((source == Spinnaker::TriggerSource_Line0) || (source == Spinnaker::TriggerSource_Line1))
+        {
+            cam->TriggerActivation.SetValue(activation);
+        }
+
+        // set the trigger back to the previous setting
+        cam->TriggerMode.SetValue(current_trigger_mode);
+
         //sleep_ms(1000);
     }
     else
