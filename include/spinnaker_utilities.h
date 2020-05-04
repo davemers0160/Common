@@ -782,13 +782,13 @@ int configure_trigger(Spinnaker::GenApi::INodeMap& node_map, const trigger_type 
 
 
 // ----------------------------------------------------------------------------------------
-void fire_software_trigger(Spinnaker::CameraPtr& cam)
-{
-    cam->TriggerSoftware.Execute();
-
-    // Blackfly and Flea3 GEV cameras need 2 second delay after software trigger
-    //sleep_ms(2000);
-}   // end of fire_software_trigger
+//void fire_software_trigger(Spinnaker::CameraPtr& cam)
+//{
+//    cam->TriggerSoftware.Execute();
+//
+//    // Blackfly and Flea3 GEV cameras need 2 second delay after software trigger
+//    //sleep_ms(2000);
+//}   // end of fire_software_trigger
 
 
 void aquire_software_trigger_image(Spinnaker::CameraPtr& cam, Spinnaker::ImagePtr& image)
@@ -815,34 +815,34 @@ void aquire_software_trigger_image(Spinnaker::CameraPtr& cam, Spinnaker::ImagePt
     cam->EndAcquisition();
 
 }
-/*
+
 // ----------------------------------------------------------------------------------------
-int fire_software_trigger(Spinnaker::GenApi::INodeMap& node_map)
+void aquire_trigger_image(Spinnaker::CameraPtr& cam, Spinnaker::ImagePtr& image)
 {
-    int result = 0;
 
-    // Use trigger to capture image
-    //
-    // *** NOTES ***
-    // The software trigger only feigns being executed by the Enter key;
-    // what might not be immediately apparent is that there is not a
-    // continuous stream of images being captured; in other examples that
-    // acquire images, the camera captures a continuous stream of images.
-    // When an image is retrieved, it is plucked from the stream.
+    //cam->BeginAcquisition();
+    Spinnaker::ImagePtr ptr_img = cam->GetNextImage();
 
-    // Execute software trigger
-    Spinnaker::GenApi::CCommandPtr trigger_command = node_map.GetNode("TriggerSoftware");
-    if (!Spinnaker::GenApi::IsAvailable(trigger_command) || !Spinnaker::GenApi::IsWritable(trigger_command))
+    // Ensure image completion
+    if (ptr_img->IsIncomplete())
     {
-        std::cout << "Unable to execute trigger. Aborting..." << std::endl;
-        return -1;
+        // Retrieve and print the image status description
+        std::cout << "Image incomplete: " << Spinnaker::Image::GetImageStatusDescription(ptr_img->GetImageStatus())
+            << "..." << std::endl << std::endl;
     }
-    trigger_command->Execute();
-    sleep_ms(2000);         // Blackfly and Flea3 GEV cameras need 2 second delay after software trigger
 
-    return result;
-}	// end of fire_software_trigger
-*/
+    // convert image
+    image = ptr_img->Convert(Spinnaker::PixelFormat_BGR8);
+
+    // Release image
+    ptr_img->Release();
+    //cam->EndAcquisition();
+
+    //trigger_command->Execute();
+    //sleep_ms(2000);         // Blackfly and Flea3 GEV cameras need 2 second delay after software trigger
+
+}	// end of aquire_trigger_image
+
 
 
 // ----------------------------------------------------------------------------------------
@@ -850,6 +850,7 @@ int fire_software_trigger(Spinnaker::GenApi::INodeMap& node_map)
 int acquire_image(Spinnaker::CameraPtr &cam, Spinnaker::ImagePtr &image)//, Spinnaker::GenApi::INodeMap& node_map_TL_device)
 {
     int result = 0;
+
 
     //// Set acquisition mode to continuous
     //Spinnaker::GenApi::CEnumerationPtr acquisition_node = node_map.GetNode("AcquisitionMode");
