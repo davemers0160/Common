@@ -8,7 +8,7 @@
 
 #include "dlib/matrix.h"
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 typedef struct observation {
 
     float range = 0;
@@ -24,7 +24,7 @@ typedef struct observation {
 
 } observation;
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 class target_locator
 {
@@ -40,7 +40,10 @@ public:
     // observations of the target from a known position
     std::list<observation> obs;
 
-    // ----------------------------------------------------------------------------------------
+    // variable to track is the location update was successful
+    bool valid_location;
+
+    // ----------------------------------------------------------------------------
     target_locator() = default;
 
     target_locator(uint32_t id_) : id(id_) {}
@@ -54,22 +57,28 @@ public:
         add_observation(obs_);
     }
 
-    // ----------------------------------------------------------------------------------------
+    target_locator(uint32_t id_, observation obs_, std::vector<float> l_) : id(id_)
+    {
+        add_observation(obs_);
+        location = l_;
+    }
+
+    // ----------------------------------------------------------------------------
     void set_max_observations(uint32_t m_) { max_observations = m_; }
 
-    // ----------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------
     void set_min_range(double m) { min_range = m; }
 
     double get_min_range(void) { return min_range; }
 
-    // ----------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------
     void set_location(std::vector<float> point_)
     {
         location.clear();
         location = point_;
     }
 
-    // ----------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------
     bool add_observation(observation new_obs)
     {
         bool add_obs = true;
@@ -94,7 +103,7 @@ public:
 
     }   // end of add_observation
 
-    // ----------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------
     double get_range(observation o1, std::vector<float> p1)
     {
         uint32_t idx;
@@ -135,22 +144,24 @@ public:
 
     //}   // end of get_range
 
-    // ----------------------------------------------------------------------------------------
-    uint32_t get_position()
+    // ----------------------------------------------------------------------------
+    int32_t get_position()
     {
         uint32_t idx, jdx;
-        uint32_t stop_code = 0;
+        int32_t stop_code = 0;
 
         float error = 1.0;
         float delta = 1.0e-4;
         uint32_t iteration = 0;
         uint32_t max_iteration = 30;
 
+        valid_location = false;
+
         // run a check to make sure that the inputs are the same size
         if ((obs.size() == 0) || (obs.front().point.size() == 0))
         {
             std::cout << "ranges and vehicles sizes do not match." << std::endl;
-            return stop_code;
+            return -2;
         }
 
         // check for the minimum number of observations, typically one more than the number of 
@@ -158,7 +169,7 @@ public:
         if (obs.size() < (obs.front().point.size() + 1))
         {
             std::cout << "Not enough observations to make an accurate estimate of the position." << std::endl;
-            return stop_code;
+            return -1;
         }
 
         // use the current object position as the initial guess
@@ -176,7 +187,7 @@ public:
 
         // this is an iterative least squares approach
         // looking to solve Ax = b => x = A^(-1)b
-        while (stop_code == 0)
+        while (stop_code <= 0)
         {
             // build A matrix
             //for (idx = 0; idx < num_observations; idx++)
@@ -215,7 +226,7 @@ public:
 
         // put the updated position back into object2
         set_location(Po);
-
+        valid_location = true;
         return stop_code;
 
     }   // end of get_position
@@ -226,6 +237,6 @@ private:
 
 };  // end of target_locator
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 #endif	// TARGET_LOCATOR_H_
