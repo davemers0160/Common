@@ -18,6 +18,8 @@ if(input_path == 0)
     return;
 end
 
+commandwindow;
+
 %% check to see if the inputs are normal or grouped
 
 [param_type, file_index] = file_params_dialog;
@@ -113,4 +115,14 @@ end
 gtSource = groundTruthDataSource(image_files);
 gt = groundTruth(gtSource, label_description, T);
 
+%% get the stats
+
+for idx=1:size(gt.LabelDefinitions, 1)
+    label = gt.LabelDefinitions.Name(idx);
+    fprintf('Label Name: %s\n', label{1});
+    get_bb_stats(gt.LabelData, idx);
+    fprintf('\n');
+end
+
+%% start the imagelabeler app
 imageLabeler;
