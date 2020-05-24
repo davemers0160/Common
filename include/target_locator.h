@@ -43,6 +43,14 @@ public:
     // variable to track is the location update was successful
     bool valid_location;
 
+    // stop code list
+    std::vector<std::string> stop_code_list { 
+        "Minimum update error reached",                                         /*0*/
+        "Maximum iterations reached",                                           /*1*/
+        "Not enough observations to make an accurate position estimate",        /*2*/
+        "No observations are recorded"                                          /*3*/
+        }; 
+        
     // ----------------------------------------------------------------------------
     target_locator() = default;
 
@@ -148,7 +156,7 @@ public:
     int32_t get_position()
     {
         uint32_t idx, jdx;
-        int32_t stop_code = 0;
+        int32_t stop_code = -1;
 
         float error = 1.0;
         float delta = 1.0e-4;
@@ -160,16 +168,16 @@ public:
         // run a check to make sure that the inputs are the same size
         if ((obs.size() == 0) || (obs.front().point.size() == 0))
         {
-            std::cout << "ranges and vehicles sizes do not match." << std::endl;
-            return -2;
+            //std::cout << "ranges and vehicles sizes do not match." << std::endl;
+            return 3;
         }
 
         // check for the minimum number of observations, typically one more than the number of 
         // dimensions to solve for
         if (obs.size() < (obs.front().point.size() + 1))
         {
-            std::cout << "Not enough observations to make an accurate estimate of the position." << std::endl;
-            return -1;
+            //std::cout << "Not enough observations to make an accurate estimate of the position." << std::endl;
+            return 2;
         }
 
         // use the current object position as the initial guess
@@ -187,7 +195,7 @@ public:
 
         // this is an iterative least squares approach
         // looking to solve Ax = b => x = A^(-1)b
-        while (stop_code <= 0)
+        while (stop_code < 0)
         {
             // build A matrix
             //for (idx = 0; idx < num_observations; idx++)
@@ -217,10 +225,10 @@ public:
             ++iteration;
 
             if (error <= delta)
-                stop_code = 1;      // this means that the error between the updates is small
+                stop_code = 0;      // this means that the error between the updates is small
 
             if (iteration >= max_iteration)
-                stop_code = 2;      // this means that the maximum number of interations was reached
+                stop_code = 1;      // this means that the maximum number of interations was reached
 
         }   // end of while loop
 
