@@ -54,25 +54,35 @@ public:
     // ----------------------------------------------------------------------------
     target_locator() = default;
 
-    target_locator(uint32_t id_) : id(id_) {}
+    target_locator(uint32_t id_) : id(id_) 
+    {
+        valid_location = false;
+    }
 
-    //target_locator(uint32_t id_, std::list<observation> obs_) : id(id_)
-    //{
-    //    obs = obs_;
-    //}
     target_locator(uint32_t id_, observation obs_) : id(id_)
     {
         add_observation(obs_);
+        valid_location = false;
     }
 
     target_locator(uint32_t id_, observation obs_, std::vector<float> l_) : id(id_)
     {
         add_observation(obs_);
         location = l_;
+        valid_location = false;
+    }
+
+    target_locator(uint32_t id_, observation obs_, std::vector<float> l_, uint32_t m_, double r_) : id(id_), max_observations(m_), min_range(r_)
+    {
+        add_observation(obs_);
+        location = l_;
+        valid_location = false;
     }
 
     // ----------------------------------------------------------------------------
     void set_max_observations(uint32_t m_) { max_observations = m_; }
+
+    uint32_t get_max_observations() { return max_observations; }
 
     // ----------------------------------------------------------------------------
     void set_min_range(double m) { min_range = m; }
