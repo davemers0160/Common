@@ -4,6 +4,23 @@
 ## FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
 FROM nvidia/cuda:10.2-cudnn7-devel-centos7
 
+## ----------------------------------------------------------------------------
+## set up the ability to get out to the rest of the world for app user
+RUN echo 'http_proxy="http://130.163.13.200:8080"' >> /etc/environment
+RUN echo 'https_proxy="http://130.163.13.200:8080"' >> /etc/environment
+RUN echo 'HTTP_PROXY="http://130.163.13.200:8080"' >> /etc/environment
+RUN echo 'HTTPS_PROXY="http://130.163.13.200:8080"' >> /etc/environment
+
+RUN echo "export http_proxy=http://130.163.13.200:8080/" > /etc/profile.d/http_proxy.sh
+RUN echo "export https_proxy=http://130.163.13.200:8080/" >> /etc/profile.d/http_proxy.sh
+
+RUN echo "proxy=http://130.163.13.200:8080" >> /etc/yum.conf
+
+## copy the certs forrdtecndproxy01v2.crt the proxies
+ADD rdtecndproxy01v2.crt /etc/pki/ca-trust/source/anchors/
+RUN chmod 644 /etc/pki/ca-trust/source/anchors/rdtecndproxy01v2.crt
+RUN update-ca-trust extract
+
   
 ## ----------------------------------------------------------------------------
 ## install all of the required libraries/packages
@@ -28,7 +45,6 @@ RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
 RUN python3 get-pip.py
 
 RUN pip3 install -U numpy bokeh launchpadlib pandas Cython contextlib2 pillow lxml jupyter matplotlib opencv-python cffi tqdm
-
 
     
 ## ----------------------------------------------------------------------------
@@ -67,6 +83,12 @@ RUN cd ~ && mkdir ~/opencv_build && cd ~/opencv_build && \
     git clone https://github.com/opencv/opencv_contrib.git
 #    cd ~/opencv_build/opencv && mkdir build && cd build && \
 #    cmake3 -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D INSTALL_C_EXAMPLES=ON -D INSTALL_PYTHON_EXAMPLES=ON -D WITH_TBB=ON -D WITH_V4L=ON -D OPENCV_GENERATE_PKGCONFIG=ON -D WITH_QT=ON -D WITH_OPENGL=ON -D OPENCV_EXTRA_MODULES_PATH=~/opencv_build/opencv_contrib/modules -D ENABLE_CXX11=ON -D BUILD_EXAMPLES=ON ..
+
+RUN cd ~/opencv_build/opencv/build && make -j10 && \
+    sudo make install && \
+    sudo ln -s /usr/local/lib64/pkgconfig/opencv4.pc /usr/share/pkgconfig/ && \
+    sudo ldconfig
+
 
 
 ## ----------------------------------------------------------------------------
