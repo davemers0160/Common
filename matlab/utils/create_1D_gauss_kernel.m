@@ -1,5 +1,9 @@
 function [kernel] = create_1D_gauss_kernel(kernel_size, sigma)
 
+    if(sigma == 0)
+        sigma = 1e-10;
+    end
+    
     for col = 1:kernel_size	
         scale = 1.0/(sigma*sqrt((2*pi)));
         x = ((col-1) - floor(kernel_size/2));
