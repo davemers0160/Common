@@ -36,6 +36,7 @@ RUN yum install -y eigen3-devel cmake3 cmake3-gui putty usbutils openblas-devel 
 RUN yum install -y git gcc gcc-c++ make qt5-qtbase-devel python3-devel python3-pip
 RUN yum install -y gtk2-devel libpng-devel jasper-devel openexr-devel libwebp-devel libjpeg-turbo-devel libtiff-devel libdc1394-devel tbb-devel numpy
 RUN yum install -y gstreamer-plugins-base-devel freeglut-devel mesa-libGL mesa-libGL-devel boost boost-thread boost-devel libv4l-devel
+RUN yum install -y bzip2 wget gcc gcc-c++ gmp-devel mpfr-devel libmpc-devel
 
 RUN rm -rf /var/lib/rpm/__db*
 
@@ -69,11 +70,10 @@ RUN cd ~ && \
 	
 RUN cd ~ && mkdir -p Projects
 
-RUN cd ~/Projects && git clone https://github.com/davemers0160/Common
-RUN cd ~/Projects && git clone https://github.com/davemers0160/dfd_common
-RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib-contrib
-RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib_obj_detector
-RUN cd ~/Projects && git clone https://github.com/davemers0160/obj_det_lib
+RUN cd ~/Projects && git clone https://github.com/davemers0160/Common.git
+RUN cd ~/Projects && git clone https://github.com/davemers0160/dfd_common.git
+RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib-contrib.git
+RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib_object_detection.git
 
 
 ## ----------------------------------------------------------------------------
@@ -81,13 +81,13 @@ RUN cd ~/Projects && git clone https://github.com/davemers0160/obj_det_lib
 RUN cd ~ && mkdir ~/opencv_build && cd ~/opencv_build && \
     git clone https://github.com/opencv/opencv.git && \
     git clone https://github.com/opencv/opencv_contrib.git
-#    cd ~/opencv_build/opencv && mkdir build && cd build && \
+    cd ~/opencv_build/opencv && mkdir build && cd build && \
 #    cmake3 -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D INSTALL_C_EXAMPLES=ON -D INSTALL_PYTHON_EXAMPLES=ON -D WITH_TBB=ON -D WITH_V4L=ON -D OPENCV_GENERATE_PKGCONFIG=ON -D WITH_QT=ON -D WITH_OPENGL=ON -D OPENCV_EXTRA_MODULES_PATH=~/opencv_build/opencv_contrib/modules -D ENABLE_CXX11=ON -D BUILD_EXAMPLES=ON ..
 
-RUN cd ~/opencv_build/opencv/build && make -j10 && \
-    sudo make install && \
-    sudo ln -s /usr/local/lib64/pkgconfig/opencv4.pc /usr/share/pkgconfig/ && \
-    sudo ldconfig
+#RUN cd ~/opencv_build/opencv/build && make -j10 && \
+#    sudo make install && \
+#    sudo ln -s /usr/local/lib64/pkgconfig/opencv4.pc /usr/share/pkgconfig/ && \
+#    sudo ldconfig
 
 
 
