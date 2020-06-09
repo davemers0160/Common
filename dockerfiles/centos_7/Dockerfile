@@ -6,22 +6,8 @@ FROM nvidia/cuda:10.2-cudnn7-devel-centos7
 
 ## ----------------------------------------------------------------------------
 ## set up the ability to get out to the rest of the world for app user
-RUN echo 'http_proxy="http://130.163.13.200:8080"' >> /etc/environment
-RUN echo 'https_proxy="http://130.163.13.200:8080"' >> /etc/environment
-RUN echo 'HTTP_PROXY="http://130.163.13.200:8080"' >> /etc/environment
-RUN echo 'HTTPS_PROXY="http://130.163.13.200:8080"' >> /etc/environment
 
-RUN echo "export http_proxy=http://130.163.13.200:8080/" > /etc/profile.d/http_proxy.sh
-RUN echo "export https_proxy=http://130.163.13.200:8080/" >> /etc/profile.d/http_proxy.sh
 
-RUN echo "proxy=http://130.163.13.200:8080" >> /etc/yum.conf
-
-## copy the certs forrdtecndproxy01v2.crt the proxies
-ADD rdtecndproxy01v2.crt /etc/pki/ca-trust/source/anchors/
-RUN chmod 644 /etc/pki/ca-trust/source/anchors/rdtecndproxy01v2.crt
-RUN update-ca-trust extract
-
-  
 ## ----------------------------------------------------------------------------
 ## install all of the required libraries/packages
 RUN yum -y update && yum clean all
