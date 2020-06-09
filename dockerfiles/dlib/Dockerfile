@@ -72,6 +72,10 @@ RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib_object_detec
 ADD spinnaker-1.27.0.48-Ubuntu18.04-amd64-pkg.tar.gz /home/owner/
 
 ## ----------------------------------------------------------------------------
+RUN echo "PATH=\$PATH:/home/owner/.local/bin" >> /home/owner/.bashrc
+RUN echo "export PLATFORM=docker" >> /home/owner/.bashrc
+
+## ----------------------------------------------------------------------------
 WORKDIR /home/owner
 CMD ["bash"]
 
