@@ -255,3 +255,7 @@ DfD_Analysis/.vscode/launch.json
 *.dll
 
 /.idea
+
+# certificate files
+*.crt
+

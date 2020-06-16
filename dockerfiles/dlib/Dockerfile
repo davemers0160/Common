@@ -54,14 +54,14 @@ USER owner
 
 RUN cd ~ && \
     mkdir -p dlib && \
-    git clone -b 'v19.19' --single-branch https://github.com/davisking/dlib.git dlib/
+    git clone -b 'v19.19' --single-branch https://github.com/davisking/dlib.git dlib-19.19/
 	
 RUN cd ~ && mkdir -p Projects
 
-RUN cd ~/Projects && git clone https://github.com/davemers0160/Common
-RUN cd ~/Projects && git clone https://github.com/davemers0160/dfd_common
-RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib-contrib
-RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib_obj_detector
+RUN cd ~/Projects && git clone https://github.com/davemers0160/Common.git
+RUN cd ~/Projects && git clone https://github.com/davemers0160/dfd_common.git
+RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib-contrib.git
+RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib_object_detection.git
 
 ## ----------------------------------------------------------------------------
 ## copy the flycapture install files from the PC to the image
@@ -70,6 +70,10 @@ RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib_obj_detector
 #ADD flycapture2-2.13.3.31-amd64-pkg_Ubuntu18.04.tgz /home/owner/
 #ADD spinnaker-1.27.0.48-Ubuntu16.04-amd64-pkg.tar.gz /home/owner/
 ADD spinnaker-1.27.0.48-Ubuntu18.04-amd64-pkg.tar.gz /home/owner/
+
+## ----------------------------------------------------------------------------
+RUN echo "PATH=\$PATH:/home/owner/.local/bin" >> /home/owner/.bashrc
+RUN echo "export PLATFORM=docker" >> /home/owner/.bashrc
 
 ## ----------------------------------------------------------------------------
 WORKDIR /home/owner
