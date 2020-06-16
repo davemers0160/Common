@@ -4,6 +4,19 @@
 ## FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
 FROM nvidia/cuda:10.2-cudnn7-devel-centos7
 
+
+## ----------------------------------------------------------------------------
+## set up the ability to get out to the rest of the world for app user
+RUN echo 'http_proxy="http://130.163.13.200:8080"' >> /etc/environment
+RUN echo 'https_proxy="http://130.163.13.200:8080"' >> /etc/environment
+
+
+## ----------------------------------------------------------------------------
+## copy the certs for rdtecndproxy01v2.crt the proxies
+ADD /home/$USER/Projects/rdtecndproxy01v2.crt /usr/local/share/ca-certificates/
+RUN chmod 644 /usr/local/share/ca-certificates/rdtecndproxy01v2.crt
+RUN update-ca-certificates
+
 ## ----------------------------------------------------------------------------
 #RUN adduser --gecos "Main User" --home /home/owner --disabled-password owner && \
 #    usermod -a -G dialout owner && \
