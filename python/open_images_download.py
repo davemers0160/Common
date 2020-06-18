@@ -34,6 +34,13 @@ class_names = ["/m/025dyy", "box"]     # box
 # build the correct paths to save everything
 #download_dir = "D:/Projects/object_detection_data/open_images/box"
 
+# print out some of the important variables to double check things
+print("Annotation Root: " + annotation_file_root)
+print("Download Dir:    " + download_dir)
+print("Data Type:       " + data_type)
+print("Class Name:      " + class_names[1])
+
+
 # read in the file
 annotation_file = annotation_file_root + data_type + "-annotations-bbox.csv"
 f = pd.read_csv(annotation_file)
