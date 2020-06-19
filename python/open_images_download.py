@@ -28,8 +28,8 @@ else:
     print("Quiting!")
     quit()
 
-# class_names = ["/m/01940j", "backpack" ]     # backpack
-class_names = ["/m/025dyy", "box"]     # box
+class_names = ["/m/01940j", "backpack" ]
+#class_names = ["/m/025dyy", "box"]
 
 # build the correct paths to save everything
 #download_dir = "D:/Projects/object_detection_data/open_images/box"
@@ -58,7 +58,7 @@ commands = []
 # cycle through each entry and add to the commands list
 for idx in u.index:
     image_filename = u['ImageID'][idx] + ".jpg"
-    command = "aws s3 --no-sign-request --only-show-errors cp s3://open-images-dataset/" + data_type + "/" + image_filename + " " + download_dir + "/" + class_names[1]
+    command = "aws s3 --no-sign-request --only-show-errors cp s3://open-images-dataset/" + data_type + "/" + image_filename + " " + download_dir + class_names[1]
     print(command)
     commands.append(command)
 
