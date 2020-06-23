@@ -74,6 +74,7 @@ num_labels = numel(label_names);
 % get the filename to write the data to
 [~, tmp_file, file_ext] = fileparts(base_save_file);    
 
+data_directory = strrep(data_directory, '\', '/');
 data_directory = strcat(data_directory,'/');
 file_name = fullfile(input_save_path, strcat(tmp_file, '_input.txt'));
 file_id = fopen(file_name, 'w');
@@ -87,8 +88,10 @@ fprintf(file_id, '# file location, {x,y,w,h,label}, {x,y,w,h,label}, ...\n');
 for jdx=1:num_images
 
     % get the image file name
-    [~,image_name,ext] = fileparts(data{jdx,1}{1});
-    image_file_name = strcat(image_name, ext);
+    %[~,image_name,ext] = fileparts(data{jdx,1}{1});
+    %image_file_name = strcat(image_name, ext);
+    image_file_name = data{jdx,1}{1};
+    image_file_name = strrep(image_file_name, '\', '/');
     
     % create an empty char string to store the bounding box data
     s_line = strcat(image_file_name, ',');

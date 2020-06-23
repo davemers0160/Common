@@ -11,7 +11,6 @@
 #include <dlib/opencv.h>
 
 // ----------------------------------------------------------------------------------------
-
 void overlay_bounding_box(cv::Mat &img, cv::Rect box_rect, std::string label, cv::Scalar color, bool show_label = true)
 {
 
@@ -54,18 +53,44 @@ void overlay_bounding_box(cv::Mat &img, cv::Rect box_rect, std::string label, cv
 }   // end of overlay_bounding_box
 
 // ----------------------------------------------------------------------------------------
-
 template<typename image_type>
-void overlay_bounding_box(image_type &img, dlib::mmod_rect box_label, dlib::rgb_pixel color, bool show_label=true)
+void overlay_bounding_box(image_type &img, dlib::rectangle box, std::string label, dlib::rgb_pixel color, bool show_label=true)
+{
+
+    cv::Scalar c(color.blue, color.green, color.red);
+    cv::Rect r(box.left(), box.top(), box.width(), box.height());
+    
+    cv::Mat tmp_img = dlib::toMat(img);
+
+    overlay_bounding_box(tmp_img, r, label, c, show_label);
+
+}
+
+// ----------------------------------------------------------------------------------------
+template<typename image_type>
+void overlay_bounding_box(image_type& img, dlib::rectangle box, dlib::rgb_pixel color)
+{
+
+    cv::Scalar c(color.blue, color.green, color.red);
+    cv::Rect r(box.left(), box.top(), box.width(), box.height());
+
+    cv::Mat tmp_img = dlib::toMat(img);
+
+    overlay_bounding_box(tmp_img, r, "", c, false);
+
+}
+
+// ----------------------------------------------------------------------------------------
+template<typename image_type>
+void overlay_bounding_box(image_type& img, dlib::mmod_rect box_label, dlib::rgb_pixel color, bool show_label = true)
 {
 
     cv::Scalar c(color.blue, color.green, color.red);
     cv::Rect r(box_label.rect.left(), box_label.rect.top(), box_label.rect.width(), box_label.rect.height());
-    
+
     cv::Mat tmp_img = dlib::toMat(img);
 
     overlay_bounding_box(tmp_img, r, box_label.label, c, show_label);
 
 }
-
 #endif  // OVERLAY_BBOX_H_
