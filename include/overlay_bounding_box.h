@@ -10,6 +10,19 @@
 #include <dlib/image_processing.h>
 #include <dlib/opencv.h>
 
+
+// ----------------------------------------------------------------------------------------
+inline cv::Rect dlib2cv_rect(dlib::rectangle r)
+{
+    return cv::Rect(r.left(), r.top(), r.width(), r.height());
+}
+
+// ----------------------------------------------------------------------------------------
+inline dlib::rectangle cv2dlib_rect(cv::Rect r)
+{
+    return dlib::rectangle(r.x, r.y, r.x+r.width, r.y+r.height);
+}
+
 // ----------------------------------------------------------------------------------------
 void overlay_bounding_box(cv::Mat &img, cv::Rect box_rect, std::string label, cv::Scalar color, bool show_label = true)
 {
