@@ -11,9 +11,9 @@ from tqdm import tqdm
 from multiprocessing.dummy import Pool as ThreadPool
 
 # this is where you select where the data is downloaded from
-# data_type = "train"
+data_type = "train"
 # data_type = "validation"
-data_type = "test"
+#data_type = "test"
 
 
 # modify these to point to the right locations
@@ -22,13 +22,13 @@ if platform.system() == "Windows":
     download_dir = "D:/Projects/object_detection_data/open_images/"
 elif platform.system() == "Linux":
     home = os.path.expanduser('~')
-    annotation_file_root = home + "/Projects/object_detection_data/"
-    download_dir = home + "/Projects/object_detection_data/open_images/"
+    annotation_file_root = home + "/Projects/data/"
+    download_dir = home + "/Projects/data/open_images/"
 else:
     print("Quiting!")
     quit()
 
-# class_names = ["/m/01940j", "backpack" ]     # backpack
+#class_names = ["/m/01940j", "backpack" ]     # backpack
 class_names = ["/m/025dyy", "box"]     # box
 
 # build the correct paths to save everything
@@ -58,7 +58,7 @@ commands = []
 # cycle through each entry and add to the commands list
 for idx in u.index:
     image_filename = u['ImageID'][idx] + ".jpg"
-    command = "aws s3 --no-sign-request --only-show-errors cp s3://open-images-dataset/" + data_type + "/" + image_filename + " " + download_dir + "/" + class_names[1]
+    command = "aws s3 --no-sign-request --only-show-errors cp s3://open-images-dataset/" + data_type + "/" + image_filename + " " + download_dir + class_names[1]
     print(command)
     commands.append(command)
 
