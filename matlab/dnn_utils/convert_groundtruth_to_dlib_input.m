@@ -90,6 +90,7 @@ num_scales = numel(scale_folder_name);
 parfor idx=1:num_scales
     
     data_directory = strcat(save_path,'/',scale_folder_name{idx},'/');
+    data_directory = strrep(data_directory, '\', '/');
     fprintf('Creating directory: %s\n', data_directory);
     
     mkdir(data_directory);
