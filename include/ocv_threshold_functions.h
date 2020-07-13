@@ -13,6 +13,7 @@ void advanced_threshold(cv::Mat &src, cv::Mat &dst, T threshold, T min_val, T ma
 	//CV_Assert(inputImage.depth() == CV_8U);
 
 	//int channels = inputImage.channels();
+    dst = cv::Mat::zeros(src.rows, src.cols, src.type());
 
 	cv::MatIterator_<T> it, end;
     cv::MatIterator_<T> thresh_it = dst.begin<T>();
@@ -36,6 +37,8 @@ void ranged_threshold(cv::Mat &src, cv::Mat &dst, T min_val, T max_val)
 {
     //CV_Assert(src.depth() == CV_8U);
 
+    dst = cv::Mat::zeros(src.rows, src.cols, src.type());
+
     cv::MatIterator_<T> it, end;
     cv::MatIterator_<T> thresh_it = dst.begin<T>();
     
@@ -57,7 +60,7 @@ void ranged_threshold(cv::Mat &src, cv::Mat &dst, T min_val, T max_val)
 
 }   // end of ranged_threshold
 
-void energy_threshold(cv::Mat &src, cv::Mat &dst, double energyVal, int &threshVal, int method);
+void energy_threshold(cv::Mat &src, cv::Mat &dst, double energyVal, int &threshVal, int method)
 {
     //CV_Assert(src.depth() == CV_8U);
 
@@ -67,6 +70,8 @@ void energy_threshold(cv::Mat &src, cv::Mat &dst, double energyVal, int &threshV
 	double currentEnergy = 0.0;
 	double result = 0.0;
 	double min, max;
+
+    dst = cv::Mat::zeros(src.rows, src.cols, src.type());
 
 	cv::minMaxIdx(src, &min, &max);
 
@@ -79,7 +84,7 @@ void energy_threshold(cv::Mat &src, cv::Mat &dst, double energyVal, int &threshV
                 // cycle from min+1 to max-1 on threshold values to find the tipping point
                 // where ratio of the current energy to the initial energy is l.t. the
                 // energy value threshold
-                cv::threshold(src, dst, threshVal, 255, THRESH_TOZERO);
+                cv::threshold(src, dst, threshVal, 255, cv::THRESH_TOZERO);
                 currentEnergy = (double)cv::sum(dst)[0];
                 result = currentEnergy / intialEnergy;
                 if (result < energyVal)
@@ -87,7 +92,7 @@ void energy_threshold(cv::Mat &src, cv::Mat &dst, double energyVal, int &threshV
                     break;
                 }
             }
-            cv::threshold(src, dst, threshVal, 255, THRESH_BINARY);
+            cv::threshold(src, dst, threshVal, 255, cv::THRESH_BINARY);
 
             break;
 
@@ -98,7 +103,7 @@ void energy_threshold(cv::Mat &src, cv::Mat &dst, double energyVal, int &threshV
                 // cycle from min+1 to max-1 on threshold values to find the tipping point
                 // where abs(1 - ratio of the current energy to the initial energy) is g.t. the
                 // energy value threshold
-                cv::threshold(src, dst, threshVal, 255, THRESH_TOZERO);
+                cv::threshold(src, dst, threshVal, 255, cv::THRESH_TOZERO);
                 currentEnergy = (double)cv::sum(dst)[0];
                 result = currentEnergy / intialEnergy;
                 // 
@@ -108,7 +113,7 @@ void energy_threshold(cv::Mat &src, cv::Mat &dst, double energyVal, int &threshV
                 }
 
             }
-            cv::threshold(src, dst, threshVal, 255, THRESH_BINARY);
+            cv::threshold(src, dst, threshVal, 255, cv::THRESH_BINARY);
 
             break;
             
