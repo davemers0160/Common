@@ -5,6 +5,24 @@
 FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
 
 ## ----------------------------------------------------------------------------
+## set up the ability to get out to the rest of the world for app user
+RUN echo 'http_proxy="http://130.163.13.200:8080"' >> /etc/environment
+RUN echo 'https_proxy="http://130.163.13.200:8080"' >> /etc/environment
+RUN echo 'HTTP_PROXY="http://130.163.13.200:8080"' >> /etc/environment
+RUN echo 'HTTPS_PROXY="http://130.163.13.200:8080"' >> /etc/environment
+
+RUN echo "export http_proxy=http://130.163.13.200:8080/" > /etc/profile.d/http_proxy.sh
+RUN echo "export https_proxy=http://130.163.13.200:8080/" >> /etc/profile.d/http_proxy.sh
+
+RUN echo "proxy=http://130.163.13.200:8080" >> /etc/yum.conf
+
+## copy the certs forrdtecndproxy01v2.crt the proxies
+ADD rdtecndproxy01v2.crt /etc/pki/ca-trust/source/anchors/
+RUN chmod 644 /etc/pki/ca-trust/source/anchors/rdtecndproxy01v2.crt
+RUN update-ca-certificates
+
+  
+## ----------------------------------------------------------------------------
 #RUN adduser --gecos "Main User" --home /home/owner --disabled-password owner && \
 #    usermod -a -G dialout owner && \
 #    echo "owner ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/99_aptget
@@ -40,10 +58,10 @@ RUN adduser --system --gecos '' --home /home/owner --disabled-password owner && 
 RUN chown owner:owner -R /home/owner
 
 ## ----------------------------------------------------------------------------
-RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
-RUN sudo python3 get-pip.py
+#RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
+#RUN sudo python3 get-pip.py
 
-RUN pip3 install -U numpy bokeh launchpadlib pandas Cython contextlib2 pillow lxml jupyter matplotlib opencv-python cffi tqdm
+#RUN pip3 install -U numpy bokeh launchpadlib pandas Cython contextlib2 pillow lxml jupyter matplotlib opencv-python cffi tqdm
 
 RUN apt-get update -y && \
     apt-get install -y --fix-missing putty
@@ -61,7 +79,7 @@ RUN cd ~ && mkdir -p Projects
 RUN cd ~/Projects && git clone https://github.com/davemers0160/Common
 RUN cd ~/Projects && git clone https://github.com/davemers0160/dfd_common
 RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib-contrib
-RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib_obj_detector
+RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib_object_detection.git
 
 ## ----------------------------------------------------------------------------
 ## copy the flycapture install files from the PC to the image
@@ -69,7 +87,7 @@ RUN cd ~/Projects && git clone https://github.com/davemers0160/dlib_obj_detector
 #ADD flycapture2-2.13.3.31-amd64-pkg_Ubuntu16.04.tgz /home/owner/
 #ADD flycapture2-2.13.3.31-amd64-pkg_Ubuntu18.04.tgz /home/owner/
 #ADD spinnaker-1.27.0.48-Ubuntu16.04-amd64-pkg.tar.gz /home/owner/
-ADD spinnaker-1.27.0.48-Ubuntu18.04-amd64-pkg.tar.gz /home/owner/
+#ADD spinnaker-1.27.0.48-Ubuntu18.04-amd64-pkg.tar.gz /home/owner/
 
 ## ----------------------------------------------------------------------------
 WORKDIR /home/owner
