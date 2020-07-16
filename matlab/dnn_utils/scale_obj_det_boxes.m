@@ -9,8 +9,8 @@ full_path = mfilename('fullpath');
 [startpath,  filename, ext] = fileparts(full_path);
 plot_num = 1;
 
+%% get the mat file containing the full size ground truth table
 
-%% select the file
 startpath = 'D:/Projects/';
 
 mat_file_filter = {'*.mat','Mat Files';'*.*','All Files' };
@@ -40,19 +40,12 @@ end
 data = eval(strcat('gt_tmp(gt_idx).',gt_names{gt_idx}));
 
 startpath = mat_path;
-clear gt_tmp
+clear gt_tmp gt_names
 
 %% get the save location
 save_path = uigetdir(startpath, 'Select save directory');
 
 if(save_path == 0)
-    return;
-end
-
-%% get the location of the data
-data_path = uigetdir(startpath, 'Select directory where the data is stored');
-
-if(data_path == 0)
     return;
 end
 
@@ -65,6 +58,11 @@ if(input_save_path == 0)
 end
 
 commandwindow;
+
+%% get the full size image height and width
+
+img_h = 720;
+img_w = 1280;
 
 %% convert the ground truth table to cell array and get the label names
 
@@ -81,20 +79,19 @@ scale_folder_name = {'full','half','third','quarter'};
 scales = [1.0, 1/2, 1/3, 1/4];
 num_scales = numel(scale_folder_name);
 
+
 %% parse through the ground truth object detection table labels
 
 % get the filename to write the data to
 [~, tmp_file, file_ext] = fileparts(base_save_file);
 
 % cycle through
-parfor idx=1:num_scales
+for idx=1:num_scales
     
     data_directory = strcat(save_path,'/',scale_folder_name{idx},'/');
     data_directory = strrep(data_directory, '\', '/');
     fprintf('Creating directory: %s\n', data_directory);
-    
-    mkdir(data_directory);
-    
+        
     file_name = fullfile(input_save_path, strcat(tmp_file, '_', scale_folder_name{idx}, '_input.txt'));
     file_id = fopen(file_name, 'w');
   
@@ -102,22 +99,15 @@ parfor idx=1:num_scales
     fprintf(file_id, '# Data Directory:\n');
     fprintf(file_id, '%s\n\n', data_directory);
     fprintf(file_id, '# file location, {x,y,w,h,label}, {x,y,w,h,label}, ...\n');
-
+    
+    
     % write the data in the following format:
     % file location, {x,y,w,h,label}, {x,y,w,h,label},...
     for jdx=1:num_images
         
         % get the image file name
         [~,image_name,ext] = fileparts(data{jdx,1}{1});
-        
-        % load the image and then resize based on the current scale setting
-        img = imread(fullfile(data_path, strcat(image_name, ext)));
-        img = imresize(img, scales(idx));
-        
         image_file_name = strcat(image_name, ext);
-        
-        % save the image resized image
-        imwrite(img, strcat(data_directory,image_file_name));
         
         s_line = strcat(image_file_name, ',');
 
@@ -135,12 +125,12 @@ parfor idx=1:num_scales
             end        
         end
 
-        s_line = s_line(1:end-1);   
+        s_line = s_line(1:end-1);
         fprintf('%s\n', s_line);
-        fprintf(file_id, '%s\n', s_line);   
+        fprintf(file_id, '%s\n', s_line);
+        
     end
-
+    
     fclose(file_id);
 
 end
-

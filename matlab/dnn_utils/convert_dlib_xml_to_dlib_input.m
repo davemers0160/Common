@@ -22,7 +22,7 @@ data = xml2struct(fullfile(gt_path, gt_file));
 
 images = data.dataset.images.image;
 
-folder = 'mod_orange';
+folder = '';
 
 %% run through each image
 for idx=1:numel(images)
@@ -30,6 +30,8 @@ for idx=1:numel(images)
     img = images{1,idx};
     % get the filename
     filename = img.Attributes.file;
+    
+    %fprintf('%s/', folder);
     
     % get the bounding boxes
     if(isfield(img,'box'))
@@ -52,9 +54,9 @@ for idx=1:numel(images)
             box_str = box_str(1:end-1);
         end
 
-        fprintf('%s/%s,%s\n', folder, filename, box_str);
+        fprintf('%s,%s\n', filename, box_str);
     else
-        fprintf('%s/%s\n', folder, filename);
+        fprintf('%s\n', filename);
     end
 end
 
