@@ -77,7 +77,7 @@ min_w = [];
 max_w = [];
 
 for idx=1:numel(box)
-    
+    % need to get the min/max/mean and number of each class
     
     
     
