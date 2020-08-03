@@ -75,8 +75,14 @@ label_names = label_names(2:end);
 num_images = size(label_data,1);
 num_labels = numel(label_names);
 
-scale_folder_name = {'full','half','third','quarter'};
-scales = [1.0, 1/2, 1/3, 1/4];
+% use this one to go from full size to 1/4
+%scale_folder_name = {'full','half','third','quarter'};
+%scales = [1.0, 1/2, 1/3, 1/4];
+
+% use this one to go from 1/4 to full size
+scale_folder_name = {'quarter','third','half','full'};
+scales = [1.0, 4/3, 4/2, 4/1];
+
 num_scales = numel(scale_folder_name);
 
 
