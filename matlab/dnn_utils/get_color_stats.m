@@ -57,10 +57,17 @@ for idx=1:length(params)
     img = imread(fullfile(data_directory, params{idx}{file_index}));
 %     img = img(:,:,1:3);
 
-    r = mean(mean(img(:,:,1)));
-    g = mean(mean(img(:,:,2)));
-    b = mean(mean(img(:,:,3)));
-    gr = mean(mean(rgb2gray(img)));
+    if(size(img,3) == 1)
+        r = mean(mean(img));
+        g = mean(mean(img));
+        b = mean(mean(img));
+        gr = mean(mean(img));     
+    else
+        r = mean(mean(img(:,:,1)));
+        g = mean(mean(img(:,:,2)));
+        b = mean(mean(img(:,:,3)));
+        gr = mean(mean(rgb2gray(img)));
+    end
     
     red = red + r;
     green = green + g; 
