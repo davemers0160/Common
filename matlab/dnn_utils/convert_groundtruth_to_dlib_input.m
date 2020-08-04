@@ -98,7 +98,6 @@ parfor idx=1:num_scales
     file_name = fullfile(input_save_path, strcat(tmp_file, '_', scale_folder_name{idx}, '_input.txt'));
     file_id = fopen(file_name, 'w');
   
-    fprintf(file_id, '# Full data listing\n');
     fprintf(file_id, '# Data Directory:\n');
     fprintf(file_id, '%s\n\n', data_directory);
     fprintf(file_id, '# file location, {x,y,w,h,label}, {x,y,w,h,label}, ...\n');
