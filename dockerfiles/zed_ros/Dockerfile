@@ -39,7 +39,8 @@ RUN rm -rf /var/lib/apt/lists/*
 ## ----------------------------------------------------------------------------
 ## Get the ZED SDK
 RUN apt-get update -y
-RUN wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/2.8/ZED_SDK_Ubuntu16_v2.8.3.run --no-check-certificate
+#RUN wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/2.8/ZED_SDK_Ubuntu16_v2.8.3.run --no-check-certificate
+RUN wget https://stereolabs.sfo2.cdn.digitaloceanspaces.com/zedsdk/3.1/ZED_SDK_Ubuntu16_cuda10.0_v3.1.2.run --no-check-certificate
 RUN chmod +x ZED_SDK_Ubuntu16_v2.8.3.run
 RUN ./ZED_SDK_Ubuntu16_v2.8.3.run silent
 RUN rm ZED_SDK_Ubuntu16_v2.8.3.run
