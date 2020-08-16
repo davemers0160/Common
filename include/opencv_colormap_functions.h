@@ -52,9 +52,10 @@ inline cv::Vec3b float2rgb_jet(float t, const float t_min, const float t_max)
 }   // end of float2rgb_jet
 
 // ----------------------------------------------------------------------------------------
-inline cv::Mat cv_jet(const cv::Mat& img, const float t_min, const float t_max)
+template <typename T>
+inline cv::Mat cv_jet(const cv::Mat& img, const T t_min, const T t_max)
 {
-    int64_t r, c;
+    int r, c;
 
     cv::Mat hm = cv::Mat(img.size(), CV_8UC3, cv::Scalar::all(0));
 
@@ -62,7 +63,7 @@ inline cv::Mat cv_jet(const cv::Mat& img, const float t_min, const float t_max)
     {
         for (c = 0; c < img.cols; ++c)
         {
-            hm.at<cv::Vec3b>(r, c) = float2rgb_jet(img.at<float>(r,c), t_min, t_max);
+            hm.at<cv::Vec3b>(r, c) = float2rgb_jet(img.at<T>(r,c), t_min, t_max);
         }
     }
 
