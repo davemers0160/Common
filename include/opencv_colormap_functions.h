@@ -11,42 +11,15 @@
 // ----------------------------------------------------------------------------------------
 inline cv::Vec3b float2rgb_jet(float t, const float t_min, const float t_max)
 {
-    float r;
-    float g;
-    float b;   
-
     float t_range = t_max - t_min;
-    float p1 = t_min + t_range * (1 / 4);
-    float p2 = t_min + t_range * (2 / 4);
-    float p3 = t_min + t_range * (3 / 4);
+    float p1 = t_min + t_range * (0.25);
+    float p2 = t_min + t_range * (0.50);
+    float p3 = t_min + t_range * (0.75);
 
-    t = std::max(std::min(t, t_max), t_min);
+    float r = (float)std::max(std::min((1.0 / (p3 - p2)) * ((t - p2)), 1.0), 0.0);
+    float g = (float)std::max(std::min(2.0 - (1.0 / (p1 - t_min)) * abs(t - p2), 1.0), 0.0);
+    float b = (float)std::max(std::min((1.0 / (p1 - p2)) * (t - p2), 1.0), 0.0);
 
-    if (t <= p1)
-    {
-        r = 0.0f;
-        b = 1.0f;
-        g = (1.0f / (p1 - t_min)) * (t - t_min);
-    }
-    else if(t <= p2)
-    {
-        r = 0.0f;
-        g = 1.0f;
-        b = 1.0f - (1.0f / (p2 - p1)) * (t - p1);
-    }
-    else if (t <= p3)
-    {
-        r = (1.0f / (p3 - p2)) * (t - p2);
-        b = 0.0f;
-        g = 1.0f;
-    }
-    else
-    {
-        r = 1.0f;
-        b = 0.0f;
-        g = 1.0f - (1.0f / (t_max - p3)) * (t - p3);
-    }
-    
     return cv::Vec3b((uint8_t)(255 * b), (uint8_t)(255 * g), (uint8_t)(255 * r));
 
 }   // end of float2rgb_jet
@@ -70,7 +43,28 @@ inline cv::Mat cv_jet(const cv::Mat& img, const T t_min, const T t_max)
     return hm;
 }   // end of cv_jet
 
+// ----------------------------------------------------------------------------------------
+template <typename T>
+inline cv::Mat cv_gray(const cv::Mat& img, const T t_min, const T t_max)
+{
+    int r, c;
+    float nt;
+    float t_range = 255.0 / (t_max - t_min);
 
+    cv::Mat hm = cv::Mat(img.size(), CV_8UC3, cv::Scalar::all(0));
+
+    for (r = 0; r < img.rows; ++r)
+    {
+        for (c = 0; c < img.cols; ++c)
+        {
+            nt = std::max(std::min(img.at<T>(r, c), t_max), t_min);
+            nt = (nt - t_min) * t_range;
+            hm.at<cv::Vec3b>(r, c) = cv::Vec3b((uint8_t)(nt), (uint8_t)(nt), (uint8_t)(nt));
+        }
+    }
+
+    return hm;
+}   // end of cv_jet
 
 
 #endif  // OPENCV_COLORMAP_FUNCTIONS_H_
