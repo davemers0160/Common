@@ -32,7 +32,7 @@ commandwindow;
 %% read in the images and then create the movie
 
 % set the frame rate
-fps = 1;
+fps = 30;
 
 % get the file type for the video
 if(strcmp(video_ext, '.mp4'))
