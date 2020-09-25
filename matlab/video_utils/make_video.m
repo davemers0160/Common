@@ -53,7 +53,10 @@ listing = dir(strcat(data_path, filesep, file_type));
 data = cell(length(listing),1);
 for idx=1:length(listing)
     fprintf('Opening: %s\n', fullfile(listing(idx).folder, listing(idx).name));
-    data{idx} = imread(fullfile(listing(idx).folder, listing(idx).name)); 
+    tmp_img = imread(fullfile(listing(idx).folder, listing(idx).name)); 
+    tmp_img = imresize(tmp_img, 0.5, 'lanczos3');
+    data{idx} = insertMarker(tmp_img, [floor(size(tmp_img, 2)/2), floor(size(tmp_img,1)/2)], '+', 'color', 'red', 'size', 4);
+    data{idx} = insertShape(data{idx}, 'Rectangle', [floor(size(tmp_img, 2)/2)-64, floor(size(tmp_img,1)/2)-64, 128, 128], 'Color', 'yellow', 'LineWidth', 1, 'Opacity',1, 'SmoothEdges', false);
 
 end
 
