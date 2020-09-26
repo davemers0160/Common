@@ -3,16 +3,13 @@
 
 #include <cstdint>
 #include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <string>
 
 // OpenCV Includes
 #include <opencv2/core/core.hpp>           
 #include <opencv2/highgui/highgui.hpp>     
 #include <opencv2/imgproc/imgproc.hpp>  
 
-
+// ----------------------------------------------------------------------------
 void create_gaussian_kernel(uint32_t size, double sigma, cv::Mat &kernel)
 {
 	// assumes a 0 mean Gaussian distribution
@@ -35,7 +32,6 @@ void create_gaussian_kernel(uint32_t size, double sigma, cv::Mat &kernel)
 
 	kernel = kernel * (1.0 / matsum);	// get the matrix to sum up to 1...
 
-
-}	// end of createGaussKernel
+}	// end of create_gaussian_kernel
 
 #endif  // CREATE_GAUSSIAN_KERNEL_H_
