@@ -46,4 +46,4 @@ void read_binary_image(std::string filename, dlib::matrix<T> &img)
 	}
 }
 
-#endif	// _READ_BINARY_LIDAR_DATA_H
+#endif	// _READ_BINARY_IMAGE_H
