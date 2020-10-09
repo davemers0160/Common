@@ -10,10 +10,10 @@
 #include <opencv2/imgproc/imgproc.hpp>  
 
 // ----------------------------------------------------------------------------
-void create_gaussian_kernel(uint32_t size, double sigma, cv::Mat &kernel)
+void create_gaussian_kernel(int32_t size, double sigma, cv::Mat &kernel)
 {
 	// assumes a 0 mean Gaussian distribution
-	uint32_t row, col;
+	int32_t row, col;
     double s = sigma*sigma;
 
     kernel = cv::Mat::zeros(size, size, CV_64FC1);
@@ -24,6 +24,7 @@ void create_gaussian_kernel(uint32_t size, double sigma, cv::Mat &kernel)
 	{
 		for (col = 0; col < size; ++col)
 		{
+			auto ts = t * std::exp((-((col - (size >> 1)) * (col - (size >> 1))) - ((row - (size >> 1)) * (row - (size >> 1)))) / (2 * s));
 			kernel.at<double>(row, col) = t * std::exp((-((col - (size >> 1))*(col - (size >> 1))) - ((row - (size >> 1))*(row - (size >> 1)))) / (2 * s));
 		}
 	}
