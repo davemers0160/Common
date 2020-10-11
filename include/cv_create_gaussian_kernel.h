@@ -24,7 +24,6 @@ void create_gaussian_kernel(int32_t size, double sigma, cv::Mat &kernel)
 	{
 		for (col = 0; col < size; ++col)
 		{
-			auto ts = t * std::exp((-((col - (size >> 1)) * (col - (size >> 1))) - ((row - (size >> 1)) * (row - (size >> 1)))) / (2 * s));
 			kernel.at<double>(row, col) = t * std::exp((-((col - (size >> 1))*(col - (size >> 1))) - ((row - (size >> 1))*(row - (size >> 1)))) / (2 * s));
 		}
 	}
