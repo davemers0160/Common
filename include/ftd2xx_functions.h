@@ -160,6 +160,21 @@ bool receive_data(FT_HANDLE driver, uint32_t count, std::vector<uint8_t> &rx_dat
 
 }   // end of receive_data
 
+// ----------------------------------------------------------------------------------------
+bool flush_port(FT_HANDLE driver)
+{
+    bool status = true;
+    unsigned long ft_status;
+
+    ft_status = FT_Purge(driver, FT_PURGE_RX | FT_PURGE_TX);
+
+    if (ft_status != FT_OK)
+    {
+        status = false;
+    }
+
+    return status;
+}   // end of flush_port
 
 // ----------------------------------------------------------------------------------------
 inline std::ostream& operator<< (
