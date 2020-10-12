@@ -3,7 +3,6 @@
 
 
 #include <cstdint>
-#include <cstdio>
 
 
 class fip_protocol
@@ -13,10 +12,27 @@ public:
 
     uint8_t length;             // length includes type (1-byte), data (N-bytes) and checksum (1-byte)
     uint8_t type;
+    uint8_t port;
     uint8_t checksum;
     
     std::vector<uint8_t> data;
 
+    fip_protocol() = default;
+    
+    fip_protocol(uint8_t t_, uint8_t p_) : type(t_), port(p_)
+    {
+        data.clear();
+        length = 3;
+        checksum = calc_checksum();
+    }
+
+    fip_protocol(uint8_t t_, uint8_t p_, std::vector<uint8_t> d_) : type(t_), port(p_)
+    {
+        data = d_;
+        length = 3 + data.size();
+        checksum = calc_checksum();        
+    }
+    
 
 
     //-----------------------------------------------------------------------------
@@ -40,10 +56,11 @@ public:
 private:
     
     std::vector<uint8_t> header = { 0x51, 0xAC };
+    uint8_t checksum;
     
     uint8_t calc_checksum(void)
     {
-        uint8_t crc = 0x01;
+        uint8_t checksum = 0x01;
         
         const int16_t crc8_table[ ] = {
                     0, 94, 188, 226, 97, 63, 221, 131, 194, 156, 126, 32, 163, 253, 31, 
@@ -66,14 +83,14 @@ private:
         };
         
         // calc checksum on type
-        crc = crc8_table[crc^type];
+        checksum = crc8_table[checksum^type];
         
         for(uint32_t idx=0; idx<data.size(); ++idx)
         {
-            crc = crc8_table[crc^data[idx]];
+            checksum = crc8_table[checksum^data[idx]];
         }            
         
-        return crc;
+        return checksum;
         
     }   // end of calc_checksum
 
