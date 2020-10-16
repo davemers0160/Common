@@ -6,13 +6,15 @@
 #include <wind_protocol.h>
 
 //-----------------------------------------------------------------------------
-enum command_id {
-    
+enum system_command {
     ERROR_RESPONSE =    0x00,
     
     GET_CAMERA_VER =    0x01,
     
-    END_CAMERA_CTRL =   0x02,
+    END_CAMERA_CTRL =   0x02,    
+};
+
+enum lens_command {
     
     LENS_VERSION =      0x41,
     LENS_READY =        0x42,
@@ -35,9 +37,19 @@ enum command_id {
     SET_FOCUS_SPEED =   0x50,
     GET_FOCUS_SPEED =   0x51,
     
+    RUN_CONT_ZOOM =     0x52,
+    RUN_CONT_FOCUS =    0x53,
+    
+    SET_LENS_BLUR =     0x54
+};
+
+enum sensor_command {
     SENSOR_VERSION =    0x81,
     
     FLAT_FIELD_CORR =   0x82,
+    
+    LOAD_NUC_TABLE =    0x83,
+    GET_NUC_TABLE =     0x84,
     
     SET_AUTO_FFC_PER =  0x85,
     GET_AUOT_FFC_PER =  0x86,
@@ -98,106 +110,192 @@ class lens{
     }        
     
     //-----------------------------------------------------------------------------
-    uint8_t get_version(void)
+    fip_protocol get_version(void)
     {
-        uint8_t error = 0;
         wind_protocol lens_packet(LENS_VERSION);
         
         // build a fip packet
-        fip_protocol fip_packet(0x3D, lens_packet.to_array());
+        return fip_packet(0x3D, lens_packet.to_array());
         
-        // send fip packet to the camera controller
-        
-        
-        // get the response from the camera in the form of a fip packet
-        
-        
-        // check the error
-        
-        
-        
-        return error;
     }
     
     //-----------------------------------------------------------------------------
-    uint8_t lens_ready(uint8_t &ready)
+    fip_protocol lens_ready(uint8_t &value)
     {
-        uint8_t error = 0;
         wind_protocol lens_packet(LENS_READY);
 
         // build a fip packet
-        fip_protocol fip_packet(0x3D, lens_packet.to_array());        
+        return fip_packet(0x3D, lens_packet.to_array());        
         
-        // send fip packet to the camera controller
-        
-        
-        // get the response from the camera in the form of a fip packet
-        
-        
-        // check the error
-
-        return error;
     }
 
     //-----------------------------------------------------------------------------
-    uint8_t set_zoom_index(uint16_t zi)
+    fip_protocol set_zoom_index(uint16_t value)
     {
-        uint8_t error = 0;
         wind_protocol lens_packet(SET_ZOOM_INDEX);
-        lens_packet.update_payload(zi);
+        lens_packet.update_payload(value);
 
         // build a fip packet
-        fip_protocol fip_packet(0x3D, lens_packet.to_array());        
+        return fip_packet(0x3D, lens_packet.to_array());        
         
-        // send fip packet to the camera controller
-        
-        
-        // get the response from the camera in the form of a fip packet
-        
-        
-        // check the error
-
-        return error;
     }
 
     //-----------------------------------------------------------------------------
-    uint8_t get_zoom_index(uint16_t &zi)
+    fip_protocol get_zoom_index(uint16_t &value)
     {
-        uint8_t error = 0;
         wind_protocol lens_packet(GET_ZOOM_INDEX);
 
         // build a fip packet
-        fip_protocol fip_packet(0x3D, lens_packet.to_array());        
+        return fip_packet(0x3D, lens_packet.to_array());        
         
-        // send fip packet to the camera controller
-        
-        
-        // get the response from the camera in the form of a fip packet
-        
-        
-        // check the error
 
-        return error;
     }
 
     //-----------------------------------------------------------------------------
-    uint8_t get_zoom_index(uint16_t &zi)
+    fip_protocol get_zoom_index(uint16_t &value)
     {
-        uint8_t error = 0;
         wind_protocol lens_packet(GET_ZOOM_INDEX);
 
         // build a fip packet
-        fip_protocol fip_packet(0x3D, lens_packet.to_array());        
+        return fip_packet(0x3D, lens_packet.to_array());        
         
-        // send fip packet to the camera controller
-        
-        
-        // get the response from the camera in the form of a fip packet
-        
-        
-        // check the error
+    }
 
-        return error;
+    //-----------------------------------------------------------------------------
+    fip_protocol get_zoom_mtr_position(uint16_t &value)
+    {
+        wind_protocol lens_packet(GET_ZOOM_MTR_POS);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
+    }
+    
+        //-----------------------------------------------------------------------------
+    fip_protocol set_focus_position(uint16_t value)
+    {
+        wind_protocol lens_packet(SET_FOCUS_POS);
+        lens_packet.update_payload(value);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol get_focus_position(uint16_t &value)
+    {
+        wind_protocol lens_packet(GET_FOCUS_POS);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol set_infinity_focus(void)
+    {
+        wind_protocol lens_packet(SET_INF_FOCUS);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol start_autofocus(uint8_t value)
+    {
+        wind_protocol lens_packet(START_AUTOFOCUS);
+        lens_packet.update_payload(value);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol stop_autofocus(void)
+    {
+        wind_protocol lens_packet(STOP_AUTOFOCUS);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol set_zoom_speed(uint8_t value)
+    {
+        wind_protocol lens_packet(GET_ZOOM_INDEX);
+        lens_packet.update_payload(value);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol get_zoom_speed(uint8_t &value)
+    {
+        wind_protocol lens_packet(GET_ZOOM_INDEX);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol set_focus_speed(uint8_t value)
+    {
+        wind_protocol lens_packet(GET_ZOOM_INDEX);
+        lens_packet.update_payload(value);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol get_focus_speed(uint8_t &value)
+    {
+        wind_protocol lens_packet(GET_ZOOM_INDEX);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol run_continuous_zoom(uint8_t value)
+    {
+        wind_protocol lens_packet(RUN_CONT_ZOOM);
+        lens_packet.update_payload(value);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol run_continuous_focus(uint8_t value)
+    {
+        wind_protocol lens_packet(RUN_CONT_FOCUS);
+        lens_packet.update_payload(value);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol set_lens_blur(uint8_t value)
+    {
+        wind_protocol lens_packet(SET_LENS_BLUR);
+        lens_packet.update_payload(value);
+
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());        
+        
     }
     
     //-----------------------------------------------------------------------------
@@ -210,7 +308,8 @@ class lens{
         out << "  Software Version: " << (uint32_t)item.sw_maj_rev << "." << item.sw_min_rev << std::endl;
         return out;
     }
-};
+    
+};  // end lens class
 
 
 //-----------------------------------------------------------------------------
@@ -235,7 +334,112 @@ class sensor{
         sw_min_rev = sw_min;
     }        
     
+    //-----------------------------------------------------------------------------
+    fip_protocol get_version(void)
+    {
+        wind_protocol lens_packet(SENSOR_VERSION);
+        
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol perform_ffc(uint8_t value)
+    {
+        wind_protocol lens_packet(FLAT_FIELD_CORR);
+        lens_packet.update_payload(value);
+        
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol set_auto_ffc_period(uint8_t value)
+    {
+        wind_protocol lens_packet(SET_AUTO_FFC_PER);
+        lens_packet.update_payload(value);
+        
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol get_auto_ffc_period(uint8_t &value)
+    {
+        wind_protocol lens_packet(GET_AUOT_FFC_PER);
+        
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol set_auto_ffc_mode(uint8_t value)
+    {
+        wind_protocol lens_packet(SET_AUTO_FFC_MODE);
+        lens_packet.update_payload(value);
+        
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol get_auto_ffc_mode(uint8_t &value)
+    {
+        wind_protocol lens_packet(LENS_VERSION);
+        
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());
+        
+    }    
     
+    //-----------------------------------------------------------------------------
+    fip_protocol set_shutter(uint8_t value)
+    {
+        wind_protocol lens_packet(SET_SHUTTER);
+        lens_packet.update_payload(value);
+        
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol get_sensor_ready(uint8_t &value)
+    {
+        wind_protocol lens_packet(GET_SENSOR_READY);
+        
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());
+        
+    }
+
+    //-----------------------------------------------------------------------------
+    fip_protocol load_nuc_table(uint8_t value)
+    {
+        wind_protocol lens_packet(LOAD_NUC_TABLE);
+        lens_packet.update_payload(value);
+        
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());
+        
+    }    
+
+    //-----------------------------------------------------------------------------
+    fip_protocol get_nuc_table(uint8_t &value)
+    {
+        wind_protocol lens_packet(GET_NUC_TABLE);
+        
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());
+        
+    }
+
+    //-----------------------------------------------------------------------------    
     inline friend std::ostream& operator<< (
         std::ostream& out,
         const sensor& item
@@ -245,10 +449,40 @@ class sensor{
         out << "  Software Version: " << (uint32_t)item.sw_maj_rev << "." << item.sw_min_rev << std::endl;
         return out;
     }
-};
+    
+};  // end sensor class
 
 //-----------------------------------------------------------------------------
 
+
+class system{
+
+    uint8_t maj_rev;
+    uint8_t min_rev;
+    uint16_t build_num;
+    uint16_t camera_type;
+
+    //-----------------------------------------------------------------------------
+    fip_protocol get_version(void)
+    {
+        wind_protocol lens_packet(GET_CAMERA_VER);
+        
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());
+        
+    }
+    
+    //-----------------------------------------------------------------------------
+    fip_protocol end_cam_control(void)
+    {
+        wind_protocol lens_packet(END_CAMERA_CTRL);
+        
+        // build a fip packet
+        return fip_packet(0x3D, lens_packet.to_array());
+        
+    }    
+
+};  // end system class
 
 
 #endif  // _VINDEN_COMMANDS_H_
