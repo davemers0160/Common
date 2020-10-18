@@ -1,9 +1,10 @@
-#ifndef _VINDEN_COMMANDS_H_
-#define _VINDEN_COMMANDS_H_
+#ifndef _SO_CAM_COMMANDS_H_
+#define _SO_CAM_COMMANDS_H_
 
 #include <cstdint>
 
 #include <wind_protocol.h>
+#include <fip_protocol.h>
 
 //-----------------------------------------------------------------------------
 enum system_command {
@@ -84,7 +85,7 @@ std::vector<std::string> vinden_error_code = {
 };
 
 //-----------------------------------------------------------------------------
-class lens{
+class lens_class{
     
     uint16_t fw_maj_rev;
     uint16_t fw_min_rev;
@@ -99,14 +100,16 @@ class lens{
     uint8_t focus_speed;
     
     //-----------------------------------------------------------------------------
-    lens() = default;
+    lens_class() = default;
     
-    lens(uint16_t fw_maj, uint16_t fw_min, uint16_t sw_maj, uint16_t fw_min)
+    lens_class(uint16_t fw_maj, uint16_t fw_min, uint16_t sw_maj, uint16_t fw_min) : fw_maj_rev(fw_maj), fw_min_rev(fw_min), sw_maj_rev(sw_maj), sw_min_rev(sw_min)
     {
-        fw_maj_rev = fw_maj;
-        fw_min_rev = fw_min;
-        sw_maj_rev = sw_maj;
-        sw_min_rev = sw_min;
+        zoom_index = 0;
+        zoom_position = 0;
+        zoom_speed = 0;
+        
+        focus_position = 0;
+        focus_speed = 0;
     }        
     
     //-----------------------------------------------------------------------------
@@ -162,7 +165,7 @@ class lens{
     }
 
     //-----------------------------------------------------------------------------
-    fip_protocol get_zoom_mtr_position(uint16_t &value)
+    fip_protocol get_zoom_position(uint16_t &value)
     {
         wind_protocol lens_packet(GET_ZOOM_MTR_POS);
 
@@ -301,19 +304,24 @@ class lens{
     //-----------------------------------------------------------------------------
     inline friend std::ostream& operator<< (
         std::ostream& out,
-        const vinden_lens& item
+        const lens_class& item
     )
     {
-        out << "  Firmware Version: " << (uint32_t)item.fw_maj_rev << "." << item.fw_min_rev << std::endl;
-        out << "  Software Version: " << (uint32_t)item.sw_maj_rev << "." << item.sw_min_rev << std::endl;
+        out << "  Firmware Version: " << (uint32_t)item.fw_maj_rev << "." << (uint32_t)item.fw_min_rev << std::endl;
+        out << "  Software Version: " << (uint32_t)item.sw_maj_rev << "." << (uint32_t)item.sw_min_rev << std::endl;
+        out << "  Zoom Index:       " << (uint32_t)item.zoom_index << std::endl;
+        out << "  Zoom Position:    " << (uint32_t)item.zoom_position << std::endl;
+        out << "  Zoom Speed:       " << (uint32_t)item.zoom_speed << std::endl;
+        out << "  Focus Position:   " << (uint32_t)item.focus_position << std::endl;
+        out << "  Focus Speed:      " << (uint32_t)item.focus_speed << std::endl;
         return out;
     }
     
-};  // end lens class
+};  // end lens_class
 
 
 //-----------------------------------------------------------------------------
-class sensor{
+class sensor_class{
     
     uint16_t fw_maj_rev;
     uint16_t fw_min_rev;
@@ -324,14 +332,12 @@ class sensor{
     uint8_t ffc_mode;
     
     
-    sensor() = default;
+    sensor_class() = default;
     
-    sensor(uint16_t fw_maj, uint16_t fw_min, uint16_t sw_maj, uint16_t fw_min)
+    sensor_class(uint16_t fw_maj, uint16_t fw_min, uint16_t sw_maj, uint16_t fw_min) : fw_maj_rev(fw_maj), fw_min_rev(fw_min), sw_maj_rev(sw_maj), sw_min_rev(sw_min)
     {
-        fw_maj_rev = fw_maj;
-        fw_min_rev = fw_min;
-        sw_maj_rev = sw_maj;
-        sw_min_rev = sw_min;
+        ffc_period = 0;
+        ffc_mode = 0;
     }        
     
     //-----------------------------------------------------------------------------
@@ -442,11 +448,13 @@ class sensor{
     //-----------------------------------------------------------------------------    
     inline friend std::ostream& operator<< (
         std::ostream& out,
-        const sensor& item
+        const sensor_class& item
     )
     {
-        out << "  Firmware Version: " << (uint32_t)item.fw_maj_rev << "." << item.fw_min_rev << std::endl;
-        out << "  Software Version: " << (uint32_t)item.sw_maj_rev << "." << item.sw_min_rev << std::endl;
+        out << "  Firmware Version: " << (uint32_t)item.fw_maj_rev << "." << (uint32_t)item.fw_min_rev << std::endl;
+        out << "  Software Version: " << (uint32_t)item.sw_maj_rev << "." << (uint32_t)item.sw_min_rev << std::endl;
+        out << "  FFC Period:       " << (uint32_t)item.ffc_period << std::endl;
+        out << "  FFC Mode:         " << (uint32_t)item.ffc_mode << std::endl;
         return out;
     }
     
@@ -455,12 +463,24 @@ class sensor{
 //-----------------------------------------------------------------------------
 
 
-class system{
+class camera{
 
     uint8_t maj_rev;
     uint8_t min_rev;
     uint16_t build_num;
     uint16_t camera_type;
+    
+    lens_class lens;
+    sensor_class sensor;
+    
+
+    camera() = default;
+    
+    camera(uint8_t maj_r, uint8_t min_r, uint16_t bn, uint16_t ct) : maj_rev(maj_r), min_rev(min_r), build_num(bn), camera_type(ct)
+    {
+        lens = lens_class();
+        sensor = sensor_class();
+    } 
 
     //-----------------------------------------------------------------------------
     fip_protocol get_version(void)
@@ -482,7 +502,21 @@ class system{
         
     }    
 
-};  // end system class
+    //-----------------------------------------------------------------------------    
+    inline friend std::ostream& operator<< (
+        std::ostream& out,
+        const camera& item
+    )
+    {
+        out << "Camera:" << std::endl;
+        out << "  Firmware Version: " << (uint32_t)item.maj_rev << "." << (uint32_t)item.min_rev << uint32_t)item.build_num << uint32_t)item.camera_type << std::endl;
+        out << "Lens" << std::endl;
+        out << item.lens;
+        out << "Sensor" << std::endl;
+        out << item.sensor << std::endl;
+        return out;
+    }
+};  // end camera class
 
 
-#endif  // _VINDEN_COMMANDS_H_
+#endif  // _SO_CAM_COMMANDS_H_

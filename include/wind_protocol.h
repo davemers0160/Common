@@ -83,6 +83,11 @@ private:
         
         return ~checksum;
     }
+    
+    bool validate_checksum(void)
+    {
+        
+    }
 
 };  // end of wind_protocol class
 

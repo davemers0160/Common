@@ -93,6 +93,11 @@ private:
         return checksum;
         
     }   // end of calc_checksum
+    
+    bool validate_checksum(void)
+    {
+        
+    }
 
 };  // end of fip_protocol class
 
