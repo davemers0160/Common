@@ -33,7 +33,41 @@ public:
         checksum = calc_checksum();        
     }
     
+    fip_protocol(std::vector<uint8_t> d_)
+    {
+        uint16_t idx, index = 0;
+        
+        if(d_[0] == header[0] && d_[1] == header[1])
+        {
+            if(d_[2] > 127)
+            {
+                length = (d_[3] << 7) | (d_[2] & ~0x80);
+                index = 4;
+            }
+            else
+            {
+                length = d_[2];
+                index = 3;
+            }
+            
+            type = d_[index];
+            
+            for(idx=index; idx<d_.size()-1; ++idx)
+            {
+                data.push_bakc(d_[idx]);
+            }
+            
+            checksum = d_[d_.size()-1];
+                     
+            checksum_valid = validate_checksum();
 
+        }
+        else
+        {
+            std::cout << "Error in supplied packet format. File: " << __FILE__ << ", line: " << __LINE__<< std::endl;
+        }
+        
+    }
 
     //-----------------------------------------------------------------------------
     std::vector<uint8_t> to_array(void)
@@ -57,7 +91,8 @@ private:
     
     std::vector<uint8_t> header = { 0x51, 0xAC };
     uint8_t checksum;
-    
+    bool checksum_valid = true;
+
     //-----------------------------------------------------------------------------
     uint8_t calc_checksum(void)
     {
@@ -96,7 +131,7 @@ private:
     }   // end of calc_checksum
     
     //-----------------------------------------------------------------------------
-    bool valid_checksum(void)
+    bool validate_checksum(void)
     {        
         return (checksum == calc_checksum());
     }

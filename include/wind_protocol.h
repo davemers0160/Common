@@ -22,6 +22,7 @@ public:
         size = 0;
         payload.clear();
         calc_checksum();
+        checksum_valid = true;
     }
     
     wind_protocol(uint8_t id_, std::vector<uint8_t> data) : id(id_)
@@ -29,8 +30,33 @@ public:
         payload = data;
         size = payload.size();
         calc_checksum();
+        checksum_valid = true;
     }
     
+    wind_protocol(std::vector<uint8_t> data)
+    {
+        int32_t idx = 0;
+        
+        if(data[0] == header && data.size() < 3)
+        {
+            id = data[1];
+            size = data[2];
+            
+            for(idx=0; idx<size; ++idx)
+            {
+                payload.push_back(data[idx+3]);
+            }
+            
+            checksum = data[idx+3];
+            
+            checksum_valid = validate_checksum();
+        }
+        else
+        {
+            std::cout << "Error in supplied packet format. File: " << __FILE__ << ", line: " << __LINE__<< std::endl;            
+        }
+    }
+   
     //-----------------------------------------------------------------------------
     inline void update_payload(uint16_t value)
     {
@@ -68,6 +94,7 @@ private:
 
     uint8_t header = 0x70;
     uint8_t checksum;
+    bool checksum_valid = true;
     
     //-----------------------------------------------------------------------------
     uint8_t calc_checksum(void);
@@ -86,7 +113,7 @@ private:
     }
     
     //-----------------------------------------------------------------------------
-    bool valid_checksum(void)
+    bool validate_checksum(void)
     {
         return (checksum == calc_checksum());
     }
