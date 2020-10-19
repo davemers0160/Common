@@ -69,6 +69,7 @@ private:
     uint8_t header = 0x70;
     uint8_t checksum;
     
+    //-----------------------------------------------------------------------------
     uint8_t calc_checksum(void);
     {
         uint8_t checksum = header;
@@ -84,9 +85,10 @@ private:
         return ~checksum;
     }
     
-    bool validate_checksum(void)
+    //-----------------------------------------------------------------------------
+    bool valid_checksum(void)
     {
-        
+        return (checksum == calc_checksum());
     }
 
 };  // end of wind_protocol class

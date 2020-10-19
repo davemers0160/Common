@@ -65,7 +65,7 @@ enum sensor_command {
 };
 
 //-----------------------------------------------------------------------------
-std::vector<std::string> vinden_error_code = {
+std::vector<std::string> error_codes = {
     "None",
     "Wrong command ID",
     "Wrond data size",
@@ -111,6 +111,22 @@ class lens_class{
         focus_position = 0;
         focus_speed = 0;
     }        
+    
+    lens_class(std::vector<uint8_t> data)
+    {
+        
+        fw_maj_rev = data[1]<<8 | data[0];
+        fw_min_rev = data[3]<<8 | data[2];
+        sw_maj_rev = data[5]<<8 | data[4];
+        sw_min_rev = data[7]<<8 | data[6];
+        
+        zoom_index = 0;
+        zoom_position = 0;
+        zoom_speed = 0;
+        
+        focus_position = 0;
+        focus_speed = 0;        
+    }
     
     //-----------------------------------------------------------------------------
     fip_protocol get_version(void)
@@ -338,7 +354,19 @@ class sensor_class{
     {
         ffc_period = 0;
         ffc_mode = 0;
-    }        
+    }
+    
+    sensor_class(std::vector<uint8_t> data)
+    {
+        
+        fw_maj_rev = data[1]<<8 | data[0];
+        fw_min_rev = data[3]<<8 | data[2];
+        sw_maj_rev = data[5]<<8 | data[4];
+        sw_min_rev = data[7]<<8 | data[6];
+        
+        ffc_period = 0;
+        ffc_mode = 0;        
+    }
     
     //-----------------------------------------------------------------------------
     fip_protocol get_version(void)

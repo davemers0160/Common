@@ -58,6 +58,7 @@ private:
     std::vector<uint8_t> header = { 0x51, 0xAC };
     uint8_t checksum;
     
+    //-----------------------------------------------------------------------------
     uint8_t calc_checksum(void)
     {
         uint8_t checksum = 0x01;
@@ -94,9 +95,10 @@ private:
         
     }   // end of calc_checksum
     
-    bool validate_checksum(void)
-    {
-        
+    //-----------------------------------------------------------------------------
+    bool valid_checksum(void)
+    {        
+        return (checksum == calc_checksum());
     }
 
 };  // end of fip_protocol class
