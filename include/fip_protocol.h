@@ -1,9 +1,7 @@
 #ifndef _FIP_PROTOCOL_H_
 #define _FIP_PROTOCOL_H_
 
-
 #include <cstdint>
-
 
 class fip_protocol
 {
@@ -13,20 +11,19 @@ public:
     uint8_t length;             // length includes type (1-byte), data (N-bytes) and checksum (1-byte)
     uint8_t type;
     uint8_t port;
-    uint8_t checksum;
     
     std::vector<uint8_t> data;
 
     fip_protocol() = default;
     
-    fip_protocol(uint8_t t_, uint8_t p_) : type(t_), port(p_)
+    fip_protocol(uint8_t t_, uint8_t p_ = 12) : type(t_), port(p_)
     {
         data.clear();
         length = 3;
         checksum = calc_checksum();
     }
 
-    fip_protocol(uint8_t t_, uint8_t p_, std::vector<uint8_t> d_) : type(t_), port(p_)
+    fip_protocol(uint8_t t_, std::vector<uint8_t> d_, uint8_t p_ = 12) : type(t_), port(p_)
     {
         data = d_;
         length = 3 + data.size();
@@ -54,7 +51,7 @@ public:
             
             for(idx=index; idx<d_.size()-1; ++idx)
             {
-                data.push_bakc(d_[idx]);
+                data.push_back(d_[idx]);
             }
             
             checksum = d_[d_.size()-1];
@@ -76,9 +73,19 @@ public:
 
         std::copy(header.begin(), header.end(), std::back_inserter(d));
 
-        d.push_back(length);
+        if (length > 127)
+        {
+            d.push_back(length);
+            d.push_back(0x01);
+        }
+        else
+        {
+            d.push_back(length);
+        }
 
         d.push_back(type);
+
+        d.push_back(port);
         
         d.insert(d.end(), data.begin(), data.end());
 
@@ -96,7 +103,7 @@ private:
     //-----------------------------------------------------------------------------
     uint8_t calc_checksum(void)
     {
-        uint8_t checksum = 0x01;
+        uint8_t crc = 0x01;
         
         const int16_t crc8_table[ ] = {
                     0, 94, 188, 226, 97, 63, 221, 131, 194, 156, 126, 32, 163, 253, 31, 
@@ -119,14 +126,14 @@ private:
         };
         
         // calc checksum on type
-        checksum = crc8_table[checksum^type];
+        crc = crc8_table[crc^type];
         
         for(uint32_t idx=0; idx<data.size(); ++idx)
         {
-            checksum = crc8_table[checksum^data[idx]];
+            crc = crc8_table[crc^data[idx]];
         }            
         
-        return checksum;
+        return crc;
         
     }   // end of calc_checksum
     

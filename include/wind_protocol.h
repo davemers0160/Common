@@ -1,9 +1,7 @@
 #ifndef _WIND_PROTOCOL_H_
 #define _WIND_PROTOCOL_H_
 
-
 #include <cstdint>
-
 
 //-----------------------------------------------------------------------------
 class wind_protocol
@@ -58,6 +56,14 @@ public:
     }
    
     //-----------------------------------------------------------------------------
+    inline void update_payload(uint8_t value)
+    {
+        payload.push_back((uint8_t)(value & 0x00FF));
+
+        size = payload.size();
+        calc_checksum();
+    }
+
     inline void update_payload(uint16_t value)
     {
         payload.push_back((uint8_t)(value & 0x00FF));
@@ -97,7 +103,7 @@ private:
     bool checksum_valid = true;
     
     //-----------------------------------------------------------------------------
-    uint8_t calc_checksum(void);
+    uint8_t calc_checksum(void)
     {
         uint8_t checksum = header;
         
