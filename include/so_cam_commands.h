@@ -8,7 +8,7 @@
 
 //-----------------------------------------------------------------------------
 enum system_command {
-    ERROR_RESPONSE =    0x00,
+    SO_ERROR_RESPONSE = 0x00,
     
     GET_CAMERA_VER =    0x01,
     

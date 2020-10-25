@@ -31,7 +31,7 @@ public:
     fip_protocol(uint8_t t_, std::vector<uint8_t> d_, uint8_t p_ = 12) : type(t_), port(p_)
     {
         data = d_;
-        length = 3 + data.size();
+        length = (uint8_t)(3 + data.size());
         checksum = calc_checksum();        
     }
     
@@ -141,6 +141,9 @@ private:
         // calc checksum on type
         crc = crc8_table[crc^type];
         
+        // calc checksum on port
+        crc = crc8_table[crc ^ port];
+
         for(uint32_t idx=0; idx<data.size(); ++idx)
         {
             crc = crc8_table[crc^data[idx]];

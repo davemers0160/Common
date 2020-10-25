@@ -30,7 +30,7 @@ public:
     wind_protocol(uint8_t id_, std::vector<uint8_t> data) : id(id_)
     {
         payload = data;
-        size = payload.size();
+        size = (uint8_t)payload.size();
         calc_checksum();
         checksum_valid = true;
     }
@@ -72,7 +72,7 @@ public:
     {
         payload.push_back((uint8_t)(value & 0x00FF));
 
-        size = payload.size();
+        size = (uint8_t)payload.size();
         calc_checksum();
     }
 
@@ -89,7 +89,7 @@ public:
         payload.push_back((uint8_t)(value & 0x00FF));
         payload.push_back((uint8_t)((value >> 8) & 0x00FF));
         
-        size = payload.size();
+        size = (uint8_t)payload.size();
         calc_checksum();        
     }
     
@@ -108,7 +108,7 @@ public:
         payload.push_back((uint8_t)((value >> 16) & 0x00FF));
         payload.push_back((uint8_t)((value >> 24) & 0x00FF));
         
-        size = payload.size();
+        size = (uint8_t)payload.size();
         calc_checksum();
     }    
     
