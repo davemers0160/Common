@@ -4,6 +4,10 @@
 #include <cstdint>
 
 //-----------------------------------------------------------------------------
+/** @brief WIND Protocol Class
+
+This class builds WIND packets.
+*/
 class wind_protocol
 {
 
@@ -56,6 +60,14 @@ public:
     }
    
     //-----------------------------------------------------------------------------
+    /**
+    @brief Update Payload.
+
+    This function adds a single byte to the packet payload.
+
+    @param[in] value to be added to the payload
+
+    */
     inline void update_payload(uint8_t value)
     {
         payload.push_back((uint8_t)(value & 0x00FF));
@@ -64,6 +76,14 @@ public:
         calc_checksum();
     }
 
+    /**
+    @brief Update Payload.
+
+    This function adds a 16-bit integer to the packet payload in LSB, MSB order.
+
+    @param[in] value to be added to the payload
+
+    */
     inline void update_payload(uint16_t value)
     {
         payload.push_back((uint8_t)(value & 0x00FF));
@@ -73,6 +93,14 @@ public:
         calc_checksum();        
     }
     
+    /**
+    @brief Update Payload.
+
+    This function adds a 32-bit integer to the packet payload in LSB, MSB order.
+
+    @param[in] value to be added to the payload
+
+    */
     inline void update_payload(uint32_t value)
     {
         payload.push_back((uint8_t)(value & 0x00FF));
@@ -85,6 +113,14 @@ public:
     }    
     
     //-----------------------------------------------------------------------------
+    /**
+    @brief to_array.
+
+    This function converts the wind_protocol class to a uint8_t vector
+
+    @param[out] std::vector<uint8_t> 
+
+    */
     std::vector<uint8_t> to_array(void)
     {
         std::vector<uint8_t> d = {header, id, size};

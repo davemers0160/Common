@@ -3,6 +3,11 @@
 
 #include <cstdint>
 
+//-----------------------------------------------------------------------------
+/** @brief FIP Protocol Class
+
+This class builds FIP packets.
+*/
 class fip_protocol
 {
     
@@ -67,6 +72,14 @@ public:
     }
 
     //-----------------------------------------------------------------------------
+    /**
+    @brief to_array.
+
+    This function converts the wind_protocol class to a uint8_t vector
+
+    @param[out] std::vector<uint8_t>
+
+    */
     std::vector<uint8_t> to_array(void)
     {
         std::vector<uint8_t> d;
