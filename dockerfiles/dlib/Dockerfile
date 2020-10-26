@@ -17,9 +17,9 @@ RUN echo "export https_proxy=http://130.163.13.200:8080/" >> /etc/profile.d/http
 RUN echo "proxy=http://130.163.13.200:8080" >> /etc/yum.conf
 
 ## copy the certs forrdtecndproxy01v2.crt the proxies
-ADD rdtecndproxy01v2.crt /etc/pki/ca-trust/source/anchors/
-RUN chmod 644 /etc/pki/ca-trust/source/anchors/rdtecndproxy01v2.crt
-RUN update-ca-certificates
+#ADD rdtecndproxy01v2.crt /etc/pki/ca-trust/source/anchors/
+#RUN chmod 644 /etc/pki/ca-trust/source/anchors/rdtecndproxy01v2.crt
+#RUN update-ca-certificates
 
   
 ## ----------------------------------------------------------------------------
@@ -107,6 +107,7 @@ CMD ["bash"]
 ## ----------------------------------------------------------------------------
 # To start the container run the following command
 # xhost +local:docker
+# docker container run -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix dlib_docker
 # docker container run --rm -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix dlib_docker
 # xhost -local:docker
 
