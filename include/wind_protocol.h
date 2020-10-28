@@ -118,7 +118,7 @@ public:
 
     This function converts the wind_protocol class to a uint8_t vector
 
-    @param[out] std::vector<uint8_t> 
+    @return std::vector<uint8_t> 
 
     */
     std::vector<uint8_t> to_array(void)
