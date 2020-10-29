@@ -16,14 +16,21 @@
 #endif
 
 //-----------------------------------------------------------------------------
-struct ftdiDeviceDetails //structure storage for FTDI device details
+//structure storage for FTDI device details
+typedef struct ftdiDeviceDetails 
 {
     int32_t device_number = 0;
     uint32_t type = 0;
     uint32_t baud_rate = 0;
     std::string description;
     std::string serial_number;
-};
+    uint8_t bits = FT_BITS_8;
+    uint8_t stop_bits = FT_STOP_BITS_2;
+    uint8_t parity = FT_PARITY_NONE;
+
+    ftdiDeviceDetails() = default;
+
+} ftdiDeviceDetails;
 
 
 //-----------------------------------------------------------------------------
@@ -90,14 +97,12 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, 
             std::cout << "Error setting baud rate!" << std::endl;
             return ftHandle;
         }
-            //			if (FT_SetBaudRate(ftHandle, 230400l) != FT_OK)
-            //printf("ERROR: Baud rate not supported\n");
 
-        status |= FT_SetDataCharacteristics(ftHandle, FT_BITS_8, FT_STOP_BITS_2, FT_PARITY_NONE);
+        status |= FT_SetDataCharacteristics(ftHandle, device.bits, device.stop_bits, device.parity);
         status |= FT_SetTimeouts(ftHandle, read_timeout, write_timeout);
         if (FT_GetComPortNumber(ftHandle, &comm_port_num) == FT_OK)
         {
-            if (comm_port_num == -1) // No COM port assigned }
+            if (comm_port_num == -1) // No COM port assigned
                 std::cout << "The device selected does not have a Comm Port assigned!" << std::endl << std::endl;
             else
                 std::cout << "FTDI device " << device.description << " found on COM:" << std::setw(2) << std::setfill('0') << comm_port_num << std::endl << std::endl;
@@ -137,6 +142,24 @@ bool send_data(FT_HANDLE driver, std::vector<uint8_t> data)
 
 }	// end of send_packet
 
+//-----------------------------------------------------------------------------
+bool receive_data(FT_HANDLE driver, uint8_t& rx_data)
+{
+    bool status = true;
+    DWORD read_count = 0;
+    unsigned long ft_status;
+
+    ft_status = FT_Read(driver, &rx_data, 1, &read_count);
+
+    if (read_count < 1)
+    {
+        std::cout << "No data received from FTDI device!" << std::endl;
+        status = false;
+    }
+
+    return status;
+
+}   // end of receive_data
 
 //-----------------------------------------------------------------------------
 bool receive_data(FT_HANDLE driver, uint32_t count, std::vector<uint8_t> &rx_data)

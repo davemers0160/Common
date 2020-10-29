@@ -847,9 +847,9 @@ namespace SO
         {
             out << "Camera:" << std::endl;
             out << "  Firmware Version: " << (uint32_t)item.maj_rev << "." << (uint32_t)item.min_rev << (uint32_t)item.build_num << (uint32_t)item.camera_type << std::endl;
-            out << "Lens" << std::endl;
+            out << "Lens:" << std::endl;
             out << item.lens;
-            out << "Sensor" << std::endl;
+            out << "Sensor:" << std::endl;
             out << item.sensor << std::endl;
             return out;
         }
