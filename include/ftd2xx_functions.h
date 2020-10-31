@@ -86,6 +86,7 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, 
     FT_HANDLE ftHandle = NULL;
     LONG comm_port_num;
     FT_STATUS status;
+    uint8_t latency_timer = 2;
     
     status = FT_Open(device.device_number, &ftHandle);
     
@@ -100,12 +101,22 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, 
 
         status |= FT_SetDataCharacteristics(ftHandle, device.bits, device.stop_bits, device.parity);
         status |= FT_SetTimeouts(ftHandle, read_timeout, write_timeout);
-        if (FT_GetComPortNumber(ftHandle, &comm_port_num) == FT_OK)
+        status |= FT_SetLatencyTimer(ftHandle, latency_timer);
+
+        if ((FT_GetComPortNumber(ftHandle, &comm_port_num) == FT_OK) && (status == FT_OK))
         {
             if (comm_port_num == -1) // No COM port assigned
+            {
                 std::cout << "The device selected does not have a Comm Port assigned!" << std::endl << std::endl;
+            }
             else
+            {
                 std::cout << "FTDI device " << device.description << " found on COM:" << std::setw(2) << std::setfill('0') << comm_port_num << std::endl << std::endl;
+            }
+        }
+        else
+        {
+            std::cout << "Error setting FTDI device parameters: FT_STATUS = " << status << std::endl;
         }
     }
     else
