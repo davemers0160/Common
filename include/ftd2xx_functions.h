@@ -99,11 +99,25 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, 
             return ftHandle;
         }
 
-        status |= FT_SetDataCharacteristics(ftHandle, device.bits, device.stop_bits, device.parity);
-        status |= FT_SetTimeouts(ftHandle, read_timeout, write_timeout);
-        status |= FT_SetLatencyTimer(ftHandle, latency_timer);
-
-        if ((FT_GetComPortNumber(ftHandle, &comm_port_num) == FT_OK) && (status == FT_OK))
+        status = FT_SetDataCharacteristics(ftHandle, device.bits, device.stop_bits, device.parity);
+        if(status != FT_OK)
+        {
+            std::cout << "Error setting FT_SetDataCharacteristics: FT_STATUS = " << status << std::endl;
+        }
+        
+        status = FT_SetTimeouts(ftHandle, read_timeout, write_timeout);
+        if(status != FT_OK)
+        {
+            std::cout << "Error setting FT_SetTimeouts: FT_STATUS = " << status << std::endl;
+        }
+        
+        status = FT_SetLatencyTimer(ftHandle, latency_timer);
+        if(status != FT_OK)
+        {
+            std::cout << "Error setting FT_SetLatencyTimer: FT_STATUS = " << status << std::endl;
+        }
+        
+        if ((FT_GetComPortNumber(ftHandle, &comm_port_num) == FT_OK))
         {
             if (comm_port_num == -1) // No COM port assigned
             {
@@ -114,14 +128,14 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, 
                 std::cout << "FTDI device " << device.description << " found on COM:" << std::setw(2) << std::setfill('0') << comm_port_num << std::endl << std::endl;
             }
         }
-        else
-        {
-            std::cout << "Error setting FTDI device parameters: FT_STATUS = " << status << std::endl;
-        }
+        //else
+        //{
+        //    std::cout << "Error getting FTDI device port" << std::endl;
+        //}
     }
     else
     {
-        std::cout << "Error opening port: FT_STATUS = " << status << std::endl;
+        std::cout << "Error opening device: FT_STATUS = " << status << std::endl;
     }
 
     return ftHandle;
