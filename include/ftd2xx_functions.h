@@ -117,7 +117,9 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, 
             std::cout << "Error setting FT_SetLatencyTimer: FT_STATUS = " << status << std::endl;
         }
         
-        if ((FT_GetComPortNumber(ftHandle, &comm_port_num) == FT_OK))
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+        status = FT_GetComPortNumber(ftHandle, &comm_port_num);
+        if (status != FT_OK)
         {
             if (comm_port_num == -1) // No COM port assigned
             {
@@ -128,10 +130,12 @@ FT_HANDLE open_com_port(ftdiDeviceDetails &device, uint32_t read_timeout=10000, 
                 std::cout << "FTDI device " << device.description << " found on COM:" << std::setw(2) << std::setfill('0') << comm_port_num << std::endl << std::endl;
             }
         }
-        //else
-        //{
-        //    std::cout << "Error getting FTDI device port" << std::endl;
-        //}
+        else
+        {
+            std::cout << "Error getting FT_GetComPortNumber: FT_STATUS = " << status << std::endl;
+        }
+#endif
+
     }
     else
     {
