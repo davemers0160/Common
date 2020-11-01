@@ -168,6 +168,56 @@ void parse_input_range(std::string input, std::vector<T> &range)
 
 }	// end of parse_input_range
 
+//-----------------------------------------------------------------------------
+template<typename T>
+void validate_input_range(std::string input, T min_value, T max_value, std::vector<T>& range)
+{
+    range.clear();
+    std::vector<std::string> params;
+    std::vector<T> r;
+
+    // parse out the input values. should be in the form min:step:max
+    parse_line(input, ':', params);
+
+
+    if (params.size() != 3)
+    {
+        std::cout << "Incorrect range parameters supplied.  Setting value to: 0" << std::endl;
+        range.push_back(0);
+        return;
+    }
+    else
+    {
+
+        r.push_back((T)(min(max(std::stod(params[0]), (double)min_value), (double)max_value)));
+        r.push_back((T)(std::stod(params[1])));
+        r.push_back((T)(min(max(std::stod(params[2]), (double)min_value), (double)max_value)));
+    }
+
+    T s = r[0];
+    if (r[1] > 0)
+    {
+        while (s <= r[2])
+        {
+            range.push_back(s);
+            s += r[1];
+        }
+    }
+    else if (r[1] < 0)
+    {
+        while (s >= r[2])
+        {
+            range.push_back(s);
+            s += r[1];
+        }
+    }
+    else
+    {
+        range.push_back(r[0]);
+    }
+}   // end of validate_range
+
+
 // ----------------------------------------------------------------------------------------
 void parse_csv_line(std::string line, std::vector<std::string> &line_params)
 {
