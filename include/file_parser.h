@@ -241,6 +241,12 @@ void parse_csv_file(std::string parse_filename, std::vector<std::vector<std::str
 	std::ifstream csv_file(parse_filename);
 	std::string next_line;
 
+    if (!csv_file.is_open())
+    {
+        std::cout << "Error opening file: " << parse_filename << std::endl;
+        return;
+    }
+
 	while (std::getline(csv_file, next_line))
 	{
 		if ((next_line[0] != '#') && (next_line.size() > 0))
