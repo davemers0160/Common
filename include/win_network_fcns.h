@@ -29,6 +29,7 @@ enum socket_errors { SUCCESS = 0,
     CLOSE_FAILED = 10
 };
 
+// ----------------------------------------------------------------------------
 uint32_t init_udp_socket(int32_t port, SOCKADDR_IN &srcaddr, SOCKET &s, std::string &error_msg)
 {
     WSADATA wsaData;
@@ -61,6 +62,7 @@ uint32_t init_udp_socket(int32_t port, SOCKADDR_IN &srcaddr, SOCKET &s, std::str
 }   // end of init_udp_socket
 
 
+// ----------------------------------------------------------------------------
 uint32_t init_tcp_socket(std::string ip_address, uint32_t port, SOCKET &s, std::string &error_msg)
 {
     WSADATA wsaData;
@@ -151,17 +153,37 @@ uint32_t init_tcp_socket(std::string ip_address, uint32_t port, SOCKET &s, std::
 }   // end of init_tcp_socket
 
 
-
-uint32_t send_message(SOCKET &s, const std::string command, std::string &message)
+// ----------------------------------------------------------------------------
+uint32_t send_message(SOCKET &s, const std::string data, std::string &error_msg)
 {
     int32_t result;
 
-    message = "";
-    std::string cmd = command + "\n";
+    error_msg = "";
+    std::string cmd = data + "\n";
 
     result = send(s, cmd.c_str(), (int32_t)cmd.length(), 0);
     if (result == SOCKET_ERROR) {
-        message = "Send failed with error: (" + std::to_string(result) + " : " + std::to_string(WSAGetLastError()) + ")";
+        error_msg = "Send failed with error: (" + std::to_string(result) + " : " + std::to_string(WSAGetLastError()) + ")";
+        closesocket(s);
+        WSACleanup();
+        return SEND_ERROR;
+    }
+
+    return SUCCESS;
+
+}   // end of send_message
+
+// ----------------------------------------------------------------------------
+uint32_t send_message(SOCKET &s, std::vector<uint8_t> data, std::string &error_msg)
+{
+    int32_t result;
+
+    error_msg = "";
+    //std::string cmd = command + "\n";
+
+    result = send(s, data.data, (int32_t)data.length(), 0);
+    if (result == SOCKET_ERROR) {
+        error_msg = "Send failed with error: (" + std::to_string(result) + " : " + std::to_string(WSAGetLastError()) + ")";
         closesocket(s);
         WSACleanup();
         return SEND_ERROR;
@@ -225,12 +247,13 @@ void get_ip_address(std::vector<std::string> &data, std::string &lpMsgBuf)
 
 }   // end of get_ip_address
 
-uint32_t receive_message(SOCKET &s, const uint32_t max_res_len, std::string &message)
+// ----------------------------------------------------------------------------
+uint32_t receive_message(SOCKET &s, const uint32_t length, std::string &message)
 {
     int32_t result;
-    char *read_buf = new char[max_res_len + 1];
+    char *read_buf = new char[length + 1];
 
-    result = recv(s, read_buf, max_res_len, 0);
+    result = recv(s, read_buf, length, 0);
     if (result < 0)
     {
         message = "Recieve failed: (" + std::to_string(result) + " : " + std::to_string(WSAGetLastError()) + ")";
@@ -246,7 +269,26 @@ uint32_t receive_message(SOCKET &s, const uint32_t max_res_len, std::string &mes
 
 }   // end of receive_message
 
+// ----------------------------------------------------------------------------
+uint32_t receive_message(SOCKET &s, const uint32_t length, std::vector<uint8_t> &data, std::string &error_msg)
+{
+    int32_t result;
+    error_msg = "";
+    data.clear();
+    data.set_size(length + 1);
 
+    result = recv(s, data.data, length, 0);
+    if (result < 0)
+    {
+        error_msg = "Recieve failed: (" + std::to_string(result) + " : " + std::to_string(WSAGetLastError()) + ")";
+        return READ_FAILED;
+    }
+
+    return SUCCESS;
+
+}   // end of receive_message
+
+// ----------------------------------------------------------------------------
 uint32_t close_connection(SOCKET &s, std::string &error_msg)
 {
     int32_t result = shutdown(s, SD_SEND);

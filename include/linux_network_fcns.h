@@ -24,6 +24,7 @@ enum socket_errors { SUCCESS = 0,
     CLOSE_FAILED = 10
 };
 
+// ----------------------------------------------------------------------------
 uint32_t init_udp_socket(int32_t port, int32_t &sock_fd, std::string &error_msg)
 {
 
@@ -62,6 +63,7 @@ uint32_t init_udp_socket(int32_t port, int32_t &sock_fd, std::string &error_msg)
 }   // end of init_udp_socket
 
 
+// ----------------------------------------------------------------------------
 uint32_t init_tcp_socket(std::string ip_address, uint32_t port, int32_t &sock_fd, std::string &error_msg)
 {
 
@@ -120,17 +122,16 @@ uint32_t init_tcp_socket(std::string ip_address, uint32_t port, int32_t &sock_fd
 
 }   // end of init_tcp_socket
 
-
-
-uint32_t send_message(int32_t &s, const std::string command, std::string &error_msg)
+// ----------------------------------------------------------------------------
+uint32_t send_message(int32_t &s, const std::string data, std::string &error_msg)
 {
 
     error_msg = "";
-    std::string cmd = command + "\n";
+    std::string cmd = data + "\n";
 
     ssize_t result = write(s, cmd.c_str(), cmd.length());
     if (result != (ssize_t)cmd.length()) {
-        error_msg =  "init_client: failed to send command";
+        error_msg =  "init_client: failed to send data";
         return -1;
     }   
     
@@ -140,6 +141,23 @@ uint32_t send_message(int32_t &s, const std::string command, std::string &error_
 
 }   // end of send_message
 
+// ----------------------------------------------------------------------------
+uint32_t send_message(int32_t &s, std::vector<uint8_t> data, std::string &error_msg)
+{
+
+    error_msg = "";
+
+    ssize_t result = write(s, data.data, data.length());
+    if (result != (ssize_t)data.length()) {
+        error_msg =  "init_client: failed to send data";
+        return -1;
+    }   
+    
+    //error_msg = "Send failed with error: (" + std::to_string(result) + " : " + std::to_string(WSAGetLastError()) + ")";
+
+    return SUCCESS;
+
+}   // end of send_message
 // ----------------------------------------------------------------------------------------
 /*
 void get_ip_address(std::vector<std::string> &data, std::string &lpMsgBuf)
@@ -197,13 +215,12 @@ void get_ip_address(std::vector<std::string> &data, std::string &lpMsgBuf)
 */
 
 // ----------------------------------------------------------------------------------------
-
-uint32_t receive_message(int32_t &s, const uint32_t max_res_len, std::string &message)
+uint32_t receive_message(int32_t &s, const uint32_t length, std::string &message)
 {
     int32_t result;
-    char *read_buf = new char[max_res_len + 1];
+    char *read_buf = new char[length + 1];
 
-    result = recv(s, read_buf, max_res_len, 0);
+    result = recv(s, read_buf, length, 0);
     if (result < 0)
     {
         message = "Recieve failed: (" + std::to_string(result) + ")";
@@ -219,7 +236,26 @@ uint32_t receive_message(int32_t &s, const uint32_t max_res_len, std::string &me
 
 }   // end of receive_message
 
+// ----------------------------------------------------------------------------------------
+uint32_t receive_message(int32_t &s, const uint32_t length, std::vector<uint8_t> &data, std::string &error_msg)
+{
+    int32_t result;
+    error_msg = "";
+    data.clear();
+    data.set_size(length + 1);
 
+    result = recv(s, data.data, length, 0);
+    if (result < 0)
+    {
+        error_msg = "Recieve failed: (" + std::to_string(result) + ")";
+        return READ_FAILED;
+    }
+
+    return SUCCESS;
+
+}   // end of receive_message
+
+// ----------------------------------------------------------------------------
 uint32_t close_connection(int32_t &s, std::string &error_msg)
 {
     int32_t result = close(s);
