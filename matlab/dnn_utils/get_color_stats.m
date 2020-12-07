@@ -108,11 +108,14 @@ fprintf('red:   %3.4f\n', red);
 fprintf('green: %3.4f\n', green);
 fprintf('blue:  %3.4f\n', blue);
 fprintf('gray:  %3.4f\n', gray);
+fprintf('\n');
 
 fprintf('%8.4f, %8.4f, %8.4f, %8.4f\n', red, green, blue, gray);
 
 %% calculate the histograms CDF
 
+fprintf('\n');
+fprintf('CDF of green histogram\n');
 gr_cdf = zeros(1, hist_bins);
 
 for idx=1:hist_bins    
