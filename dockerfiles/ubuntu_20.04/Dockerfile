@@ -1,26 +1,32 @@
 ## ----------------------------------------------------------------------------
 ## Download base image ubuntu 20.04
+##FROM nvidia/cuda:11.1-base-ubuntu20.04
 FROM ubuntu:20.04
 
 ## ----------------------------------------------------------------------------
 RUN apt-get update -y && apt-get upgrade -y
-RUN apt-get install -y --fix-missing sudo build-essential make gfortran git wget curl nano udev kmod usbutils putty libusb-dev pkg-config iputils-ping
-#RUN apt-get install -y --fix-missing libatlas-base-dev libavcodec-dev libavformat-dev libgtk2.0-dev libjpeg-dev liblapack-dev libswscale-dev 
+RUN apt-get install -y --fix-missing linux-headers-`uname -r`
+#RUN apt-get install -y --fix-missing linux-headers-`uname -r`:i386 
+RUN apt-get install -y --fix-missing sudo build-essential make bash software-properties-common module-assistant
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata
+RUN apt-get install -y --fix-missing gfortran git wget curl nano udev kmod usbutils putty libusb-dev pkg-config iputils-ping libncurses5-dev
+#RUN apt-get install -y --fix-missing libatlas-base-dev libavcodec-dev libavformat-dev libgtk2.0-dev libjpeg-dev liblapack-dev libswscale-dev libtiff5-dev libqt4-dev
 #RUN apt-get install -y --fix-missing libqt5xml5 libxmu-dev libxi-dev 
-RUN apt-get install -y --fix-missing python3-dev python3-numpy
+RUN apt-get install -y --fix-missing python3-dev python3-numpy unzip 
 RUN rm -rf /var/lib/apt/lists/*
 
 ## ----------------------------------------------------------------------------
 ## Install cmake 3.16
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.16.3/cmake-3.16.3-Linux-x86_64.sh --no-check-certificate
-RUN chmod +x cmake-3.16.3-Linux-x86_64.sh
-RUN ./cmake-3.16.3-Linux-x86_64.sh --prefix /usr/local/cmake --exclude-subdir --skip-license
+#RUN wget https://github.com/Kitware/CMake/releases/download/v3.16.3/cmake-3.16.3-Linux-x86_64.sh --no-check-certificate
+#RUN chmod +x cmake-3.16.3-Linux-x86_64.sh
+#RUN ./cmake-3.16.3-Linux-x86_64.sh --prefix /usr/local/cmake --exclude-subdir --skip-license
 
 ## ----------------------------------------------------------------------------
 ## get the EDT PDV API for the VisionLink F4 card
-RUN wget https://edt.com/wp-content/uploads/2019/07/EDTpdv_lnx_5.5.8.9.run --no-check-certificate
+RUN apt-get install -y --fix-missing flex bison
+RUN wget https://edt.com/wp-content/uploads/2019/07/EDTpdv_lnx_5.5.8.9.run
 RUN chmod +x EDTpdv_lnx_5.5.8.9.run 
-RUN ./EDTpdv_lnx_5.5.8.9.run --default
+RUN ./EDTpdv_lnx_5.5.8.9.run -- --default
 
 ## These are for the FLIR camera
 #RUN apt-get update -y && \
@@ -31,8 +37,8 @@ RUN ./EDTpdv_lnx_5.5.8.9.run --default
     
 ## ----------------------------------------------------------------------------
 ## Add the user
-RUN adduser --system --gecos '' --home /home/owner --disabled-password owner && \
-    addgroup owner && \
+RUN adduser --system --gecos '' --home /home/owner --disabled-password owner
+RUN addgroup owner && \
     #usermod -a -G owner owner && \
     adduser owner owner && \
     adduser owner sudo && \
