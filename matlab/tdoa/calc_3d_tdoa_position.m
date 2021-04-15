@@ -1,4 +1,4 @@
-function Po = calc_3d_tdoa_position(S, Po, v)
+function [Po, iter, err] = calc_3d_tdoa_position(S, Po, v)
 % Inputs: S - Array of positions (x,y,z,t)
 %         Po - Intial guess position (x,y,z)
 %         v - speed of the signal

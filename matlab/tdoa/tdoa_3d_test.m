@@ -20,7 +20,7 @@ S = zeros(N, 4);
 S(1,:) = [100, 150, 89, 0];
 S(2,:) = [345, 212, 334, 0];
 S(3,:) = [212, 343, 121, 0];
-S(4,:) = [255, 564, 33, 0];
+S(4,:) = [260, 564, 33, 0];
 
 % set P
 P = [200, 100, 100];
@@ -35,17 +35,20 @@ for idx=1:N
 end
 
 % calculate an initial position
-Po = [250, 150, 500];
+Po = [250, 150, 244];
 
 P_new = zeros(100,3);
+iter = zeros(100,1);
+err = zeros(100,1);
+
 rt = zeros(4,100);
 
 
 for idx=1:100
-    rt(:,idx) = 0.001*randn(4,1);
+    rt(:,idx) = 0.000001*randn(4,1);
     S(:,4) = S(:,4) + rt(:,idx);
 
-    P_new(idx,:) = calc_3d_tdoa_position(S, Po, v);
+    [P_new(idx,:), iter(idx,:), err(idx,:)]= calc_3d_tdoa_position(S, Po, v);
 
 end
 
