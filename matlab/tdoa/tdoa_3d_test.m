@@ -12,18 +12,28 @@ plot_num = 1;
 %% set up each of the 4 points
 rng(now);
 
-N = 4;
 v = 100;
 
-S = zeros(N, 4);
+% S = zeros(N, 4);
 
-S(1,:) = [100, 150, 89, 0];
-S(2,:) = [345, 212, 334, 0];
-S(3,:) = [212, 343, 121, 0];
-S(4,:) = [260, 564, 33, 0];
+% set the station locations (S) and the emitter location (P)
+% 3D
+% S(1,:) = [100, 150, 89, 0];
+% S(2,:) = [345, 212, 334, 0];
+% S(3,:) = [212, 343, 121, 0];
+% S(4,:) = [260, 564, 33, 0];
+% P = [200, 100, 0];
 
-% set P
-P = [200, 100, 100];
+% 2D
+S(1,:) = [100, 150, 0];
+S(2,:) = [345, 212, 0];
+S(3,:) = [212, 343, 0];
+%S(4,:) = [255, 564, 0];
+P = [200, 100];
+
+
+N = size(S,1);
+num_dim = size(P, 2);
 
 % get the base time
 t = 100;
@@ -31,22 +41,23 @@ t = 100;
 % calculate the arrival times
 for idx=1:N
     %S(idx, 4) = sqrt((S(idx,1)-P(1))^2 + (S(idx,2)-P(2))^2 + (S(idx,3)-P(3))^2)/v + t;
-    S(idx, 4) = sqrt(sum((S(idx, 1:3) - P).*(S(idx, 1:3) - P)))/v + t;
+    S(idx, end) = sqrt(sum((S(idx, 1:end-1) - P).*(S(idx, 1:end-1) - P)))/v + t;
 end
 
-% calculate an initial position
-Po = [250, 150, 244];
+% guess/calculate an initial position
+% Po = [250, 150, 0];
+Po = [104, 300];
 
-P_new = zeros(100,3);
+P_new = zeros(100,num_dim);
 iter = zeros(100,1);
 err = zeros(100,1);
 
-rt = zeros(4,100);
+rt = zeros(N, 100);
 
 
 for idx=1:100
-    rt(:,idx) = 0.000001*randn(4,1);
-    S(:,4) = S(:,4) + rt(:,idx);
+    rt(:,idx) = 0.000001*randn(N,1);
+    S(:,end) = S(:,end) + rt(:,idx);
 
     [P_new(idx,:), iter(idx,:), err(idx,:)]= calc_3d_tdoa_position(S, Po, v);
 
