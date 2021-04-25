@@ -12,7 +12,8 @@ plot_num = 1;
 %% set up each of the 4 points
 rng(now);
 
-v = 100;
+% v = 161874.9773218;
+v = 299792458;
 
 % S = zeros(N, 4);
 
@@ -25,18 +26,27 @@ v = 100;
 % P = [200, 100, 0];
 
 % 2D
-S(1,:) = [100, 150, 0];
-S(2,:) = [345, 212, 0];
-S(3,:) = [212, 343, 0];
+% S(1,:) = [100, 150, 0];
+% S(2,:) = [325, 222, 0];
+% S(3,:) = [212, 303, 0];
+
+% S(1,:) = [145, 250, 0];
+% S(2,:) = [200, 250, 0];
+% S(3,:) = [250, 250, 0];
+
+S(1,:) = [3, 5, 0];
+S(2,:) = [1, 2, 0];
+S(3,:) = [-3, 2, 0];
+
 %S(4,:) = [255, 564, 0];
-P = [200, 100];
+P = [0, 6];
 
 
 N = size(S,1);
 num_dim = size(P, 2);
 
 % get the base time
-t = 100;
+t = 0;
 
 % calculate the arrival times
 for idx=1:N
@@ -46,20 +56,25 @@ end
 
 % guess/calculate an initial position
 % Po = [250, 150, 0];
-Po = [104, 300];
+Po = [0.333, 3];
 
-P_new = zeros(100,num_dim);
-iter = zeros(100,1);
-err = zeros(100,1);
+% set teh number of trials
+num_trials = 100;
 
-rt = zeros(N, 100);
+P_new = zeros(num_trials, num_dim);
+iter = zeros(num_trials, 1);
+err = zeros(num_trials, 1);
 
+%rt = zeros(N, 100);
+rt = 0.0000000001*randn(N, num_trials);
 
-for idx=1:100
-    rt(:,idx) = 0.000001*randn(N,1);
-    S(:,end) = S(:,end) + rt(:,idx);
+for idx=1:num_trials
+    
+    Sn(:,:, idx) = S;
+    Sn(:, 1:num_dim, idx) = Sn(:, 1:num_dim, idx) + 0.01*randn(N, num_dim);
+    Sn(:,end, idx) = S(:,end) + rt(:,idx);
 
-    [P_new(idx,:), iter(idx,:), err(idx,:)]= calc_3d_tdoa_position(S, Po, v);
+    [P_new(idx,:), iter(idx,:), err(idx,:)]= calc_3d_tdoa_position(Sn(:,:, idx), Po, v);
 
 end
 
@@ -71,13 +86,13 @@ Pn = P_new(:,1:2).';
 C = mean(Pn, 2);
 
 % calculate the covariance matrix
-Rp = (1/100)*((Pn-C)*(Pn-C).');
+Rp = (1/num_trials)*((Pn-C)*(Pn-C).');
 
 % find the eigenvalues (V) and the eigenvectors (E)
 [Ep, Vp] = eig(Rp, 'vector');
 
 % get the confidence interval 
-p = 0.80;
+p = 0.95;
 s = -2 * log(1 - p);
 Vp = Vp*s;
 
@@ -112,25 +127,19 @@ r_ellipse = (Ep * (sqrt(diag(Vp)))) * [cos(theta(:))'; sin(theta(:))'];
 figure(plot_num)
 set(gcf,'position',([50,50,1200,700]),'color','w')
 
-scatter(S(:,1), S(:,2), '*', 'k')
+scatter(reshape(Sn(:,1,:),[num_trials*N,1]), reshape(Sn(:,2,:),[num_trials*N,1]), 10, 'v', 'filled', 'k')
 hold on
-
-scatter(P(1), P(2), 'o', 'filled', 'r')
-scatter(P_new(:,1), P_new(:,2), '.', 'b')
-
 grid on
 box on
 
+scatter(Po(1), Po(2), 20, 'd', 'filled', 'b')
+scatter(P_new(:,1), P_new(:,2), '.', 'b')
+
 % plot the center
-scatter(C(1), C(2), 'o', 'filled', 'g')
+%scatter(C(1), C(2), 'o', 'filled', 'g')
+scatter(P(1), P(2), 'o', 'filled', 'r')
 
 plot(r_ellipse(1,:) + C(1), r_ellipse(2,:) + C(2), '-g')
-
-%h = plot_ellipses(cnt, [Vp(1)*Ep(:,1), Vp(2)*Ep(:,2)])
-% scatter(C(1)+sm1(1), C(2)+sm1(2), '+', 'k')
-% scatter(C(1)-sm1(1), C(2)-sm1(2), '+', 'k')
-% scatter(C(1)+sm2(1), C(2)+sm2(2), '+', 'g')
-% scatter(C(1)-sm2(1), C(2)-sm2(2), '+', 'g')
 
 bp = 1;
 return;

@@ -255,6 +255,7 @@ DfD_Analysis/.vscode/launch.json
 *.dll
 
 /.idea
+/python/tdoa/.idea
 
 # certificate files
 *.crt
