@@ -66,12 +66,12 @@ iter = zeros(num_trials, 1);
 err = zeros(num_trials, 1);
 
 %rt = zeros(N, 100);
-rt = 0.0000000001*randn(N, num_trials);
+rt = 0*randn(N, num_trials);
 
 for idx=1:num_trials
     
     Sn(:,:, idx) = S;
-    Sn(:, 1:num_dim, idx) = Sn(:, 1:num_dim, idx) + 0.01*randn(N, num_dim);
+    Sn(:, 1:num_dim, idx) = Sn(:, 1:num_dim, idx) + 0*randn(N, num_dim);
     Sn(:,end, idx) = S(:,end) + rt(:,idx);
 
     [P_new(idx,:), iter(idx,:), err(idx,:)]= calc_3d_tdoa_position(Sn(:,:, idx), Po, v);
