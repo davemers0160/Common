@@ -5,7 +5,7 @@ import math
 from bokeh import events
 
 from bokeh.io import curdoc, output_file
-from bokeh.models import ColumnDataSource, Spinner, Range1d, Slider, Legend, CustomJS, HoverTool, PointDrawTool, TableColumn, DataTable
+from bokeh.models import ColumnDataSource, Spinner, Range1d, Slider, Legend, CustomJS, HoverTool, PointDrawTool, TableColumn, DataTable, NumberFormatter
 from bokeh.plotting import figure, show, output_file
 from bokeh.layouts import column, row, Spacer
 
@@ -16,7 +16,7 @@ from calc_tdoa_position import calc_tdoa_position
 v = 299792458
 
 # predfine the stations
-S = 1*np.array([[3, 5, 0],
+S = 1*np.array([[4, 5, 0],
               [1, 2, 0],
               [-3, 2, 0]], dtype='float')
 
@@ -80,23 +80,17 @@ ell_source = ColumnDataSource(data=dict(ex=[P[0]*1], ey=[P[1]*1]))
 
 
 ### ---------------------------------------------------------------------------
-tdoa_dict = dict(st=st_source, ig=ig_source, P=P, N=N, v=v)
+tdoa_dict = dict(st=st_source, ig=ig_source, ctx=ctx_source, tx=tx_source, etx=etx_source, N=N, v=v, range_err=range_err, time_err=time_err)
 update_plot_callback = CustomJS(args=tdoa_dict, code="""
     console.log('test')
     
+    var num_trials = 100;
     var st = st.data;
-    
-    // error limit
-    var d_err = 1e-3;
-    var err = 1000;
-
-    // iteration limit
-    var max_iter = 50;
-    var iter = 0;
     
     var v = v;
     var S = [];
-    var Po = [ig.data['pox'], ig.data['poy']];
+    var Po = [ig.data['pox'][0], ig.data['poy'][0] ];
+    var P = [tx.data['tx'][0], tx.data['ty'][0] ];
     
     //--------------------------------------------------------------------
     function mat_mul(A, B)
@@ -125,6 +119,93 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
     }
      
     //--------------------------------------------------------------------
+    function randn()
+    {
+        return Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+    }
+    
+    //--------------------------------------------------------------------
+    function arr_avg(A)
+    {
+        var length = A.length;
+        var value = 0.0;
+        for(idx=0; idx<length; ++idx)
+        {
+            value += A[idx];
+        }
+        return value/length;
+    }
+    
+    
+    //--------------------------------------------------------------------
+    function calc_tdoa_position(S, Po, v)
+    {
+        // error limit
+        var d_err = 1e-3;
+        var err = 1000;
+    
+        // iteration limit
+        var max_iter = 50;
+        var iter = 0;
+    
+        var Pn = Po.slice(0);
+        
+        S.sort(function(a,b){ return a[2] > b[2] ? 1 : -1; })
+        
+        //--------------------------------------------------------------------
+        while((iter < max_iter) && (err > d_err))
+        {
+            // calculate the R's
+            var R = [];
+            for(var idx=0; idx<N; ++idx)
+            {
+                R[idx] = Math.sqrt( (S[idx][0] - Pn[0])*(S[idx][0] - Pn[0]) + (S[idx][1] - Pn[1])*(S[idx][1] - Pn[1]) );
+            }
+            
+            // build A and b
+            var A = [[0,0],[0,0]];
+            var b = [0,0];
+            for(var idx=1; idx<N; ++idx)
+            {
+                A[idx - 1][0] = (S[idx][0] - Pn[0])/R[idx] - (S[0][0] - Pn[0])/R[0];
+                A[idx - 1][1] = (S[idx][1] - Pn[1])/R[idx] - (S[0][1] - Pn[1])/R[0];
+                b[idx - 1] = v * (S[idx][2] - S[0][2]) - (R[idx] - R[0]);
+            }
+                
+            // invert A -> (AtA)^-1 At
+            var AT = [[0,0],[0,0]];
+            AT[0][0] = A[0][0];
+            AT[0][1] = A[1][0];
+            AT[1][0] = A[0][1];
+            AT[1][1] = A[1][1];
+    
+            // multiply ATA
+            var ATA = mat_mul(AT, A);
+            
+            ATA = inv_mat(ATA);
+            
+            ATA = mat_mul(ATA, AT);
+            
+            // ATA*b
+            var dP = [];
+            dP[0] = ATA[0][0]*b[0] + ATA[0][1]*b[1];
+            dP[1] = ATA[1][0]*b[0] + ATA[1][1]*b[1];
+            
+            // generate new Po: Po = Po - dP
+            Pn[0] = Pn[0] - dP[0];
+            Pn[1] = Pn[1] - dP[1];
+    
+            // get the error
+            err = Math.sqrt(dP[0]*dP[0] + dP[1]*dP[1]); 
+                   
+            ++iter;
+        }
+        
+        return Pn;
+    
+    }
+       
+    //--------------------------------------------------------------------
     // build S and update the latest arrival time estimate based on the new station positions
     for(var idx = 0; idx<N; idx++)
     {
@@ -134,68 +215,38 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
         S[idx][2] = Math.sqrt( (S[idx][0] - P[0])*(S[idx][0] - P[0]) + (S[idx][1] - P[1])*(S[idx][1] - P[1]) )/v;
     }
     
-    // find the smallest time
-    //t_idx = t.indexOf(Math.min(...t))
-    S.sort(function(a,b){ return a[2] > b[2] ? 1 : -1; })
     
-    //--------------------------------------------------------------------
-    while((iter < max_iter) && (err > d_err))
+    var P_new = [];
+    var Sn = [];
+    
+    for(var idx=0; idx<num_trials; ++idx)
     {
-        // calculate the R's
-        var R = [];
-        for(var idx=0; idx<N; ++idx)
+    
+        for(var jdx=0; jdx<N; ++jdx)
         {
-            R[idx] = Math.sqrt( (S[idx][0] - Po[0])*(S[idx][0] - Po[0]) + (S[idx][1] - Po[1])*(S[idx][1] - Po[1]) );
-        }
+            Sn[jdx] = [S[jdx][0] + range_err*randn(), S[jdx][1] + range_err*randn(), S[jdx][2] + time_err*randn()];
+            //Sn[jdx][1] = S[jdx][1] + range_err*randn();
+            //Sn[jdx][2] = S[jdx][2] + time_err*randn();
+        }    
+    
+        // calculate the position
+        P_new[idx] = calc_tdoa_position(Sn, Po, v);
         
-        // build A and b
-        var A = [[0,0],[0,0]];
-        var b = [0,0];
-        for(var idx=1; idx<N; ++idx)
-        {
-            //A[idx] = [];
-            A[idx - 1][0] = (S[idx][0] - Po[0])/R[idx] - (S[0][0] - Po[0])/R[0];
-            A[idx - 1][1] = (S[idx][1] - Po[1])/R[idx] - (S[0][1] - Po[1])/R[0];
-            b[idx - 1] = v * (S[idx][2] - S[0][2]) - (R[idx] - R[0]);
-        }
-            
-        // invert A -> (AtA)^-1 At
-        var AT = [[0,0],[0,0]];
-        AT[0][0] = A[0][0];
-        AT[0][1] = A[1][0];
-        AT[1][0] = A[0][1];
-        AT[1][1] = A[1][1];
-
-        // multiply ATA
-        var ATA = mat_mul(AT, A);
-        
-        ATA = inv_mat(ATA);
-        
-        ATA = mat_mul(ATA, AT);
-        
-        var dP = [];
-        dP[0] = ATA[0][0]*b[0] + ATA[0][1]*b[1];
-        dP[1] = ATA[1][0]*b[0] + ATA[1][1]*b[1];
-        
-        
-        //dP = np.matmul(np.matmul(np.linalg.pinv(np.matmul(A.transpose(), A)), A.transpose()), b).transpose()
-
-        // find the new delta P
-        //dP = A_li * b
-
-        // generate new Po
-        //Po = Po - dP
-        Po[0] = Po[0] - dP[0];
-        Po[1] = Po[1] - dP[1];
-
-        // get the error
-        //err = math.sqrt(np.matmul(dP, dP.transpose()))
-        err = Math.sqrt(dP[0]*dP[0] + dP[1]*dP[1]); 
-               
-        ++iter;
     }
     
-    // return the results
+    var cx = arr_avg(P_new.map(function(value,index) { return value[0]; }) );
+    var cy = arr_avg(P_new.map(function(value,index) { return value[1]; }) );
+    
+    // return the results   
+    console.log(Po);
+    ctx.data['tx'] = [cx];
+    ctx.data['ty'] = [cy];
+    
+    etx.data['tx'] = P_new.map(function(value,index) { return value[0]; });
+    etx.data['ty'] = P_new.map(function(value,index) { return value[1]; });
+    
+    ctx.change.emit();
+    etx.change.emit();
     
     var bp = 1;
 """)
@@ -221,8 +272,8 @@ tool = PointDrawTool(renderers=[s1, s2], num_objects=3)
 tdoa_plot.add_tools(tool)
 
 st_columns = [
-    TableColumn(field="sx", title="X (km)"),
-    TableColumn(field="sy", title="Y (km)"),
+    TableColumn(field="sx", title="X (km)", formatter=NumberFormatter(format='0[.]000', text_align='center')),
+    TableColumn(field="sy", title="Y (km)", formatter=NumberFormatter(format='0[.]000', text_align='center')),
 ]
 st_datatable = DataTable(source=st_source, columns=st_columns, width=200, height=280, editable=True)
 
