@@ -128,12 +128,7 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
                 AB[idx][jdx] = sum;
             }        
         }
-              
-        //var AB = [[0,0],[0,0]];
-        //AB[0][0] = A[0][0]*B[0][0] + A[0][1]*B[1][0];
-        //AB[0][1] = A[0][0]*B[0][1] + A[0][1]*B[1][1];
-        //AB[1][0] = A[1][0]*B[0][0] + A[1][1]*B[1][1];
-        //AB[1][1] = A[1][0]*B[0][1] + A[1][1]*B[1][1];
+             
         return AB;
     }
     
@@ -207,11 +202,6 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
             }
                 
             // invert A -> (AtA)^-1 At
-            //var AT = [[0,0],[0,0]];
-            //AT[0][0] = A[0][0];
-            //AT[0][1] = A[1][0];
-            //AT[1][0] = A[0][1];
-            //AT[1][1] = A[1][1];
             var AT = mat_trans(A);
     
             // multiply ATA
@@ -241,6 +231,14 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
     }
        
     //--------------------------------------------------------------------
+    function calc_covariance()
+    {
+        //var CV = mat_mul(P_new[idx])
+    }
+
+    //--------------------------------------------------------------------
+    // Main function code
+    //--------------------------------------------------------------------
     // build S and update the latest arrival time estimate based on the new station positions
     for(var idx = 0; idx<N; idx++)
     {
@@ -249,8 +247,7 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
         S[idx][1] = st['y'][idx];
         S[idx][2] = Math.sqrt( (S[idx][0] - P[0])*(S[idx][0] - P[0]) + (S[idx][1] - P[1])*(S[idx][1] - P[1]) )/v;
     }
-    
-    
+      
     var P_new = [];
     var Sn = [];
     
