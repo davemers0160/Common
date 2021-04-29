@@ -14,6 +14,12 @@ rng(now);
 
 % v = 161874.9773218;
 v = 299792458;
+% estimating +/- 10 error
+range_err = 0.0054;
+
+% estimating +/- 0.1us error
+time_err = 1e-6;
+
 
 % S = zeros(N, 4);
 
@@ -42,22 +48,18 @@ S(3,:) = [-3, 2, 0];
 P = [0, 6];
 
 
+% get the dimensions of the data
 N = size(S,1);
 num_dim = size(P, 2);
-
-% get the base time
-t = 0;
 
 % calculate the arrival times
 for idx=1:N
     %S(idx, 4) = sqrt((S(idx,1)-P(1))^2 + (S(idx,2)-P(2))^2 + (S(idx,3)-P(3))^2)/v + t;
-    S(idx, end) = sqrt(sum((S(idx, 1:end-1) - P).*(S(idx, 1:end-1) - P)))/v + t;
+    S(idx, end) = sqrt(sum((S(idx, 1:end-1) - P).*(S(idx, 1:end-1) - P)))/v;
 end
 
 % guess/calculate an initial position
-% Po = [250, 150, 0];
 Po = [0.333, 3];
-
 % set teh number of trials
 num_trials = 100;
 
@@ -73,6 +75,8 @@ for idx=1:num_trials
     Sn(:,:, idx) = S;
     Sn(:, 1:num_dim, idx) = Sn(:, 1:num_dim, idx) + 0*randn(N, num_dim);
     Sn(:,end, idx) = S(:,end) + rt(:,idx);
+    Sn(:, 1:num_dim, idx) = Sn(:, 1:num_dim, idx) + range_err*randn(N, num_dim);
+    Sn(:,end, idx) = S(:,end) + time_err*randn(1);
 
     [P_new(idx,:), iter(idx,:), err(idx,:)]= calc_3d_tdoa_position(Sn(:,:, idx), Po, v);
 
@@ -120,7 +124,11 @@ r_ellipse = (Ep * (sqrt(diag(Vp)))) * [cos(theta(:))'; sin(theta(:))'];
 
 % [V, D] = eig(Rp * s);
 % r_ellipse = (V * sqrt(D)) * [cos(theta(:))'; sin(theta(:))'];
+ecc = sqrt(1-(min(Vp)/max(Vp)));
+aou = prod(sqrt(Vp))*pi();
 
+fprintf('AOU = %2.5f\n', aou);
+fprintf('Eccentricity = %2.5f\n', ecc);
 
 
 %% plot the data
@@ -137,9 +145,21 @@ scatter(P_new(:,1), P_new(:,2), '.', 'b')
 
 % plot the center
 %scatter(C(1), C(2), 'o', 'filled', 'g')
+scatter(C(1), C(2), 'o', 'filled', 'g')
 scatter(P(1), P(2), 'o', 'filled', 'r')
 
 plot(r_ellipse(1,:) + C(1), r_ellipse(2,:) + C(2), '-g')
+
+set(gca,'fontweight','bold','FontSize',13);
+xlim([floor(min((S(:,1)-5)/20))*20, 220]);
+xtickformat('%1.1f')
+xlabel('X (nmi)', 'fontweight','bold','FontSize',13);
+
+ytickformat('%1.1f')
+ylabel('Y (nmi)', 'fontweight','bold','FontSize',13);
+
+ax = gca;
+ax.Position = [0.07 0.09 0.90 0.86];
 
 bp = 1;
 return;
