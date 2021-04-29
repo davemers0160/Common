@@ -31,24 +31,19 @@ while((iter < max_iter) && (err > de))
         R(idx) = sqrt(sum((S(idx, 1:end-1) - Po).*(S(idx, 1:end-1) - Po)));
     end
 
-    % build A
+    % build A and b
     A = zeros(N-1, num_dim);
-    for idx = 2:N
-        A(idx-1, :) = (S(idx, 1:end-1) - Po)/R(idx) - (S(1,1:end-1) - Po)/R(1);
-    end
-
-    % build b
     b = zeros(N-1, 1);
     for idx = 2:N
+        A(idx-1, :) = (S(idx, 1:end-1) - Po)/R(idx) - (S(1,1:end-1) - Po)/R(1);
         b(idx-1) = v*(S(idx, end)-S(1, end)) - (R(idx) - R(1));
     end
 
     % invert A -> (AtA)^-1 At
-    A_li = pinv(A.' * A)*A.';
+    A_li = (pinv(A.' * A)*A.');
 
     % find the new delta P
     dP = A_li * b;
-
 
     % generate new Po
     Po = Po - dP.';
