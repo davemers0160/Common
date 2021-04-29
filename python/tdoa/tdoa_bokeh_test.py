@@ -11,6 +11,8 @@ from bokeh.layouts import column, row, Spacer
 
 from calc_tdoa_position import calc_tdoa_position
 
+# <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-api-2.3.0.min.js" integrity="sha384-RMPdnxafNybXTSOEnNc5DcUZuWp5AI7/X1sevmORhTwgIBG9mS7D1mQ0Fbo2CvCs" crossorigin="anonymous"></script>
+# <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.3.2/math.js" integrity="sha512-Imer9iTeuCPbyZUYNTKsBWsAk3m7n1vOgPsAmw4OlkGSS9qK3/WlJZg7wC/9kL7nUUOyb06AYS8DyYQV7ELEbg==" crossorigin="anonymous"></script>
 
 # speed of the signal
 v = 299792458
@@ -82,6 +84,7 @@ ell_source = ColumnDataSource(data=dict(x=[P[0]*1], y=[P[1]*1]))
 ### ---------------------------------------------------------------------------
 tdoa_dict = dict(st=st_source, ig=ig_source, ctx=ctx_source, tx=tx_source, etx=etx_source, N=N, v=v, range_err=range_err, time_err=time_err)
 update_plot_callback = CustomJS(args=tdoa_dict, code="""
+
     console.log('test')
     
     var num_trials = 100;
