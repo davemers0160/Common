@@ -5,7 +5,7 @@ import math
 from bokeh import events
 
 from bokeh.io import curdoc, output_file
-from bokeh.models import ColumnDataSource, Spinner, Range1d, Slider, Legend, CustomJS, HoverTool, PointDrawTool, TableColumn, DataTable, NumberFormatter
+from bokeh.models import ColumnDataSource, Spinner, Range1d, Slider, Legend, CustomJS, HoverTool, PointDrawTool, TableColumn, DataTable, NumberFormatter, Div
 from bokeh.plotting import figure, show, output_file
 from bokeh.layouts import column, row, Spacer
 
@@ -71,12 +71,12 @@ def calc_covariance_matrix(P_new, cp, num_trials):
 
 ### ---------------------------------------------------------------------------
 # tdoa_source = ColumnDataSource(data=dict(tx=[P[0]], ty=[P[1]], sx=S[:,0], sy=S[:,1], pox=[Po[0]], poy=[Po[1]], v=[v]))
-st_source = ColumnDataSource(data=dict(sx=(S[:, 0]*1), sy=(S[:, 1]*1), st=S[:, 2], S=S*1))
-ig_source = ColumnDataSource(data=dict(pox=[Po[0]*1], poy=[Po[1]*1]))
-tx_source = ColumnDataSource(data=dict(tx=[P[0]*1], ty=[P[1]*1]))
-etx_source = ColumnDataSource(data=dict(tx=[P[0]*1], ty=[P[1]*1]))
-ctx_source = ColumnDataSource(data=dict(tx=[P[0]*1], ty=[P[1]*1]))
-ell_source = ColumnDataSource(data=dict(ex=[P[0]*1], ey=[P[1]*1]))
+st_source = ColumnDataSource(data=dict(x=(S[:, 0]*1), y=(S[:, 1]*1), t=S[:, 2], S=S*1))
+ig_source = ColumnDataSource(data=dict(x=[Po[0]*1], y=[Po[1]*1]))
+tx_source = ColumnDataSource(data=dict(x=[P[0]*1], y=[P[1]*1]))
+etx_source = ColumnDataSource(data=dict(x=[P[0]*1], y=[P[1]*1]))
+ctx_source = ColumnDataSource(data=dict(x=[P[0]*1], y=[P[1]*1]))
+ell_source = ColumnDataSource(data=dict(x=[P[0]*1], y=[P[1]*1]))
 
 
 ### ---------------------------------------------------------------------------
@@ -89,17 +89,51 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
     
     var v = v;
     var S = [];
-    var Po = [ig.data['pox'][0], ig.data['poy'][0] ];
-    var P = [tx.data['tx'][0], tx.data['ty'][0] ];
+    var Po = [ig.data['x'][0], ig.data['y'][0] ];
+    var P = [tx.data['x'][0], tx.data['y'][0] ];
     
+    //--------------------------------------------------------------------
+    function mat_trans(A)
+    {
+        var n = A.length;
+        var m = A[0].length;
+        
+        var AT = new Array(m);
+        for(var idx=0; idx<m; ++idx)
+        {
+            AT[idx] = A.map(function(value,index) { return value[idx]; });
+        }
+        return AT;
+    }
+
     //--------------------------------------------------------------------
     function mat_mul(A, B)
     {
-        var AB = [[0,0],[0,0]];
-        AB[0][0] = A[0][0]*B[0][0] + A[0][1]*B[1][0];
-        AB[0][1] = A[0][0]*B[0][1] + A[0][1]*B[1][1];
-        AB[1][0] = A[1][0]*B[0][0] + A[1][1]*B[1][1];
-        AB[1][1] = A[1][0]*B[0][1] + A[1][1]*B[1][1];
+        var n = A.length;
+        var m = A[0].length;
+        var p = B[0].length;    // assumes that B.length == m
+        var sum = 0;
+        
+        var AB = new Array(n);
+        for(var idx=0; idx<n; ++idx)
+        {
+            AB[idx] = new Array(p);
+            for(var jdx=0; jdx<p; ++jdx)
+            {
+                sum = 0;
+                for(var kdx=0; kdx<m; ++kdx)
+                {
+                    sum += A[idx][kdx] * B[kdx][jdx];
+                }
+                AB[idx][jdx] = sum;
+            }        
+        }
+              
+        //var AB = [[0,0],[0,0]];
+        //AB[0][0] = A[0][0]*B[0][0] + A[0][1]*B[1][0];
+        //AB[0][1] = A[0][0]*B[0][1] + A[0][1]*B[1][1];
+        //AB[1][0] = A[1][0]*B[0][0] + A[1][1]*B[1][1];
+        //AB[1][1] = A[1][0]*B[0][1] + A[1][1]*B[1][1];
         return AB;
     }
     
@@ -173,11 +207,12 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
             }
                 
             // invert A -> (AtA)^-1 At
-            var AT = [[0,0],[0,0]];
-            AT[0][0] = A[0][0];
-            AT[0][1] = A[1][0];
-            AT[1][0] = A[0][1];
-            AT[1][1] = A[1][1];
+            //var AT = [[0,0],[0,0]];
+            //AT[0][0] = A[0][0];
+            //AT[0][1] = A[1][0];
+            //AT[1][0] = A[0][1];
+            //AT[1][1] = A[1][1];
+            var AT = mat_trans(A);
     
             // multiply ATA
             var ATA = mat_mul(AT, A);
@@ -210,8 +245,8 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
     for(var idx = 0; idx<N; idx++)
     {
         S[idx] = [];
-        S[idx][0] = st['sx'][idx];
-        S[idx][1] = st['sy'][idx];
+        S[idx][0] = st['x'][idx];
+        S[idx][1] = st['y'][idx];
         S[idx][2] = Math.sqrt( (S[idx][0] - P[0])*(S[idx][0] - P[0]) + (S[idx][1] - P[1])*(S[idx][1] - P[1]) )/v;
     }
     
@@ -234,16 +269,19 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
         
     }
     
+    var PT = mat_trans(P_new);
+    var PTP = mat_mul(PT, P_new);
+    
     var cx = arr_avg(P_new.map(function(value,index) { return value[0]; }) );
     var cy = arr_avg(P_new.map(function(value,index) { return value[1]; }) );
     
     // return the results   
     console.log(Po);
-    ctx.data['tx'] = [cx];
-    ctx.data['ty'] = [cy];
+    ctx.data['x'] = [cx];
+    ctx.data['y'] = [cy];
     
-    etx.data['tx'] = P_new.map(function(value,index) { return value[0]; });
-    etx.data['ty'] = P_new.map(function(value,index) { return value[1]; });
+    etx.data['x'] = P_new.map(function(value,index) { return value[0]; });
+    etx.data['y'] = P_new.map(function(value,index) { return value[1]; });
     
     ctx.change.emit();
     etx.change.emit();
@@ -260,23 +298,26 @@ tdoa_plot.yaxis.axis_label = "Y (km)"
 tdoa_plot.axis.axis_label_text_font_style = "bold"
 
 # tdoa_plot.inverted_triangle(x=(s[0])[:,0], y=(s[0])[:,1], size=5, color='black', source=tdoa_source)
-s1 = tdoa_plot.circle(x='sx', y='sy', radius=0.1, fill_color='black', line_color='black', fill_alpha=0.4, source=st_source)
-s2 = tdoa_plot.inverted_triangle(x='sx', y='sy', size=4, color='black', source=st_source)
+s1 = tdoa_plot.circle(x='x', y='y', radius=0.1, fill_color='black', line_color='black', fill_alpha=0.4, source=st_source)
+s2 = tdoa_plot.inverted_triangle(x='x', y='y', size=4, color='black', source=st_source)
 
-tdoa_plot.diamond(x='pox', y='poy', size=10, color='blue', source=ig_source)
-tdoa_plot.scatter(x='tx', y='ty', size=3, color='blue', source=etx_source)
-tdoa_plot.scatter(x='tx', y='ty', size=5, color='lime', source=ctx_source)
-tdoa_plot.line(x='ex', y='ey', line_width=2, color='lime', source=ell_source)
-tdoa_plot.scatter(x='tx', y='ty', size=5, color='red', source=tx_source)
+tdoa_plot.diamond(x='x', y='y', size=10, color='blue', source=ig_source)
+tdoa_plot.scatter(x='x', y='y', size=3, color='blue', source=etx_source)
+tdoa_plot.scatter(x='x', y='y', size=5, color='lime', source=ctx_source)
+tdoa_plot.line(x='x', y='y', line_width=2, color='lime', source=ell_source)
+tdoa_plot.scatter(x='x', y='y', size=5, color='red', source=tx_source)
 tool = PointDrawTool(renderers=[s1, s2], num_objects=3)
 tdoa_plot.add_tools(tool)
 
-st_columns = [
-    TableColumn(field="sx", title="X (km)", formatter=NumberFormatter(format='0[.]000', text_align='center')),
-    TableColumn(field="sy", title="Y (km)", formatter=NumberFormatter(format='0[.]000', text_align='center')),
+# define the station columns to display
+columns = [
+    TableColumn(field="x", title="X (km)", formatter=NumberFormatter(format='0[.]000', text_align='center')),
+    TableColumn(field="y", title="Y (km)", formatter=NumberFormatter(format='0[.]000', text_align='center')),
 ]
-st_datatable = DataTable(source=st_source, columns=st_columns, width=200, height=280, editable=True)
+st_datatable = DataTable(source=st_source, columns=columns, width=250, height=125, editable=True)
 
+# define the initial guess
+ig_datatable = DataTable(source=ig_source, columns=columns, width=250, height=100, editable=True)
 
 S = calc_arrival_times(S, P, N, v)
 
@@ -302,9 +343,9 @@ cp = np.mean(P_new, axis=0)
 r_x, r_y = calc_covariance_matrix(P_new, cp, num_trials)
 
 # st_source.data = dict(sx=Sn[:, 0, :].reshape(-1), sy=Sn[:, 1, :].reshape(-1))
-etx_source.data = dict(tx=P_new[:, 0]*1, ty=P_new[:, 1]*1)
-ctx_source.data = dict(tx=[cp[0]*1], ty=[cp[1]*1])
-ell_source.data = dict(ex=r_x*1, ey=r_y*1)
+etx_source.data = dict(x=P_new[:, 0]*1, y=P_new[:, 1]*1)
+ctx_source.data = dict(x=[cp[0]*1], y=[cp[1]*1])
+ell_source.data = dict(x=r_x*1, y=r_y*1)
 
 # setup the event callbacks for the plot
 # for w in [st_datatable]:
@@ -312,8 +353,9 @@ ell_source.data = dict(ex=r_x*1, ey=r_y*1)
 #     w.js_on_change('value', update_plot_callback)
 
 st_source.js_on_change('patching', update_plot_callback)
+ig_source.js_on_change('patching', update_plot_callback)
 
-layout = column(tdoa_plot, st_datatable)
+inputs = column([Div(text="""<B>Station Positions</B>""", width=220), st_datatable, Spacer(height=20), Div(text="""<B>Initial Guess</B>""", width=220), ig_datatable])
+layout = row(inputs, Spacer(width=20), tdoa_plot)
+
 show(layout)    
-    
-    
