@@ -15,13 +15,10 @@ rng(now);
 % v = 161874.9773218;
 v = 299792458;
 % estimating +/- 10 error
-range_err = 0.0054;
+range_err = 0.1;
 
 % estimating +/- 0.1us error
-time_err = 1e-6;
-
-
-% S = zeros(N, 4);
+time_err = 1e-10;
 
 % set the station locations (S) and the emitter location (P)
 % 3D
@@ -39,47 +36,43 @@ time_err = 1e-6;
 % S(1,:) = [145, 250, 0];
 % S(2,:) = [200, 250, 0];
 % S(3,:) = [250, 250, 0];
-
-S(1,:) = [3, 5, 0];
-S(2,:) = [1, 2, 0];
-S(3,:) = [-3, 2, 0];
-
 %S(4,:) = [255, 564, 0];
+
+% station locations
+S(1,:) = [4, 5];
+S(2,:) = [1, 2];
+S(3,:) = [-3, 2];
+
+% times
+T = [0; 0; 0];
+
+% target location
 P = [0, 6];
-
-
-% get the dimensions of the data
-N = size(S,1);
-num_dim = size(P, 2);
-
-% calculate the arrival times
-for idx=1:N
-    %S(idx, 4) = sqrt((S(idx,1)-P(1))^2 + (S(idx,2)-P(2))^2 + (S(idx,3)-P(3))^2)/v + t;
-    S(idx, end) = sqrt(sum((S(idx, 1:end-1) - P).*(S(idx, 1:end-1) - P)))/v;
-end
 
 % guess/calculate an initial position
 Po = [0.333, 3];
+
+% get the dimensions of the data
+[N, num_dim] = size(S);
+
+% calculate the arrival times
+for idx=1:N
+    T(idx) = sqrt(sum((S(idx, :) - P).*(S(idx, :) - P)))/v;
+end
+
 % set teh number of trials
 num_trials = 100;
 
 P_new = zeros(num_trials, num_dim);
 iter = zeros(num_trials, 1);
 err = zeros(num_trials, 1);
-
-%rt = zeros(N, 100);
-rt = 0*randn(N, num_trials);
+Sn = zeros(N, num_dim, num_trials);
 
 for idx=1:num_trials
-    
-    Sn(:,:, idx) = S;
-    Sn(:, 1:num_dim, idx) = Sn(:, 1:num_dim, idx) + 0*randn(N, num_dim);
-    Sn(:,end, idx) = S(:,end) + rt(:,idx);
-    Sn(:, 1:num_dim, idx) = Sn(:, 1:num_dim, idx) + range_err*randn(N, num_dim);
-    Sn(:,end, idx) = S(:,end) + time_err*randn(1);
+    Sn(:, :, idx) = S + range_err*randn(N, num_dim);
+    Tn = T + time_err*randn(N,1);
 
-    [P_new(idx,:), iter(idx,:), err(idx,:)]= calc_3d_tdoa_position(Sn(:,:, idx), Po, v);
-
+    [P_new(idx,:), iter(idx,:), err(idx,:)]= calc_3d_tdoa_position(Sn(:,:, idx), Tn, Po, v);
 end
 
 
@@ -151,8 +144,7 @@ scatter(P(1), P(2), 'o', 'filled', 'r')
 plot(r_ellipse(1,:) + C(1), r_ellipse(2,:) + C(2), '-g')
 
 set(gca,'fontweight','bold','FontSize',13);
-xlim([floor(min((S(:,1)-5)/20))*20, 220]);
-xtickformat('%1.1f')
+xlim([floor((min(S(:,1))-1)/10)*10, ceil((max(S(:,1))+1)/10)*10]);
 xlabel('X (nmi)', 'fontweight','bold','FontSize',13);
 
 ytickformat('%1.1f')

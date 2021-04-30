@@ -1,4 +1,4 @@
-function [Po, iter, err] = calc_3d_tdoa_position(S, Po, v)
+function [Po, iter, err] = calc_3d_tdoa_position(S, T, Po, v)
 % Inputs: S - Array of positions (x,y,z,t)
 %         Po - Intial guess position (x,y,z)
 %         v - speed of the signal
@@ -16,8 +16,9 @@ N = size(S, 1);
 num_dim = size(Po, 2);
 
 % sort the S array in terms of the shortest to longest times
-[~, index] = sort(S(:,end));
+[~, index] = sort(T);
 S = S(index, :);
+T = T(index);
 
 iter = 0;
 err = 1000;
@@ -28,15 +29,15 @@ while((iter < max_iter) && (err > de))
     R = zeros(N,1);
     for idx=1:N
         %R(idx) = sqrt((S(idx,1) - Po(1))^2 + (S(idx,2) - Po(2))^2 + (S(idx,3) - Po(3))^2);
-        R(idx) = sqrt(sum((S(idx, 1:end-1) - Po).*(S(idx, 1:end-1) - Po)));
+        R(idx) = sqrt(sum((S(idx, :) - Po).*(S(idx, :) - Po)));
     end
 
     % build A and b
     A = zeros(N-1, num_dim);
     b = zeros(N-1, 1);
     for idx = 2:N
-        A(idx-1, :) = (S(idx, 1:end-1) - Po)/R(idx) - (S(1,1:end-1) - Po)/R(1);
-        b(idx-1) = v*(S(idx, end)-S(1, end)) - (R(idx) - R(1));
+        A(idx-1, :) = (S(idx, :) - Po)/R(idx) - (S(1,:) - Po)/R(1);
+        b(idx-1) = v*(T(idx)-T(1)) - (R(idx) - R(1));
     end
 
     % invert A -> (AtA)^-1 At
