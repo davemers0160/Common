@@ -128,11 +128,16 @@ fprintf('Eccentricity = %2.5f\n', ecc);
 figure(plot_num)
 set(gcf,'position',([50,50,1200,700]),'color','w')
 
-scatter(reshape(Sn(:,1,:),[num_trials*N,1]), reshape(Sn(:,2,:),[num_trials*N,1]), 10, 'v', 'filled', 'k')
+%scatter(reshape(Sn(:,1,:),[num_trials*N,1]), reshape(Sn(:,2,:),[num_trials*N,1]), 10, 'v', 'filled', 'k')
 hold on
 grid on
 box on
 
+for idx=1:N
+    rectangle('Position',[S(idx,1)-range_err, S(idx,2)-range_err, 2*range_err, 2*range_err], 'FaceColor', [0.8 0.8 0.8 0.3], 'EdgeColor', [0 0 0], 'Curvature',[1,1]);  
+end
+
+scatter(S(:,1), S(:,2), 10, 'v', 'filled', 'k')
 scatter(Po(1), Po(2), 20, 'd', 'filled', 'b')
 scatter(P_new(:,1), P_new(:,2), '.', 'b')
 
