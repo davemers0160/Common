@@ -15,6 +15,7 @@ from calc_tdoa_position import calc_tdoa_position
 <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-api-2.3.0.min.js" integrity="sha384-RMPdnxafNybXTSOEnNc5DcUZuWp5AI7/X1sevmORhTwgIBG9mS7D1mQ0Fbo2CvCs" crossorigin="anonymous"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.3.2/math.js" integrity="sha512-Imer9iTeuCPbyZUYNTKsBWsAk3m7n1vOgPsAmw4OlkGSS9qK3/WlJZg7wC/9kL7nUUOyb06AYS8DyYQV7ELEbg==" crossorigin="anonymous"></script>
 """
+
 # speed of the signal
 v = 299792458
 
@@ -318,4 +319,4 @@ ig_source.js_on_change('patching', update_plot_callback)
 inputs = column([Div(text="""<B>Station Positions</B>""", width=220), st_datatable, Spacer(height=20), Div(text="""<B>Initial Guess</B>""", width=220), ig_datatable])
 layout = row(inputs, Spacer(width=20), tdoa_plot)
 
-show(layout)    
+show(layout)
