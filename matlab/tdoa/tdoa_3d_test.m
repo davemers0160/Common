@@ -39,7 +39,7 @@ time_err = 1e-10;
 %S(4,:) = [255, 564, 0];
 
 % station locations
-S(1,:) = [4, 5];
+S(1,:) = [4, 6];
 S(2,:) = [1, 2];
 S(3,:) = [-3, 2];
 
@@ -90,7 +90,7 @@ Rp = (1/num_trials)*((Pn-C)*(Pn-C).');
 
 % get the confidence interval 
 p = 0.95;
-s = -2 * log(1 - p);
+s = -2 * log10(1 - p);
 Vp = Vp*s;
 
 % get the max eigen value
@@ -126,7 +126,7 @@ fprintf('Eccentricity = %2.5f\n', ecc);
 
 %% plot the data
 figure(plot_num)
-set(gcf,'position',([50,50,1200,700]),'color','w')
+set(gcf,'position',([50,50,1400,600]),'color','w')
 
 %scatter(reshape(Sn(:,1,:),[num_trials*N,1]), reshape(Sn(:,2,:),[num_trials*N,1]), 10, 'v', 'filled', 'k')
 hold on
@@ -139,7 +139,7 @@ end
 
 scatter(S(:,1), S(:,2), 10, 'v', 'filled', 'k')
 scatter(Po(1), Po(2), 20, 'd', 'filled', 'b')
-scatter(P_new(:,1), P_new(:,2), '.', 'b')
+%scatter(P_new(:,1), P_new(:,2), '.', 'b')
 
 % plot the center
 %scatter(C(1), C(2), 'o', 'filled', 'g')
@@ -158,30 +158,4 @@ ylabel('Y (nmi)', 'fontweight','bold','FontSize',13);
 ax = gca;
 ax.Position = [0.07 0.09 0.90 0.86];
 
-bp = 1;
-return;
-
-%%
-function h = plot_ellipses(cnt,rads,axh)
-% cnt is the [x,y] coordinate of the center (row or column index).
-% rads is the [horizontal, vertical] "radius" of the ellipses (row or column index).
-% axh is the axis handle (if missing or empty, gca will be used)
-% h is the object handle to the plotted rectangle.
-% The easiest approach IMO is to plot a rectangle with rounded edges. 
-% EXAMPLE
-%    center = [1, 2];         %[x,y] center (mean)
-%    stdev = [1.2, 0.5];      %[x,y] standard dev.
-%    h = plotEllipses(center, stdev)
-%    axis equal
-% get axis handle if needed
-if nargin < 3 || isempty(axh)
-   axh = gca();  
-end
-% Compute the lower, left corner of the rectangle.
-llc = cnt(:)-rads(:);
-% Compute the width and height
-wh = rads(:)*2; 
-% Draw rectangle 
-h = rectangle(axh,'Position',[llc(:).',wh(:).'],'Curvature',[1,1]); 
-end
 

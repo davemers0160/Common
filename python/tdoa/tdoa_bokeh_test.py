@@ -59,7 +59,7 @@ def calc_covariance_matrix(P_new, cp, num_trials):
 
     # get the confidence interval
     p = 0.95
-    s = -2 * math.log(1 - p)
+    s = -2 * math.log10(1 - p)
     Vp = Vp * s
 
     # set the ellipse plotting segments
@@ -86,8 +86,6 @@ ell_source = ColumnDataSource(data=dict(x=[P[0]*1], y=[P[1]*1]))
 ### ---------------------------------------------------------------------------
 tdoa_dict = dict(st=st_source, ig=ig_source, ctx=ctx_source, tx=tx_source, etx=etx_source, ell=ell_source, N=N, D=num_dim, v=v, range_err=range_err, time_err=time_err)
 update_plot_callback = CustomJS(args=tdoa_dict, code="""
-
-    console.log('test')
     
     var num_trials = 100;
     var st = st.data;
@@ -95,87 +93,14 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
     var v = v;
     var S = []; //st['s'];
     var T = [];
-    var Po = [ig.data['x'][0], ig.data['y'][0] ];
+    var Po = [parseFloat(ig.data['x'][0]), parseFloat(ig.data['y'][0])];
     var P = [tx.data['x'][0], tx.data['y'][0] ];
-    
-    //--------------------------------------------------------------------
-    function mat_trans(A)
-    {
-        var n = A.length;
-        var m = A[0].length;
-        
-        var AT = new Array(m);
-        for(var idx=0; idx<m; ++idx)
-        {
-            AT[idx] = A.map(function(value,index) { return value[idx]; });
-        }
-        return AT;
-    }
 
-    //--------------------------------------------------------------------
-    function mat_mul(A, B)
-    {
-        var n = A.length;
-        var m = A[0].length;
-        var p = B[0].length;    // assumes that B.length == m
-        var sum = 0;
-        
-        var AB = new Array(n);
-        for(var idx=0; idx<n; ++idx)
-        {
-            AB[idx] = new Array(p);
-            for(var jdx=0; jdx<p; ++jdx)
-            {
-                sum = 0;
-                for(var kdx=0; kdx<m; ++kdx)
-                {
-                    sum += A[idx][kdx] * B[kdx][jdx];
-                }
-                AB[idx][jdx] = sum;
-            }        
-        }
-             
-        return AB;
-    }
-    
-    //--------------------------------------------------------------------
-    function inv_mat(A)
-    {
-        var AI = [[0,0],[0,0]];
-        var det = A[0][0]*A[1][1] - A[0][1]*A[1][0];
-        if(det == 0 )
-            return AI;
-            
-        AI[0][0] = A[1][1]/det;
-        AI[0][1] = -A[1][0]/det;
-        AI[1][0] = -A[0][1]/det;
-        AI[1][1] = A[0][0]/det;
-        return AI;
-    }
      
     //--------------------------------------------------------------------
     function randn()
     {
         return Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
-    }
-    
-    //--------------------------------------------------------------------
-    function arr_avg(A)
-    {
-        var length = A.length;
-        var value = 0.0;
-        for(idx=0; idx<length; ++idx)
-        {
-            value += A[idx];
-        }
-        return value/length;
-    }
-    
-    //--------------------------------------------------------------------
-    function calc_covariance(P)
-    {
-        var Pc = math.multiply(math.transpose(P), P, 1/P.length)
-    
     }
     
     //--------------------------------------------------------------------
@@ -200,7 +125,6 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
             [T[0], T[t_index]] = [T[t_index], T[0]];
             [S[0], S[t_index]] = [S[t_index], S[0]];
         }
-        //S.sort(function(a,b){ return a[2] > b[2] ? 1 : -1; })
         
         //--------------------------------------------------------------------
         while((iter < max_iter) && (err > d_err))
@@ -222,25 +146,19 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
                 b[idx - 1] = v * (T[idx] - T[0]) - (R[idx] - R[0]);
             }
                 
-            // invert A -> (AtA)^-1 At
-            //var AT = mat_trans(A);
-    
-            // multiply ATA
-            //var ATA = mat_mul(AT, A);
+            var dP = [];          
+            var ATA = math.multiply(math.transpose(A), A);
             
-            //ATA = inv_mat(ATA);
-            
-            //ATA = mat_mul(ATA, AT);
-            
-            // ATA*b
-            //var dP = [];
-            //dP[0] = ATA[0][0]*b[0] + ATA[0][1]*b[1];
-            //dP[1] = ATA[1][0]*b[0] + ATA[1][1]*b[1];
-            var dP = math.multiply(math.multiply(math.inv(math.multiply(math.transpose(A), A)), math.transpose(A)), b)
+            // invertability check
+            if(math.det(ATA) == 0)
+            {
+                //dP = [5,5];
+                ATA = math.add(ATA, math.multiply(1.0, math.identity(ATA.length)))._data;
+            }
+
+            dP = math.multiply(math.multiply(math.inv(ATA), math.transpose(A)), b)
             
             // generate new Po: Po = Po - dP
-            //Pn[0] = Pn[0] - dP[0];
-            //Pn[1] = Pn[1] - dP[1];
             Pn = math.subtract(Pn, dP);
     
             // get the error
@@ -282,8 +200,6 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
         for(var jdx=0; jdx<N; ++jdx)
         {
             Sn[jdx] = [S[jdx][0] + range_err*randn(), S[jdx][1] + range_err*randn()];
-            //Sn[jdx][1] = S[jdx][1] + range_err*randn();
-            //Sn[jdx][2] = S[jdx][2] + time_err*randn();
             Tn[jdx] = T[jdx] + time_err*randn()
         }    
     
@@ -292,14 +208,16 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
         
     }
     
-    //var PT = mat_trans(P_new);
-    //var PTP = mat_mul(PT, P_new);
-    // get the center of the locations
-    var cx = arr_avg(P_new.map(function(value,index) { return value[0]; }) );
-    var cy = arr_avg(P_new.map(function(value,index) { return value[1]; }) );
+    //var cx = arr_avg(P_new.map(function(value,index) { return value[0]; }) );
+    //var cy = arr_avg(P_new.map(function(value,index) { return value[1]; }) );
+    var C = math.mean(P_new, 0);
+    
+    var Pm = [];
+    Pm[0] = math.subtract(math.row(math.transpose(P_new),0), C[0])[0];
+    Pm[1] = math.subtract(math.row(math.transpose(P_new),1), C[1])[0];
     
     // calculate the covariance matrix  
-    var Pc = math.multiply(math.transpose(P_new), P_new, 1/P_new.length);
+    var Pc = math.multiply(Pm, math.transpose(Pm), 1/num_trials);
     
     // get the eigen values and vectors
     var p_eigs = math.eigs(Pc);
@@ -309,18 +227,18 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
     p_eigs.values = math.multiply(p_eigs.values, scale);
     
     // set the ellipse plotting segments
-    var theta = math.range(0, 2*Math.PI, 2*Math.PI/100);
+    var theta = math.range(0, 2*Math.PI, 2*Math.PI/100, true);
 
     // calculate the ellipse
     var r_ellipse = math.multiply(math.multiply(p_eigs.vectors, math.sqrt(math.diag(p_eigs.values))), math.matrix([math.cos(theta), math.sin(theta)]));
-    var r_x = math.add(math.row(r_ellipse,0), cx);
-    var r_y = math.add(math.row(r_ellipse,1), cy);
+    var r_x = math.add(math.row(r_ellipse,0), C[0]);
+    var r_y = math.add(math.row(r_ellipse,1), C[1]);
     
 
     // return the results   
-    console.log(Po);
-    ctx.data['x'] = [cx];
-    ctx.data['y'] = [cy];
+    console.log(C);
+    ctx.data['x'] = [C[0]];
+    ctx.data['y'] = [C[1]];
     
     etx.data['x'] = P_new.map(function(value,index) { return value[0]; });
     etx.data['y'] = P_new.map(function(value,index) { return value[1]; });
@@ -394,10 +312,6 @@ ctx_source.data = dict(x=[cp[0]*1], y=[cp[1]*1])
 ell_source.data = dict(x=r_x*1, y=r_y*1)
 
 # setup the event callbacks for the plot
-# for w in [st_datatable]:
-#     # w.on_change('value', update_plot)
-#     w.js_on_change('value', update_plot_callback)
-
 st_source.js_on_change('patching', update_plot_callback)
 ig_source.js_on_change('patching', update_plot_callback)
 
