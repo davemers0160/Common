@@ -5,7 +5,7 @@ import math
 from bokeh import events
 
 from bokeh.io import curdoc, output_file
-from bokeh.models import ColumnDataSource, Spinner, Range1d, Slider, Legend, CustomJS, HoverTool, PointDrawTool, TableColumn, DataTable, NumberFormatter, Div
+from bokeh.models import ColumnDataSource, Spinner, Range1d, Slider, Legend, CustomJS, HoverTool, PointDrawTool, TableColumn, DataTable, NumberFormatter, Div, TextInput
 from bokeh.plotting import figure, show, output_file
 from bokeh.layouts import column, row, Spacer
 
@@ -15,9 +15,11 @@ from calc_tdoa_position import calc_tdoa_position
 <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-api-2.3.0.min.js" integrity="sha384-RMPdnxafNybXTSOEnNc5DcUZuWp5AI7/X1sevmORhTwgIBG9mS7D1mQ0Fbo2CvCs" crossorigin="anonymous"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.3.2/math.js" integrity="sha512-Imer9iTeuCPbyZUYNTKsBWsAk3m7n1vOgPsAmw4OlkGSS9qK3/WlJZg7wC/9kL7nUUOyb06AYS8DyYQV7ELEbg==" crossorigin="anonymous"></script>
 """
+## setup for the GUI
+spin_width = 110
 
 # speed of the signal
-v = 299792458
+v = 299792458/1000.0
 
 # predfine the stations
 S = 1*np.array([[4, 5],
@@ -39,7 +41,15 @@ N, num_dim = S.shape
 range_err = 0.01
 
 # estimating +/- 0.1us error
-time_err = 0.0000000001
+time_err = 0.0000001
+
+### ---------------------------------------------------------------------------
+p_err_spin = Spinner(title="Position Error (km)", low=0.0, high=10.0, step=0.001, value=range_err, width=spin_width)
+t_err_spin = Spinner(title="Time Error (s)", low=0.0, high=1.0, step=0.00000001, value=time_err, width=spin_width)
+
+results_div = Div(width=250)
+aou_text = TextInput(title="AOU (km^2)", value="", width=245, background=[255,255,255], disabled=True)
+
 
 ### ---------------------------------------------------------------------------
 # calculate the arrival times
@@ -60,7 +70,7 @@ def calc_covariance_matrix(P_new, cp, num_trials):
 
     # get the confidence interval
     p = 0.95
-    s = -2 * math.log10(1 - p)
+    s = -2 * math.log(1 - p)
     Vp = Vp * s
 
     # set the ellipse plotting segments
@@ -71,7 +81,9 @@ def calc_covariance_matrix(P_new, cp, num_trials):
     r_x = r_ellipse[0, :] + cp[0]
     r_y = r_ellipse[1, :] + cp[1]
 
-    return r_x, r_y
+    aou = np.prod(np.sqrt(Vp))*math.pi
+
+    return r_x, r_y, aou
 
 
 ### ---------------------------------------------------------------------------
@@ -85,7 +97,7 @@ ell_source = ColumnDataSource(data=dict(x=[P[0]*1], y=[P[1]*1]))
 
 
 ### ---------------------------------------------------------------------------
-tdoa_dict = dict(st=st_source, ig=ig_source, ctx=ctx_source, tx=tx_source, etx=etx_source, ell=ell_source, N=N, D=num_dim, v=v, range_err=range_err, time_err=time_err)
+tdoa_dict = dict(st=st_source, ig=ig_source, ctx=ctx_source, tx=tx_source, etx=etx_source, ell=ell_source, N=N, D=num_dim, v=v, p_err_spin=p_err_spin, t_err_spin=t_err_spin, aou_text=aou_text)
 update_plot_callback = CustomJS(args=tdoa_dict, code="""
     
     var num_trials = 100;
@@ -97,6 +109,8 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
     var Po = [parseFloat(ig.data['x'][0]), parseFloat(ig.data['y'][0])];
     var P = [tx.data['x'][0], tx.data['y'][0] ];
 
+    var range_err = p_err_spin.value;
+    var time_err = t_err_spin.value
      
     //--------------------------------------------------------------------
     function randn()
@@ -224,7 +238,7 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
     var p_eigs = math.eigs(Pc);
     
     // get the confidence interval
-    var scale = -2 * Math.log10(1 - 0.95)
+    var scale = -2 * Math.log(1 - 0.95)
     p_eigs.values = math.multiply(p_eigs.values, scale);
     
     // set the ellipse plotting segments
@@ -234,7 +248,9 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
     var r_ellipse = math.multiply(math.multiply(p_eigs.vectors, math.sqrt(math.diag(p_eigs.values))), math.matrix([math.cos(theta), math.sin(theta)]));
     var r_x = math.add(math.row(r_ellipse,0), C[0]);
     var r_y = math.add(math.row(r_ellipse,1), C[1]);
+    var aou = math.prod(math.sqrt(p_eigs.values))*Math.PI;
     
+    aou_text.value = aou.toPrecision(6);
 
     // return the results   
     console.log(C);
@@ -251,13 +267,14 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
     etx.change.emit();
     ell.change.emit();
     
+    
     var bp = 1;
 """)
 
 
 # tdoa_source = ColumnDataSource(data=dict(tx=[P[0]], ty=[P[1]], sx=[10], sy=[10], pox=[Po[0]], poy=[Po[1]], v=[v]))
 # setup the figure
-tdoa_plot = figure(plot_height=600, plot_width=1300, title="TDOA")
+tdoa_plot = figure(plot_height=700, plot_width=1300, title="TDOA Results")
 tdoa_plot.xaxis.axis_label = "X (km)"
 tdoa_plot.yaxis.axis_label = "Y (km)"
 tdoa_plot.axis.axis_label_text_font_style = "bold"
@@ -271,10 +288,12 @@ tdoa_plot.scatter(x='x', y='y', size=3, color='blue', source=etx_source)
 tdoa_plot.scatter(x='x', y='y', size=5, color='lime', source=ctx_source)
 tdoa_plot.line(x='x', y='y', line_width=2, color='lime', source=ell_source)
 tdoa_plot.scatter(x='x', y='y', size=5, color='red', source=tx_source)
-tool = PointDrawTool(renderers=[s1, s2], num_objects=3)
-tdoa_plot.add_tools(tool)
+# tool = PointDrawTool(renderers=[s1, s2], num_objects=3)
+# tdoa_plot.add_tools(tool)
 
-# define the station columns to display
+### ---------------------------------------------------------------------------
+# setup the inputs
+# define the receiver columns to display
 columns = [
     TableColumn(field="x", title="X (km)", formatter=NumberFormatter(format='0[.]000', text_align='center')),
     TableColumn(field="y", title="Y (km)", formatter=NumberFormatter(format='0[.]000', text_align='center')),
@@ -282,12 +301,19 @@ columns = [
 st_datatable = DataTable(source=st_source, columns=columns, width=250, height=125, editable=True)
 
 # define the initial guess
-ig_datatable = DataTable(source=ig_source, columns=columns, width=250, height=100, editable=True)
+ig_datatable = DataTable(source=ig_source, columns=columns, width=250, height=75, editable=True)
 
+# define the emitter location
+tx_datatable = DataTable(source=tx_source, columns=columns, width=250, height=75, editable=True)
+
+
+tdoa_results = "<font size='3'>AOU (km^2):<br>"
+
+### ---------------------------------------------------------------------------
 T = calc_arrival_times(S, T, P, N, v)
 
-#P_new[idx], iter[idx], err[idx] = calc_tdoa_position(Sn[:, :, idx], Po, v)
 
+### ---------------------------------------------------------------------------
 # set the number of trials
 num_trials = 100
 
@@ -305,7 +331,10 @@ for idx in range(0, num_trials):
 # get the center/means in each direction
 cp = np.mean(P_new, axis=0)
 
-r_x, r_y = calc_covariance_matrix(P_new, cp, num_trials)
+r_x, r_y, aou = calc_covariance_matrix(P_new, cp, num_trials)
+
+# results_div.text = tdoa_results + str(aou) + "</font>"
+aou_text.value = "{:.6f}".format(aou)
 
 # st_source.data = dict(sx=Sn[:, 0, :].reshape(-1), sy=Sn[:, 1, :].reshape(-1))
 etx_source.data = dict(x=P_new[:, 0]*1, y=P_new[:, 1]*1)
@@ -315,8 +344,15 @@ ell_source.data = dict(x=r_x*1, y=r_y*1)
 # setup the event callbacks for the plot
 st_source.js_on_change('patching', update_plot_callback)
 ig_source.js_on_change('patching', update_plot_callback)
+tx_source.js_on_change('patching', update_plot_callback)
+p_err_spin.js_on_change('value', update_plot_callback)
+t_err_spin.js_on_change('value', update_plot_callback)
 
-inputs = column([Div(text="""<B>Station Positions</B>""", width=220), st_datatable, Spacer(height=20), Div(text="""<B>Initial Guess</B>""", width=220), ig_datatable])
+spin_inputs = row([p_err_spin, Spacer(width=15), t_err_spin])
+
+inputs = column([Div(text="""<B>Receiver Positions</B>""", width=220), st_datatable, Spacer(height=10), Div(text="""<B>Initial Guess</B>""", width=220),
+                 ig_datatable, Spacer(height=10), Div(text="""<B>Emitter Position</B>""", width=220), tx_datatable, spin_inputs,
+                 Spacer(height=10), aou_text])
 layout = row(inputs, Spacer(width=20), tdoa_plot)
 
 show(layout)
