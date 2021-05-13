@@ -1,4 +1,4 @@
-function [iq, i_data, q_data] = read_binary_iq_data(filename, data_type, byte_order)
+function [iq, iqc, i_data, q_data] = read_binary_iq_data(filename, data_type, byte_order)
 
         % only supports the following data types: 'double', 'single',
         % u/int8, u/int16, u/int32, u/int64, float32, float64
@@ -36,6 +36,8 @@ function [iq, i_data, q_data] = read_binary_iq_data(filename, data_type, byte_or
         % separate into individual channels if needed
         i_data = iq(:,1);
         q_data = iq(:,2);
+        
+        iqc = complex(iq(:,1), iq(:,2));
 
         fclose(file_id);
     
