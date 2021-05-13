@@ -13,7 +13,7 @@ plot_num = 1;
 %rng(now);
 
 % v = 161874.9773218;
-v = 299792458/1000;
+v = 299792458/1000;         %km/s
 
 % estimating +/- position error
 range_err = 0.1;
@@ -21,14 +21,8 @@ range_err = 0.1;
 % estimating +/- arrival time error
 time_err = 1e-7;
 
-% set the station locations (S) and the emitter location (P)
-% 3D
-% S(1,:) = [100, 150, 89, 0];
-% S(2,:) = [345, 212, 334, 0];
-% S(3,:) = [212, 343, 121, 0];
-% S(4,:) = [260, 564, 33, 0];
-% P = [200, 100, 0];
- 
+% set the receiver station locations (S) and the emitter location (P)
+
 % 2D
 % receiver station locations
 S(1,:) = [-66, 5];
@@ -60,6 +54,8 @@ iter = zeros(num_trials, 1);
 err = zeros(num_trials, 1);
 Sn = zeros(N, D, num_trials);
 
+% generate noise in both the position space and time space to find a
+% general area of uncertainty 
 for idx=1:num_trials
     Sn(:, :, idx) = S + range_err*randn(N, D);
     Tn = T + time_err*randn(N,1);
@@ -120,7 +116,6 @@ fprintf('Eccentricity = %2.5f\n', ecc);
 figure(plot_num)
 set(gcf,'position',([50,50,1400,600]),'color','w')
 
-%scatter(reshape(Sn(:,1,:),[num_trials*N,1]), reshape(Sn(:,2,:),[num_trials*N,1]), 10, 'v', 'filled', 'k')
 hold on
 grid on
 box on
@@ -129,17 +124,21 @@ for idx=1:N
     rectangle('Position',[S(idx,1)-range_err, S(idx,2)-range_err, 2*range_err, 2*range_err], 'FaceColor', [0.8 0.8 0.8 0.3], 'EdgeColor', [0 0 0], 'Curvature',[1,1]);  
 end
 
+% plot each of the receiver stations and the intial guess
 scatter(S(:,1), S(:,2), 10, 'v', 'filled', 'k')
 scatter(Po(1), Po(2), 20, 'd', 'filled', 'b')
+
+% plot the results of num_trials
 scatter(P_new(:,1), P_new(:,2), '.', 'b')
 
-% plot the center
+% plot the center point of the solution and the actual target location
 scatter(C(1), C(2), 'o', 'filled', 'g')
 scatter(P(1), P(2), 'o', 'filled', 'r')
 
 % plot the ellipse
 plot(r_ellipse(1,:) + C(1), r_ellipse(2,:) + C(2), '-g')
 
+% make the graph look pretty
 set(gca,'fontweight','bold','FontSize',13);
 xlim([floor((min(S(:,1))-1)/10)*10, ceil((max(S(:,1))+1)/10)*10]);
 xlabel('X (km)', 'fontweight','bold','FontSize',13);
@@ -149,5 +148,4 @@ ylabel('Y (km)', 'fontweight','bold','FontSize',13);
 
 ax = gca;
 ax.Position = [0.07 0.09 0.90 0.86];
-
 
