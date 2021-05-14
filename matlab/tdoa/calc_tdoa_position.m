@@ -39,6 +39,8 @@ function [Pn, iter, err] = calc_tdoa_position(S, T, Po, v)
     % error limit
     de = 1e-3;
     err = 1000;
+    prev_err = realmax('double');
+    recovery_case = 0;
 
     % iteration limit
     max_iter = 50;
@@ -52,6 +54,7 @@ function [Pn, iter, err] = calc_tdoa_position(S, T, Po, v)
     S = S(index, :);
     T = T(index);
 
+    % preserve the original Po just in case
     Pn = Po;
 
     while((iter < max_iter) && (err > de))
@@ -70,18 +73,43 @@ function [Pn, iter, err] = calc_tdoa_position(S, T, Po, v)
             b(idx-1) = v*(T(idx)-T(1)) - (R(idx) - R(1));
         end
 
-        % invert A -> (AtA)^-1 At
+        % invert A -> ((AtA)^-1)At
         A_li = (pinv(A.' * A)*A.');
 
         % find the new delta P
         dP = A_li * b;
 
-        % generate new Po
+        % get the update error -  should be the same as the L2 norm
+        err = norm(dP);
+        
+        % generate new Pn
         Pn = Pn - dP.';
-
-        % get the error
-        err = sqrt(dP.' * dP);
-
+       
+        % check to see if the difference between updates is growing if it
+        % is then the initial guess may not be a good one for the
+        % configuration.  Try reflecting about a point and then try again
+        if(err > prev_err)
+            % get the distances between the initial guess and the receivers
+            for idx=1:N
+                R(idx) = sqrt(sum((S(idx, :) - Po).*(S(idx, :) - Po)));
+            end
+            
+            % find the min distance
+            [~, min_idx] = min(R);
+            
+            % use the index to get the point to reflect about
+            SR = S(min_idx,:);
+                                   
+            % try a reflection
+            Pn = (SR - Po);
+            
+            % reset the previous update difference
+            prev_err = realmax('double');               
+        else
+            % save the last update difference
+            prev_err = err;        
+        end
+        
         iter = iter + 1;
 
     end

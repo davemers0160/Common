@@ -9,6 +9,8 @@ full_path = mfilename('fullpath');
 [startpath,  filename, ext] = fileparts(full_path);
 plot_num = 1;
 
+commandwindow;
+
 %% set up each of the points
 %rng(now);
 
@@ -19,7 +21,7 @@ v = 299792458/1000;         %km/s
 range_err = 0.1;
 
 % estimating +/- arrival time error
-time_err = 1e-7;
+time_err = 2e-7;
 
 % set the receiver station locations (S) and the emitter location (P)
 
@@ -114,7 +116,7 @@ fprintf('Eccentricity = %2.5f\n', ecc);
 
 %% plot the data
 figure(plot_num)
-set(gcf,'position',([50,50,1400,600]),'color','w')
+set(gcf,'position',([50,100,1000,700]),'color','w')
 
 hold on
 grid on
@@ -147,5 +149,5 @@ ytickformat('%1.1f')
 ylabel('Y (km)', 'fontweight','bold','FontSize',13);
 
 ax = gca;
-ax.Position = [0.07 0.09 0.90 0.86];
+ax.Position = [0.08 0.09 0.89 0.86];
 
