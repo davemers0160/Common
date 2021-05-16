@@ -61,7 +61,7 @@ ylabel('Base Signal', 'fontweight','bold','FontSize',12);
 plot_num  = plot_num + 1;
 
 %% generate 4 pulse trains that vary in start time
-num = 4;
+num = 3;
 max_offset = 100;
 
 % generate a random offset
@@ -75,7 +75,7 @@ fprintf('offset: ');
 for idx=1:num
     
     % generate noise
-    noise = 0.7*randn(1,length(signal) + max_offset);
+    noise = 0.8*randn(1,length(signal) + max_offset);
     
     % build the signal
     sn(idx, :) = [zeros(1, off(idx)) signal zeros(1, max_offset-off(idx))]  + noise;
@@ -93,7 +93,7 @@ figure(plot_num)
 set(gcf,'position',([50,50,1400,700]),'color','w')
 
 for idx=1:num
-    subplot(4,1,idx);
+    subplot(num,1,idx);
     plot(sn(idx,:), cm(idx))
     grid on
     box on
@@ -120,7 +120,7 @@ figure(plot_num)
 set(gcf,'position',([50,50,1400,700]),'color','w')
 
 for idx=1:num
-    subplot(4,1,idx);
+    subplot(num,1,idx);
     plot(rxy(idx,:), cm(idx))
     grid on
     box on
@@ -149,32 +149,32 @@ for idx=1:size(sn,1)
 end
 
 % plot the blind auto cross correlations
-figure(plot_num)
-set(gcf,'position',([50,50,1400,700]),'color','w')
-
-for idx=1:num
-    subplot(4,1,idx);
-    plot(bxy{idx,idx}, cm(idx))
-    grid on
-    box on
-    
-    set(gca,'fontweight','bold','FontSize',12);
-    xlim([0, bxy_length]);
-    ax = gca;
-    ax.Position = [0.05 ax.Position(2) 0.92 ax.Position(4)];
-    ylabel(strcat('Bxy',32, num2str(idx)), 'fontweight','bold','FontSize',12);
-
-end
-
-plot_num  = plot_num + 1;
+% figure(plot_num)
+% set(gcf,'position',([50,50,1400,700]),'color','w')
+% 
+% for idx=1:num
+%     subplot(4,1,idx);
+%     plot(bxy{idx,idx}, cm(idx))
+%     grid on
+%     box on
+%     
+%     set(gca,'fontweight','bold','FontSize',12);
+%     xlim([0, bxy_length]);
+%     ax = gca;
+%     ax.Position = [0.05 ax.Position(2) 0.92 ax.Position(4)];
+%     ylabel(strcat('Bxy',32, num2str(idx)), 'fontweight','bold','FontSize',12);
+% 
+% end
+% 
+% plot_num  = plot_num + 1;
 
 %% plot the auto cross correlations 
 
 figure(plot_num)
-set(gcf,'position',([250,50,1400,700]),'color','w')
+set(gcf,'position',([350,50,1400,700]),'color','w')
 
 for idx=1:num
-    subplot(4,1,idx);
+    subplot(num,1,idx);
     grid on
     box on
     hold on
