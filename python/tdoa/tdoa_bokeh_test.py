@@ -88,7 +88,8 @@ def calc_covariance_matrix(P_new, cp, num_trials):
 
 ### ---------------------------------------------------------------------------
 # tdoa_source = ColumnDataSource(data=dict(tx=[P[0]], ty=[P[1]], sx=S[:,0], sy=S[:,1], pox=[Po[0]], poy=[Po[1]], v=[v]))
-st_source = ColumnDataSource(data=dict(x=(S[:, 0]*1), y=(S[:, 1]*1), t=T, s=S*1))
+st_source = ColumnDataSource(data=dict(x=(S[:, 0]*1), y=(S[:, 1]*1), t=T, s=S*1, rx=[range_err,range_err,range_err]))
+# st_source = ColumnDataSource(data=dict(x=S[:, 0].tolist(), y=S[:, 1].tolist(), t=T.tolist(), rx=[range_err,range_err,range_err]))
 ig_source = ColumnDataSource(data=dict(x=[Po[0]*1], y=[Po[1]*1]))
 tx_source = ColumnDataSource(data=dict(x=[P[0]*1], y=[P[1]*1]))
 etx_source = ColumnDataSource(data=dict(x=[P[0]*1], y=[P[1]*1]))
@@ -101,7 +102,7 @@ tdoa_dict = dict(st=st_source, ig=ig_source, ctx=ctx_source, tx=tx_source, etx=e
 update_plot_callback = CustomJS(args=tdoa_dict, code="""
     
     var num_trials = 100;
-    var st = st.data;
+    var st_data = st.data;
     
     var v = v;
     var S = []; //st['s'];
@@ -200,8 +201,8 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
     for(var idx = 0; idx<N; idx++)
     {
         S[idx] = [];
-        S[idx][0] = st['x'][idx];
-        S[idx][1] = st['y'][idx];
+        S[idx][0] = st_data['x'][idx];
+        S[idx][1] = st_data['y'][idx];
         T[idx] = Math.sqrt( (S[idx][0] - P[0])*(S[idx][0] - P[0]) + (S[idx][1] - P[1])*(S[idx][1] - P[1]) )/v;
     }
       
@@ -254,6 +255,9 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
 
     // return the results   
     console.log(C);
+    
+    //st['rx'] = [range_err,range_err,range_err];
+    st.data['rx'] = [range_err,range_err,range_err];
     ctx.data['x'] = [C[0]];
     ctx.data['y'] = [C[1]];
     
@@ -266,11 +270,16 @@ update_plot_callback = CustomJS(args=tdoa_dict, code="""
     ctx.change.emit();
     etx.change.emit();
     ell.change.emit();
-    
+    st.change.emit();
     
     var bp = 1;
 """)
 
+
+# def update_plot(attr, old, new):
+#     st_source.data['rx'] = [p_err_spin.value, p_err_spin.vale, p_err_spin.value]
+#
+#     bp = 1
 
 # tdoa_source = ColumnDataSource(data=dict(tx=[P[0]], ty=[P[1]], sx=[10], sy=[10], pox=[Po[0]], poy=[Po[1]], v=[v]))
 # setup the figure
@@ -280,7 +289,7 @@ tdoa_plot.yaxis.axis_label = "Y (km)"
 tdoa_plot.axis.axis_label_text_font_style = "bold"
 
 # tdoa_plot.inverted_triangle(x=(s[0])[:,0], y=(s[0])[:,1], size=5, color='black', source=tdoa_source)
-s1 = tdoa_plot.circle(x='x', y='y', radius=0.1, fill_color='black', line_color='black', fill_alpha=0.4, source=st_source)
+s1 = tdoa_plot.circle(x='x', y='y', radius='rx', fill_color='black', line_color='black', fill_alpha=0.4, source=st_source)
 s2 = tdoa_plot.inverted_triangle(x='x', y='y', size=4, color='black', source=st_source)
 
 tdoa_plot.diamond(x='x', y='y', size=10, color='blue', source=ig_source)
@@ -347,6 +356,8 @@ ig_source.js_on_change('patching', update_plot_callback)
 tx_source.js_on_change('patching', update_plot_callback)
 p_err_spin.js_on_change('value', update_plot_callback)
 t_err_spin.js_on_change('value', update_plot_callback)
+
+# p_err_spin.on_change('value', update_plot)
 
 spin_inputs = row([p_err_spin, Spacer(width=15), t_err_spin])
 
