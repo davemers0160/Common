@@ -14,11 +14,13 @@ commandwindow;
 
 %% generate the base pulse train
 
+% 13-bit barker code
+%x = [1, 1, 1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1];
 x = maxmimal_length_seq(6);
 x_length = length(x);
 
 % convert to complex
-xc = x.*((1j).^(1:x_length));
+xc = x.*((1j).^(0:x_length-1));
 ang = angle(xc)*180/pi;
 ang(ang < 0) = ang(ang < 0) + 360;
 
@@ -48,9 +50,12 @@ pulse_spacing = 200 - x_length;
 pulse_num = 12;
 
 % build the pulse train
-space = zeros(1, pulse_spacing);
-signal = repmat([xc space], 1, pulse_num);
-signal = [zeros(1, start) signal];
+%space = 0.1*complex(randn(1, pulse_spacing), randn(1, pulse_spacing));
+signal = [];
+for idx=1:pulse_num
+    signal = cat(2, signal, xc, 0.01*complex(randn(1, pulse_spacing), randn(1, pulse_spacing)));
+end
+signal = cat(2, 0.01*complex(randn(1, start), randn(1, start)), signal);
 
 %% plot the base signal 
 figure(plot_num)
