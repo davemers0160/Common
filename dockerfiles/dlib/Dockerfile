@@ -6,15 +6,15 @@ FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
 
 ## ----------------------------------------------------------------------------
 ## set up the ability to get out to the rest of the world for app user
-RUN echo 'http_proxy="http://130.163.13.200:8080"' >> /etc/environment
-RUN echo 'https_proxy="http://130.163.13.200:8080"' >> /etc/environment
-RUN echo 'HTTP_PROXY="http://130.163.13.200:8080"' >> /etc/environment
-RUN echo 'HTTPS_PROXY="http://130.163.13.200:8080"' >> /etc/environment
+#RUN echo 'http_proxy="http://130.163.13.200:8080"' >> /etc/environment
+#RUN echo 'https_proxy="http://130.163.13.200:8080"' >> /etc/environment
+#RUN echo 'HTTP_PROXY="http://130.163.13.200:8080"' >> /etc/environment
+#RUN echo 'HTTPS_PROXY="http://130.163.13.200:8080"' >> /etc/environment
 
-RUN echo "export http_proxy=http://130.163.13.200:8080/" > /etc/profile.d/http_proxy.sh
-RUN echo "export https_proxy=http://130.163.13.200:8080/" >> /etc/profile.d/http_proxy.sh
+#RUN echo "export http_proxy=http://130.163.13.200:8080/" > /etc/profile.d/http_proxy.sh
+#RUN echo "export https_proxy=http://130.163.13.200:8080/" >> /etc/profile.d/http_proxy.sh
 
-RUN echo "proxy=http://130.163.13.200:8080" >> /etc/yum.conf
+#RUN echo "proxy=http://130.163.13.200:8080" >> /etc/yum.conf
 
 ## copy the certs forrdtecndproxy01v2.crt the proxies
 #ADD rdtecndproxy01v2.crt /etc/pki/ca-trust/source/anchors/
@@ -64,14 +64,14 @@ RUN chown owner:owner -R /home/owner
 #RUN pip3 install -U numpy bokeh launchpadlib pandas Cython contextlib2 pillow lxml jupyter matplotlib opencv-python cffi tqdm
 
 RUN apt-get update -y && \
-    apt-get install -y --fix-missing putty
+    DEBIAN_FRONTEND=noninteractive apt-get install -y apt-utils tzdata && \
+    apt-get install -y --fix-missing putty libopencv-dev
     
 ## ----------------------------------------------------------------------------
 ## get the repos
 USER owner
 
 RUN cd ~ && \
-    mkdir -p dlib && \
     git clone -b 'v19.19' --single-branch https://github.com/davisking/dlib.git dlib-19.19/
 	
 RUN cd ~ && mkdir -p Projects
@@ -107,8 +107,16 @@ CMD ["bash"]
 ## ----------------------------------------------------------------------------
 # To start the container run the following command
 # xhost +local:docker
+
+# To run the docker container, attached to gpus and then remain running after the docker is closed.  Use docker commit to make changes permanent
 # docker container run -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix dlib_docker
+
+# To run the docker container, attached to gpus and then close after the docker is closed (changes won't be permanent)
 # docker container run --rm -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix dlib_docker
+
+# To run the docker container, attached to gpus and then remain running after the docker is closed.  Additional line adds capability to link to external data.
+# docker container run -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v $HOME/data:/home/owner/data dlib_docker
+
 # xhost -local:docker
 
 # This increase the file transfer ability to 1GB for the camera
@@ -118,8 +126,5 @@ CMD ["bash"]
 # To get into an existing/open conatainer while it is running execute the following
 # docker exec -it dlib_docker /bin/bash
 
-# 
-# docker container run -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v $HOME/data:/home/owner/data dlib_docker
-# docker container run --rm -it --gpus all --name dlib_docker --privileged -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v $HOME/data:/home/owner/data dlib_docker
 
 
