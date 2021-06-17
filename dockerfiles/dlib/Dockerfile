@@ -65,7 +65,7 @@ RUN chown owner:owner -R /home/owner
 
 RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y apt-utils tzdata && \
-    apt-get install -y --fix-missing putty libopencv-dev
+    apt-get install -y --fix-missing putty libcanberra-gtk-module libcanberra-gtk3-module libopencv-dev
     
 ## ----------------------------------------------------------------------------
 ## get the repos
