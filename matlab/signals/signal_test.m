@@ -14,7 +14,24 @@ commandwindow;
 
 %% generate the base pulse train
 
-x = maxmimal_length_seq(6);
+% barker codes
+b5 = [1, 1, 1, -1, 1];
+b7 = [1, 1, 1, -1, -1, 1, 1];
+b11 = [1, 1, 1, -1, -1, -1, 1, -1, -1, 1, -1];
+b13 = [1, 1, 1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1];
+
+% standard barker codes
+x = b13;
+sig_noise = 0.38;
+
+% nested barker B5XB13 
+% x = (b13' * b5)';
+% x = x(:)';
+% sig_noise = 0.7;
+
+% x = maxmimal_length_seq(6);
+% sig_noise = 0.75;
+
 x_length = length(x);
 
 % plot the base signal 
@@ -75,7 +92,7 @@ fprintf('offset: ');
 for idx=1:num
     
     % generate noise
-    noise = 0.8*randn(1,length(signal) + max_offset);
+    noise = sig_noise * randn(1,length(signal) + max_offset);
     
     % build the signal
     sn(idx, :) = [zeros(1, off(idx)) signal zeros(1, max_offset-off(idx))]  + noise;
