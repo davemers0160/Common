@@ -13,6 +13,32 @@ from bokeh.transform import dodge, factor_cmap, transform
 import pandas as pd
 output_file("periodic.html")
 
+def blues(n):
+
+    index = np.transpose(np.arange(n) * (12 / (n-1)))
+
+    color_map = np.empty((n, 3), dtype=np.uint8)
+
+    color_map[:, 0] = np.floor(255*(-0.0724*index + 0.90)).astype(np.uint8)
+    color_map[:, 1] = np.floor(255*(-0.0541*index + 0.92)).astype(np.uint8)
+    color_map[:, 2] = np.floor(255*(-0.0350*index + 1.00)).astype(np.uint8)
+
+    return color_map
+
+
+def rgb2hex(data):
+    data = np.maximum(0, np.minimum(data, 255))
+
+    cm = []
+
+    for idx in range(data.shape[0]):
+        # print("#{0:02X}{1:02x}{2:02x}".format(data[idx, 0], data[idx, 1], data[idx, 2]))
+        cm.append("#{0:02X}{1:02x}{2:02x}".format(data[idx, 0], data[idx, 1], data[idx, 2]))
+
+    return cm
+
+
+
 # cm_data = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 #          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 #          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -63,7 +89,7 @@ cm_data = np.array([[180893, 3142, 64, 68, 25, 18, 29, 99, 3, 6, 37, 29, 22, 0, 
 
 cm_min = np.min(cm_data)
 cm_max = np.max(cm_data)
-# cm_max = 100000
+cm_max = 100000
 
 cmap = {
     "alkali metal"         : "#a6cee3",
@@ -101,7 +127,8 @@ df2 = df2.stack().rename("value").reset_index()
 # this is the colormap from the original NYTimes plot
 # colors = ["#FFFFFF", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#0000EE"]
 # colors = list(reversed(['#084594', '#2171b5', '#4292c6', '#6baed6', '#9ecae1', '#c6dbef', '#deebf7', '#f7fbff']))
-colors = list(reversed(magma(250)))
+# colors = list(reversed(magma(250)))
+colors = rgb2hex(blues(200))
 
 mapper = LinearColorMapper(palette=colors, low=cm_min, high=cm_max)
 source = ColumnDataSource(df2)
