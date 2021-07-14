@@ -38,6 +38,10 @@ def rgb2hex(data):
     return cm
 
 
+cm_plot_h = 800
+cm_plot_w = 1400
+err_plot_h = cm_plot_h
+err_plot_w = 100
 
 # cm_data = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 #          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -87,31 +91,14 @@ cm_data = np.array([[180893, 3142, 64, 68, 25, 18, 29, 99, 3, 6, 37, 29, 22, 0, 
                     [123, 109, 109, 118, 210, 108, 218, 168, 275, 693, 520, 892, 963, 767, 1128, 1369, 1573, 1848, 2502, 3954, 16561, 1997608, 26796],
                     [81, 16, 92, 44, 5, 54, 140, 157, 163, 404, 636, 23, 581, 254, 444, 305, 593, 509, 1231, 1902, 2198, 11272, 842610]])
 
+cm_err_data = np.zeros(23, dtype=np.float32)
+
+
+
 cm_min = np.min(cm_data)
 cm_max = np.max(cm_data)
 cm_max = 100000
 
-cmap = {
-    "alkali metal"         : "#a6cee3",
-    "alkaline earth metal" : "#1f78b4",
-    "metal"                : "#d93b43",
-    "halogen"              : "#999d9a",
-    "metalloid"            : "#e08d49",
-    "noble gas"            : "#eaeaea",
-    "nonmetal"             : "#f1d4Af",
-    "transition metal"     : "#599d7A",
-}
-
-periods = ["I", "II", "III", "IV", "V", "VI", "VII"]
-groups = [str(x) for x in range(1, 19)]
-
-df = elements.copy()
-df["atomic mass"] = df["atomic mass"].astype(str)
-df["group"] = df["group"].astype(str)
-df["period"] = [periods[x-1] for x in df.period]
-df = df[df.group != "-"]
-df = df[df.symbol != "Lr"]
-df = df[df.symbol != "Lu"]
 
 dm_min = 0
 dm_max = 22
@@ -123,6 +110,12 @@ df2.index.name = 'Actual'
 df2.columns.name = 'Predicted'
 
 df2 = df2.stack().rename("value").reset_index()
+
+
+cm_err_df = pd.DataFrame(data=cm_err_data, index=dm_values_str, columns=["1"])
+cm_err_df.index.name = 'Error'
+cm_err_df.columns.name = 'Label'
+
 
 # this is the colormap from the original NYTimes plot
 # colors = ["#FFFFFF", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#0000EE"]
@@ -140,12 +133,12 @@ source = ColumnDataSource(df2)
 # r = p.rect("group", "period", 0.95, 0.95, source=df, fill_alpha=0.6, legend_field="metal",
 #            color=factor_cmap('metal', palette=list(cmap.values()), factors=list(cmap.keys())))
 
-p = figure(title="Confusion Matrix", plot_width=1400, plot_height=800,
+p = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
            x_range=dm_values_str, y_range=list(reversed(dm_values_str)),
-           # tools="hover, save"
+           tools="", toolbar_location=None
            )
 
-p.rect(x="Predicted", y="Actual", width=1.0, height=1.0, source=source, fill_alpha=0.5,
+p.rect(x="Predicted", y="Actual", width=1.0, height=1.0, source=source, fill_alpha=0.6, line_color='black',
            fill_color=transform('value', mapper))
 
 text_props = {"source": source, "text_align": "center", "text_font_size": "13px", "text_baseline": "middle"}
@@ -158,7 +151,38 @@ r.glyph.text_font_style="bold"
 p.axis.major_tick_line_color = None
 p.grid.grid_line_color = None
 
-show(p)
+# x-axis formatting
+p.xaxis.major_label_text_font_size = "13pt"
+p.xaxis.major_label_text_font_style= "bold"
+p.xaxis.axis_label_text_font_size = "16pt"
+p.xaxis.axis_label_text_font_style = "bold"
+p.xaxis.axis_label = "Predicted Depthmap Values"
+
+# y-axis formatting
+p.yaxis.major_label_text_font_size = "13pt"
+p.yaxis.major_label_text_font_style= "bold"
+p.yaxis.axis_label_text_font_size = "16pt"
+p.yaxis.axis_label_text_font_style = "bold"
+p.yaxis.axis_label = "Actual Depthmap Values"
+
+
+p2 = figure(plot_width=err_plot_w, plot_height=err_plot_h,
+           x_range="1", y_range=list(reversed(dm_values_str)),
+           tools="", toolbar_location=None
+           )
+
+p2.rect(x="Label", y="Error", width=1.0, height=1.0, source=ColumnDataSource(cm_err_df), fill_alpha=0.6, line_color='black',
+       fill_color=transform('value', LinearColorMapper(palette=list(reversed(colors)), low=0, high=100)))
+
+
+p2.axis.major_tick_line_color = None
+p2.grid.grid_line_color = None
+
+
+layout = row(p, Spacer(width=10), p2)
+
+
+show(layout)
 
 bp = 1
 
