@@ -41,7 +41,7 @@ def rgb2hex(data):
 cm_plot_h = 800
 cm_plot_w = 1400
 err_plot_h = cm_plot_h
-err_plot_w = 100
+err_plot_w = 80
 
 # cm_data = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 #          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -91,17 +91,18 @@ cm_data = np.array([[180893, 3142, 64, 68, 25, 18, 29, 99, 3, 6, 37, 29, 22, 0, 
                     [123, 109, 109, 118, 210, 108, 218, 168, 275, 693, 520, 892, 963, 767, 1128, 1369, 1573, 1848, 2502, 3954, 16561, 1997608, 26796],
                     [81, 16, 92, 44, 5, 54, 140, 157, 163, 404, 636, 23, 581, 254, 444, 305, 593, 509, 1231, 1902, 2198, 11272, 842610]])
 
-cm_err_data = np.zeros(23, dtype=np.float32)
+# cm_err_data = 127/128*np.ones(23, dtype=np.float32)*100
+dm_min = 0
+dm_max = 22
 
+cm_err_sum = np.sum(cm_data, axis=1)
 
+cm_err_data = (np.diag(cm_data)/cm_err_sum)*100 + [(4.5*x-95) for x in range(dm_min, dm_max+1)]
 
 cm_min = np.min(cm_data)
 cm_max = np.max(cm_data)
 cm_max = 100000
 
-
-dm_min = 0
-dm_max = 22
 
 dm_values_str = [str(x) for x in range(dm_min, dm_max+1)]
 
@@ -111,11 +112,13 @@ df2.columns.name = 'Predicted'
 
 df2 = df2.stack().rename("value").reset_index()
 
+cm_values_str = ["{:3.1f}%".format(cm_err_data[x]) for x in range(dm_min, dm_max+1)]
 
 cm_err_df = pd.DataFrame(data=cm_err_data, index=dm_values_str, columns=["1"])
 cm_err_df.index.name = 'Error'
 cm_err_df.columns.name = 'Label'
-
+cm_err_df = cm_err_df.stack().rename("value").reset_index()
+cm_err_df['str_value'] = cm_values_str
 
 # this is the colormap from the original NYTimes plot
 # colors = ["#FFFFFF", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#0000EE"]
@@ -146,7 +149,7 @@ text_props = {"source": source, "text_align": "center", "text_font_size": "13px"
 x = dodge("Predicted", 0.0, range=p.x_range)
 
 r = p.text(x=x, y="Actual", text=str("value"), **text_props)
-r.glyph.text_font_style="bold"
+r.glyph.text_font_style = "bold"
 
 p.axis.major_tick_line_color = None
 p.grid.grid_line_color = None
@@ -172,14 +175,17 @@ p2 = figure(plot_width=err_plot_w, plot_height=err_plot_h,
            )
 
 p2.rect(x="Label", y="Error", width=1.0, height=1.0, source=ColumnDataSource(cm_err_df), fill_alpha=0.6, line_color='black',
-       fill_color=transform('value', LinearColorMapper(palette=list(reversed(colors)), low=0, high=100)))
+       fill_color=transform('value', LinearColorMapper(palette=colors, low=0, high=100)))
 
+r2 = p2.text(x="Label", y="Error", text="str_value", source=ColumnDataSource(cm_err_df), text_align="center", text_font_size="13px", text_baseline="middle")
+r2.glyph.text_font_style = "bold"
 
 p2.axis.major_tick_line_color = None
 p2.grid.grid_line_color = None
+p2.xaxis.major_label_text_font_size = '0pt'  # turn off x-axis tick labels
+p2.yaxis.major_label_text_font_size = '0pt'  # turn off y-axis tick labels
 
-
-layout = row(p, Spacer(width=10), p2)
+layout = row(p, Spacer(width=20), p2)
 
 
 show(layout)
