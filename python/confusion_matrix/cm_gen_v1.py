@@ -1,5 +1,6 @@
-import numpy as np
+import os
 import math
+import numpy as np
 
 from bokeh import events
 from bokeh.io import curdoc, output_file
@@ -11,6 +12,13 @@ from bokeh.sampledata.periodic_table import elements
 from bokeh.transform import dodge, factor_cmap, transform
 
 import pandas as pd
+
+# File dialog stuff
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QFileDialog, QWidget, QApplication
+
+app = QApplication([""])
+
 output_file("periodic.html")
 
 ##-----------------------------------------------------------------------------
@@ -38,17 +46,47 @@ def rgb2hex(data):
 
     return cm
 
+
+def get_input(start_path):
+    # global detection_windows, results_div, filename_div, image_path, rgba_img
+
+    file_name = QFileDialog.getOpenFileName(None, "Select a confusion matrix csv file",  start_path, "Text Files (*.txt);;CSV Files (*.csv);;All Files (*.*)")
+    filename_text = "File name: " + file_name[0]
+    if(file_name[0] == ""):
+        return
+
+    print("Processing File: ", file_name[0])
+    # load in an image
+    # file_path = os.path.dirname(file_name[0])
+    # color_img = cv.imread(image_name[0])
+
+    cm_data = pd.read_csv(file_name[0], header=None).values
+
+    # convert the image to RGBA for display
+    # rgba_img = cv.cvtColor(color_img, cv.COLOR_RGB2RGBA)
+    # p1_src.data = {'input_img': [np.flipud(rgba_img)]}
+    #p1.image_rgba(image=[np.flipud(rgba_img)], x=0, y=0, dw=400, dh=400)
+
+    # run_detection(color_img)
+    # update_plots()
+
+    return cm_data
+
 ##-----------------------------------------------------------------------------
+
+start_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
 # plot specific variables that are used in plot formatting (size/color)...
 cm_plot_h = 800
 cm_plot_w = 1500
-err_plot_h = 100
+err_plot_h = 130
 err_plot_w = cm_plot_w
 
 cm_colors = rgb2hex(blues(200))
 error_colors = ["#00FF00", "#FFA700", "#FF0000"]
 
-cm_data = pd.read_csv('D:/Projects/dfd/dfd_dnn_analysis/results/tb23b_test/tb23b_confusion_matrix_results.txt', header=None).values
+# cm_data = pd.read_csv('D:/Projects/dfd/dfd_dnn_analysis/results/tb23b_test/tb23b_confusion_matrix_results.txt', header=None).values
+cm_data = get_input(start_path)
 
 cm_data_size = cm_data.shape[0]
 
@@ -98,18 +136,17 @@ text_mapper = LinearColorMapper(palette=["#000000", "#FFFFFF"], low=75, high=cm_
 
 p = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
            x_range=dm_values_str, y_range=list(reversed(dm_values_str)),
-           tools="", toolbar_location=None
+           tools="save", toolbar_location="right"
            )
 
 p.rect(x="Predicted", y="Actual", width=1.0, height=1.0, source=cm_source, fill_alpha=1.0, line_color='black',
            fill_color=transform('color_value', mapper))
 
-text_props = {"source": cm_source, "text_align": "center", "text_font_size": "13px", "text_baseline": "middle"}
+text_props = {"source": cm_source, "text_align": "center", "text_font_size": "13px", "text_baseline": "middle", "text_font_style": "bold"}
 
 x = dodge("Predicted", 0.0, range=p.x_range)
 
 r = p.text(x=x, y="Actual", text=str("value"), text_color=transform('color_value', text_mapper), **text_props)
-r.glyph.text_font_style = "bold"
 
 p.axis.major_tick_line_color = None
 p.grid.grid_line_color = None
@@ -131,7 +168,7 @@ p.yaxis.axis_label = "Actual Depthmap Values"
 
 p2 = figure(plot_width=err_plot_w, plot_height=err_plot_h,
            y_range="1", x_range=dm_values_str,
-           tools="", toolbar_location=None
+           tools="save", toolbar_location="below"
            )
 
 p2.rect(x="Label", y="Error", width=1.0, height=1.0, source=ColumnDataSource(cm_err_df), fill_alpha=1.0, line_color='black',
@@ -140,9 +177,7 @@ p2.rect(x="Label", y="Error", width=1.0, height=1.0, source=ColumnDataSource(cm_
 
 r2 = p2.text(x="Label", y="Error", text="str_value", source=ColumnDataSource(cm_err_df), text_align="center",
              text_color=transform('err_cat', CategoricalColorMapper(palette=["#000000", "#000000", "#FFFFFF"], factors=["0", "1", "2"])),
-             text_font_size="13px", text_baseline="middle")
-
-r2.glyph.text_font_style = "bold"
+             text_font_size="13px", text_baseline="middle", text_font_style="bold")
 
 p2.axis.major_tick_line_color = None
 p2.grid.grid_line_color = None
