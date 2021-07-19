@@ -4,7 +4,7 @@ import numpy as np
 
 from bokeh import events
 from bokeh.io import curdoc, output_file
-from bokeh.models import ColumnDataSource, Spinner, Range1d, Slider, Legend, CustomJS, HoverTool, LinearColorMapper, CategoricalColorMapper
+from bokeh.models import ColumnDataSource, Button, Div, Legend, CustomJS, HoverTool, LinearColorMapper, CategoricalColorMapper
 from bokeh.plotting import figure, show, output_file
 from bokeh.layouts import column, row, Spacer
 from bokeh.palettes import Magma, Magma256, magma, viridis
@@ -17,9 +17,38 @@ import pandas as pd
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QFileDialog, QWidget, QApplication
 
+# global variables used throughout the code
+# required for QT to use the button
 app = QApplication([""])
 
-output_file("periodic.html")
+# path to start looking in for confusion matrix files
+start_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+# get the min and max for the color shading of the confusion matrix.  Min is assumed to be 0.
+cm_min = 0
+cm_max = 100
+
+# plot specific variables that are used in plot formatting (size/color)...
+cm_plot_h = 800
+cm_plot_w = 1500
+err_plot_h = 130
+err_plot_w = cm_plot_w
+
+dm_values_str = [str(x) for x in range(0, 2)]
+cm_data = np.array([[1, 0], [0, 1]])
+
+cm_source = []
+cm_err_source = []
+
+cm_fig = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
+                x_range=dm_values_str, y_range=list(reversed(dm_values_str)),
+                tools="save", toolbar_location="right"
+                )
+
+err_fig = figure(plot_width=err_plot_w, plot_height=err_plot_h,
+                 y_range="1", x_range=dm_values_str,
+                 tools="save", toolbar_location="below"
+                 )
 
 ##-----------------------------------------------------------------------------
 def blues(n):
@@ -47,8 +76,8 @@ def rgb2hex(data):
     return cm
 
 
-def get_input(start_path):
-    # global detection_windows, results_div, filename_div, image_path, rgba_img
+def get_input():
+    global start_path   #, results_div, filename_div, image_path, rgba_img
 
     file_name = QFileDialog.getOpenFileName(None, "Select a confusion matrix csv file",  start_path, "Text Files (*.txt);;CSV Files (*.csv);;All Files (*.*)")
     filename_text = "File name: " + file_name[0]
@@ -56,142 +85,187 @@ def get_input(start_path):
         return
 
     print("Processing File: ", file_name[0])
-    # load in an image
-    # file_path = os.path.dirname(file_name[0])
-    # color_img = cv.imread(image_name[0])
+    start_path = os.path.dirname(file_name[0])
 
+    # load the data
     cm_data = pd.read_csv(file_name[0], header=None).values
 
-    # convert the image to RGBA for display
-    # rgba_img = cv.cvtColor(color_img, cv.COLOR_RGB2RGBA)
-    # p1_src.data = {'input_img': [np.flipud(rgba_img)]}
-    #p1.image_rgba(image=[np.flipud(rgba_img)], x=0, y=0, dw=400, dh=400)
+    build_dataframes(cm_data)
+
 
     # run_detection(color_img)
-    # update_plots()
+    update_plot()
 
-    return cm_data
+    return cm_data, filename_text
+
+
+def build_dataframes(cm_data):
+    global cm_source, cm_err_source, dm_values_str
+
+    # cm_data_size = cm_data.shape[0]
+
+    dm_min = 0
+    dm_max = cm_data.shape[0] - 1
+    dm_values_str = [str(x) for x in range(dm_min, dm_max+1)]
+
+    # sum up the total number of times a depthmap value is in the dataset
+    cm_err_sum = np.sum(cm_data, axis=1)
+
+    # calculate how many times the prediction is correct
+    cm_err_diag = np.diag(cm_data)
+    cm_err_data = 100 * np.divide(cm_err_diag, cm_err_sum, out=np.zeros(cm_err_diag.shape, dtype=np.float32), where=(cm_err_sum != 0))
+    cm_err_data = np.subtract(100, cm_err_data, out=np.zeros(cm_err_data.shape, dtype=np.float32), where=(cm_err_data != 0))
+    cm_err_cat = 1*(cm_err_data > 5)+1*(cm_err_data > 10)
+
+
+    cm_df = pd.DataFrame(data=cm_data, index=dm_values_str, columns=dm_values_str)
+    cm_df.index.name = "Actual"
+    cm_df.columns.name = "Predicted"
+    cm_df = cm_df.stack().rename("value").reset_index()
+    cm_df['color_value'] = 100 * np.divide(cm_data, cm_err_sum, out=np.zeros(cm_data.shape, dtype=np.float32), where=(cm_err_sum != 0)).reshape(-1)
+    cm_source = ColumnDataSource(cm_df)
+
+    # cm_values_str = ["{:4.2f}%".format(cm_err_data[x]) for x in range(dm_min, dm_max+1)]
+
+    cm_err_df = pd.DataFrame(data=cm_err_data.reshape(1, -1), index=["1"], columns=dm_values_str)
+    cm_err_df.index.name = 'Error'
+    cm_err_df.columns.name = 'Label'
+    cm_err_df = cm_err_df.stack().rename("value").reset_index()
+    cm_err_df['str_value'] = ["{:4.2f}%".format(cm_err_data[x]) for x in range(dm_min, dm_max+1)]
+    cm_err_df['err_cat'] = [str(cm_err_cat[x]) for x in range(dm_min, dm_max+1)]
+    cm_err_source = ColumnDataSource(cm_err_df)
+
+    bp = 1
+
+
+def update_plot():
+    global cm_source, cm_err_source, dm_values_str, cm_fig, err_fig
+
+    # cm_fig.x_range = dm_values_str
+    # cm_fig.y_range = list(reversed(dm_values_str))
+    #
+    # err_fig.y_range = "1"
+    # err_fig.x_range = dm_values_str
+
+    cm_fig = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
+                    x_range=dm_values_str, y_range=list(reversed(dm_values_str)),
+                    tools="save", toolbar_location="right"
+                    )
+
+    err_fig = figure(plot_width=err_plot_w, plot_height=err_plot_h,
+                     y_range="1", x_range=dm_values_str,
+                     tools="save", toolbar_location="below"
+                     )
+
+    print("update 1")
+    cm_fig.rect(x="Predicted", y="Actual", width=1.0, height=1.0, source=cm_source, fill_alpha=1.0, line_color='black',
+                fill_color=transform('color_value', cm_mapper))
+
+    text_props = {"source": cm_source, "text_align": "center", "text_font_size": "13px", "text_baseline": "middle", "text_font_style": "bold"}
+
+    x = dodge("Predicted", 0.0, range=cm_fig.x_range)
+
+    cm_fig.text(x=x, y="Actual", text=str("value"), text_color=transform('color_value', text_mapper), **text_props)
+
+    # err_fig = figure(plot_width=err_plot_w, plot_height=err_plot_h,
+    #                  y_range="1", x_range=dm_values_str,
+    #                  tools="save", toolbar_location="below"
+    #                  )
+
+    err_fig.rect(x="Label", y="Error", width=1.0, height=1.0, source=cm_err_source, fill_alpha=1.0, line_color='black',
+                 fill_color=transform('err_cat', CategoricalColorMapper(palette=error_colors, factors=["0", "1", "2"])))
+
+
+    err_fig.text(x="Label", y="Error", text="str_value", source=cm_err_source, text_align="center",
+                 text_color=transform('err_cat', CategoricalColorMapper(palette=["#000000", "#000000", "#FFFFFF"], factors=["0", "1", "2"])),
+                 text_font_size="13px", text_baseline="middle", text_font_style="bold")
+
+    print("update 2")
+    bp = 1
 
 ##-----------------------------------------------------------------------------
 
-start_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+file_select_btn = Button(label='Select File', width=100)
+file_select_btn.on_click(get_input)
+filename_div = Div(width=800, text="File name: ", style={'font-size': '125%', 'font-weight': 'bold'})
 
-# plot specific variables that are used in plot formatting (size/color)...
-cm_plot_h = 800
-cm_plot_w = 1500
-err_plot_h = 130
-err_plot_w = cm_plot_w
-
+# color palettes for plotting
 cm_colors = rgb2hex(blues(200))
+cm_mapper = LinearColorMapper(palette=cm_colors, low=cm_min, high=cm_max)
+
 error_colors = ["#00FF00", "#FFA700", "#FF0000"]
-
-# cm_data = pd.read_csv('D:/Projects/dfd/dfd_dnn_analysis/results/tb23b_test/tb23b_confusion_matrix_results.txt', header=None).values
-cm_data = get_input(start_path)
-
-cm_data_size = cm_data.shape[0]
-
-# cm_err_data = 127/128*np.ones(23, dtype=np.float32)*100
-dm_min = 0
-dm_max = cm_data_size - 1
-
-# sum up the total number of times a depthmap value is in the dataset
-cm_err_sum = np.sum(cm_data, axis=1)
-
-# calculate how many times the prediction is correct
-cm_err_diag = np.diag(cm_data)
-cm_err_data = 100 * np.divide(cm_err_diag, cm_err_sum, out=np.zeros(cm_err_diag.shape, dtype=np.float32), where=(cm_err_sum != 0))
-cm_err_data = np.subtract(100, cm_err_data, out=np.zeros(cm_err_data.shape, dtype=np.float32), where=(cm_err_data != 0))
-# np.subtract(np.divide(cm_err_diag, cm_err_sum, out=np.zeros(cm_err_diag.shape, dtype=np.float32), where=(cm_err_sum != 0)), 1, out=np.zeros(cm_err_diag.shape, dtype=np.float32), where=(cm_err_sum != 0))*100
-#+ [(4.5*x-95) for x in range(dm_min, dm_max+1)]
-# cm_err_data = np.array([0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11])
-cm_err_cat = 1*(cm_err_data > 5)+1*(cm_err_data > 10)
-
-# get the min and max for the color shading of the confusion matrix.  Min is assumed to be 0.
-cm_min = 0
-cm_max = 100 #np.mean(cm_err_diag)
-
-dm_values_str = [str(x) for x in range(dm_min, dm_max+1)]
-
-cm_df = pd.DataFrame(data=cm_data, index=dm_values_str, columns=dm_values_str)
-cm_df.index.name = "Actual"
-cm_df.columns.name = "Predicted"
-cm_df = cm_df.stack().rename("value").reset_index()
-cm_df['color_value'] = 100 * np.divide(cm_data, cm_err_sum, out=np.zeros(cm_data.shape, dtype=np.float32), where=(cm_err_sum != 0)).reshape(-1)
-cm_source = ColumnDataSource(cm_df)
-
-
-cm_values_str = ["{:4.2f}%".format(cm_err_data[x]) for x in range(dm_min, dm_max+1)]
-
-cm_err_df = pd.DataFrame(data=cm_err_data.reshape(1, -1), index=["1"], columns=dm_values_str)
-cm_err_df.index.name = 'Error'
-cm_err_df.columns.name = 'Label'
-cm_err_df = cm_err_df.stack().rename("value").reset_index()
-cm_err_df['str_value'] = cm_values_str
-cm_err_df['err_cat'] = [str(cm_err_cat[x]) for x in range(dm_min, dm_max+1)]
-
-mapper = LinearColorMapper(palette=cm_colors, low=cm_min, high=cm_max)
 
 text_mapper = LinearColorMapper(palette=["#000000", "#FFFFFF"], low=75, high=cm_max)
 
+# cm_data = pd.read_csv('D:/Projects/dfd/dfd_dnn_analysis/results/tb23b_test/tb23b_confusion_matrix_results.txt', header=None).values
+# get_input()
+build_dataframes(cm_data)
+update_plot()
 
-p = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
-           x_range=dm_values_str, y_range=list(reversed(dm_values_str)),
-           tools="save", toolbar_location="right"
-           )
+# cm_fig = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
+#            x_range=dm_values_str, y_range=list(reversed(dm_values_str)),
+#            tools="save", toolbar_location="right"
+#            )
+#
+# cm_fig.rect(x="Predicted", y="Actual", width=1.0, height=1.0, source=cm_source, fill_alpha=1.0, line_color='black',
+#            fill_color=transform('color_value', cm_mapper))
+#
+# text_props = {"source": cm_source, "text_align": "center", "text_font_size": "13px", "text_baseline": "middle", "text_font_style": "bold"}
+#
+# x = dodge("Predicted", 0.0, range=cm_fig.x_range)
+#
+# cm_fig.text(x=x, y="Actual", text=str("value"), text_color=transform('color_value', text_mapper), **text_props)
 
-p.rect(x="Predicted", y="Actual", width=1.0, height=1.0, source=cm_source, fill_alpha=1.0, line_color='black',
-           fill_color=transform('color_value', mapper))
-
-text_props = {"source": cm_source, "text_align": "center", "text_font_size": "13px", "text_baseline": "middle", "text_font_style": "bold"}
-
-x = dodge("Predicted", 0.0, range=p.x_range)
-
-r = p.text(x=x, y="Actual", text=str("value"), text_color=transform('color_value', text_mapper), **text_props)
-
-p.axis.major_tick_line_color = None
-p.grid.grid_line_color = None
+cm_fig.axis.major_tick_line_color = None
+cm_fig.grid.grid_line_color = None
 
 # x-axis formatting
-p.xaxis.major_label_text_font_size = "13pt"
-p.xaxis.major_label_text_font_style= "bold"
-p.xaxis.axis_label_text_font_size = "16pt"
-p.xaxis.axis_label_text_font_style = "bold"
-p.xaxis.axis_label = "Predicted Depthmap Values"
+cm_fig.xaxis.major_label_text_font_size = "13pt"
+cm_fig.xaxis.major_label_text_font_style= "bold"
+cm_fig.xaxis.axis_label_text_font_size = "16pt"
+cm_fig.xaxis.axis_label_text_font_style = "bold"
+cm_fig.xaxis.axis_label = "Predicted Depthmap Values"
 
 # y-axis formatting
-p.yaxis.major_label_text_font_size = "13pt"
-p.yaxis.major_label_text_font_style= "bold"
-p.yaxis.axis_label_text_font_size = "16pt"
-p.yaxis.axis_label_text_font_style = "bold"
-p.yaxis.axis_label = "Actual Depthmap Values"
+cm_fig.yaxis.major_label_text_font_size = "13pt"
+cm_fig.yaxis.major_label_text_font_style= "bold"
+cm_fig.yaxis.axis_label_text_font_size = "16pt"
+cm_fig.yaxis.axis_label_text_font_style = "bold"
+cm_fig.yaxis.axis_label = "Actual Depthmap Values"
 
 
-p2 = figure(plot_width=err_plot_w, plot_height=err_plot_h,
-           y_range="1", x_range=dm_values_str,
-           tools="save", toolbar_location="below"
-           )
+# err_fig = figure(plot_width=err_plot_w, plot_height=err_plot_h,
+#            y_range="1", x_range=dm_values_str,
+#            tools="save", toolbar_location="below"
+#            )
+#
+# err_fig.rect(x="Label", y="Error", width=1.0, height=1.0, source=cm_err_source, fill_alpha=1.0, line_color='black',
+#        fill_color=transform('err_cat', CategoricalColorMapper(palette=error_colors, factors=["0", "1", "2"])))
+#
+#
+# err_fig.text(x="Label", y="Error", text="str_value", source=cm_err_source, text_align="center",
+#              text_color=transform('err_cat', CategoricalColorMapper(palette=["#000000", "#000000", "#FFFFFF"], factors=["0", "1", "2"])),
+#              text_font_size="13px", text_baseline="middle", text_font_style="bold")
 
-p2.rect(x="Label", y="Error", width=1.0, height=1.0, source=ColumnDataSource(cm_err_df), fill_alpha=1.0, line_color='black',
-       fill_color=transform('err_cat', CategoricalColorMapper(palette=error_colors, factors=["0", "1", "2"])))
 
-
-r2 = p2.text(x="Label", y="Error", text="str_value", source=ColumnDataSource(cm_err_df), text_align="center",
-             text_color=transform('err_cat', CategoricalColorMapper(palette=["#000000", "#000000", "#FFFFFF"], factors=["0", "1", "2"])),
-             text_font_size="13px", text_baseline="middle", text_font_style="bold")
-
-p2.axis.major_tick_line_color = None
-p2.grid.grid_line_color = None
+err_fig.axis.major_tick_line_color = None
+err_fig.grid.grid_line_color = None
 # p2.xaxis.major_label_text_font_size = '0pt'  # turn off x-axis tick labels
-p2.yaxis.major_label_text_font_size = '0pt'  # turn off y-axis tick labels
-p2.xaxis.major_label_text_font_size = "13pt"
-p2.xaxis.major_label_text_font_style= "bold"
-p2.xaxis.axis_label_text_font_size = "16pt"
-p2.xaxis.axis_label_text_font_style = "bold"
-p2.xaxis.axis_label = "Actual Depthmap Errors"
+err_fig.yaxis.major_label_text_font_size = '0pt'  # turn off y-axis tick labels
+err_fig.xaxis.major_label_text_font_size = "13pt"
+err_fig.xaxis.major_label_text_font_style= "bold"
+err_fig.xaxis.axis_label_text_font_size = "16pt"
+err_fig.xaxis.axis_label_text_font_style = "bold"
+err_fig.xaxis.axis_label = "Actual Depthmap Errors"
 
-layout = column(p, Spacer(height=20), p2)
+input_layout = row(Spacer(width=30), file_select_btn, Spacer(width=10), filename_div)
+layout = column(input_layout, cm_fig, Spacer(height=20), err_fig)
 
-show(layout)
+# show(layout)
+
+doc = curdoc()
+doc.title = "Confusion Matrix Viewer"
+doc.add_root(layout)
 
 bp = 1
 
