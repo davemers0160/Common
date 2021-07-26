@@ -29,7 +29,7 @@ cm_min = 0
 cm_max = 100
 
 # plot specific variables that are used in plot formatting (size/color)...
-cm_plot_h = 800
+cm_plot_h = 750
 cm_plot_w = 1500
 err_plot_h = 130
 err_plot_w = cm_plot_w
@@ -77,12 +77,14 @@ def rgb2hex(data):
 
 
 def get_input():
-    global start_path   #, results_div, filename_div, image_path, rgba_img
+    global start_path, filename_div   #, results_div, filename_div, image_path, rgba_img
 
     file_name = QFileDialog.getOpenFileName(None, "Select a confusion matrix csv file",  start_path, "Text Files (*.txt);;CSV Files (*.csv);;All Files (*.*)")
-    filename_text = "File name: " + file_name[0]
     if(file_name[0] == ""):
         return
+
+    filename_text = "File name: " + file_name[0]
+    filename_div.text = filename_text
 
     print("Processing File: ", file_name[0])
     start_path = os.path.dirname(file_name[0])
@@ -163,18 +165,12 @@ def update_plot():
 
     text_props = {"source": cm_source, "text_align": "center", "text_font_size": "13px", "text_baseline": "middle", "text_font_style": "bold"}
 
-    x = dodge("Predicted", 0.0, range=cm_fig.x_range)
+    # x = dodge("Predicted", 0.0, range=cm_fig.x_range)
 
-    cm_fig.text(x=x, y="Actual", text=str("value"), text_color=transform('color_value', text_mapper), **text_props)
-
-    # err_fig = figure(plot_width=err_plot_w, plot_height=err_plot_h,
-    #                  y_range="1", x_range=dm_values_str,
-    #                  tools="save", toolbar_location="below"
-    #                  )
+    cm_fig.text(x="Predicted", y="Actual", text=str("value"), text_color=transform('color_value', text_mapper), **text_props)
 
     err_fig.rect(x="Label", y="Error", width=1.0, height=1.0, source=cm_err_source, fill_alpha=1.0, line_color='black',
                  fill_color=transform('err_cat', CategoricalColorMapper(palette=error_colors, factors=["0", "1", "2"])))
-
 
     err_fig.text(x="Label", y="Error", text="str_value", source=cm_err_source, text_align="center",
                  text_color=transform('err_cat', CategoricalColorMapper(palette=["#000000", "#000000", "#FFFFFF"], factors=["0", "1", "2"])),
@@ -187,7 +183,7 @@ def update_plot():
 
 file_select_btn = Button(label='Select File', width=100)
 file_select_btn.on_click(get_input)
-filename_div = Div(width=800, text="File name: ", style={'font-size': '125%', 'font-weight': 'bold'})
+filename_div = Div(width=1450, text="File name: ", style={'font-size': '125%', 'font-weight': 'bold'})
 
 # color palettes for plotting
 cm_colors = rgb2hex(blues(200))
@@ -198,9 +194,9 @@ error_colors = ["#00FF00", "#FFA700", "#FF0000"]
 text_mapper = LinearColorMapper(palette=["#000000", "#FFFFFF"], low=75, high=cm_max)
 
 # cm_data = pd.read_csv('D:/Projects/dfd/dfd_dnn_analysis/results/tb23b_test/tb23b_confusion_matrix_results.txt', header=None).values
-# get_input()
-build_dataframes(cm_data)
-update_plot()
+get_input()
+# build_dataframes(cm_data)
+# update_plot()
 
 # cm_fig = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
 #            x_range=dm_values_str, y_range=list(reversed(dm_values_str)),
@@ -258,8 +254,9 @@ err_fig.xaxis.axis_label_text_font_size = "16pt"
 err_fig.xaxis.axis_label_text_font_style = "bold"
 err_fig.xaxis.axis_label = "Actual Depthmap Errors"
 
-input_layout = row(Spacer(width=30), file_select_btn, Spacer(width=10), filename_div)
-layout = column(input_layout, cm_fig, Spacer(height=20), err_fig)
+# input_layout = row(Spacer(width=30), file_select_btn, Spacer(width=10), filename_div)
+input_layout = row(Spacer(width=50), filename_div)
+layout = column(input_layout, cm_fig, Spacer(height=15), err_fig)
 
 # show(layout)
 
@@ -268,4 +265,3 @@ doc.title = "Confusion Matrix Viewer"
 doc.add_root(layout)
 
 bp = 1
-
