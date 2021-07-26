@@ -257,7 +257,7 @@ DfD_Analysis/.vscode/launch.json
 /.idea
 /python/tdoa/.idea
 /python/confusion_matrix/.idea
-
+/python/confusion_matrix/*.html
 # certificate files
 *.crt
 

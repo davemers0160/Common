@@ -143,12 +143,6 @@ def build_dataframes(cm_data):
 def update_plot():
     global cm_source, cm_err_source, dm_values_str, cm_fig, err_fig
 
-    # cm_fig.x_range = dm_values_str
-    # cm_fig.y_range = list(reversed(dm_values_str))
-    #
-    # err_fig.y_range = "1"
-    # err_fig.x_range = dm_values_str
-
     cm_fig = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
                     x_range=dm_values_str, y_range=list(reversed(dm_values_str)),
                     tools="save", toolbar_location="right"
@@ -159,7 +153,6 @@ def update_plot():
                      tools="save", toolbar_location="below"
                      )
 
-    print("update 1")
     cm_fig.rect(x="Predicted", y="Actual", width=1.0, height=1.0, source=cm_source, fill_alpha=1.0, line_color='black',
                 fill_color=transform('color_value', cm_mapper))
 
@@ -176,7 +169,6 @@ def update_plot():
                  text_color=transform('err_cat', CategoricalColorMapper(palette=["#000000", "#000000", "#FFFFFF"], factors=["0", "1", "2"])),
                  text_font_size="13px", text_baseline="middle", text_font_style="bold")
 
-    print("update 2")
     bp = 1
 
 ##-----------------------------------------------------------------------------
@@ -198,20 +190,6 @@ get_input()
 # build_dataframes(cm_data)
 # update_plot()
 
-# cm_fig = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
-#            x_range=dm_values_str, y_range=list(reversed(dm_values_str)),
-#            tools="save", toolbar_location="right"
-#            )
-#
-# cm_fig.rect(x="Predicted", y="Actual", width=1.0, height=1.0, source=cm_source, fill_alpha=1.0, line_color='black',
-#            fill_color=transform('color_value', cm_mapper))
-#
-# text_props = {"source": cm_source, "text_align": "center", "text_font_size": "13px", "text_baseline": "middle", "text_font_style": "bold"}
-#
-# x = dodge("Predicted", 0.0, range=cm_fig.x_range)
-#
-# cm_fig.text(x=x, y="Actual", text=str("value"), text_color=transform('color_value', text_mapper), **text_props)
-
 cm_fig.axis.major_tick_line_color = None
 cm_fig.grid.grid_line_color = None
 
@@ -228,20 +206,6 @@ cm_fig.yaxis.major_label_text_font_style= "bold"
 cm_fig.yaxis.axis_label_text_font_size = "16pt"
 cm_fig.yaxis.axis_label_text_font_style = "bold"
 cm_fig.yaxis.axis_label = "Actual Depthmap Values"
-
-
-# err_fig = figure(plot_width=err_plot_w, plot_height=err_plot_h,
-#            y_range="1", x_range=dm_values_str,
-#            tools="save", toolbar_location="below"
-#            )
-#
-# err_fig.rect(x="Label", y="Error", width=1.0, height=1.0, source=cm_err_source, fill_alpha=1.0, line_color='black',
-#        fill_color=transform('err_cat', CategoricalColorMapper(palette=error_colors, factors=["0", "1", "2"])))
-#
-#
-# err_fig.text(x="Label", y="Error", text="str_value", source=cm_err_source, text_align="center",
-#              text_color=transform('err_cat', CategoricalColorMapper(palette=["#000000", "#000000", "#FFFFFF"], factors=["0", "1", "2"])),
-#              text_font_size="13px", text_baseline="middle", text_font_style="bold")
 
 
 err_fig.axis.major_tick_line_color = None
