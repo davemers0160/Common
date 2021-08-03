@@ -29,9 +29,9 @@ time_err = 2e-7;
 
 % 2D
 % receiver station locations
-S(1,:) = [20, 20];
-S(2,:) = [80, 5];
-S(3,:) = [140, 20];
+S(1,:) = [20, 40];
+S(2,:) = [80, 25];
+S(3,:) = [140, 40];
 
 % get the dimensions of the data
 [N, D] = size(S);
@@ -159,8 +159,8 @@ colorbar
 % plot each of the receiver stations and the intial guess
 % scatter(S(:,1), S(:,2), 20, 'v', 'filled', 'r')
 % scatter(Po(1), Po(2), 20, 'd', 'filled', 'b')
-scatter3(S(:,1), S(:,2), 50*ones(N,1), 20, 'v', 'filled', 'r')
-scatter3(Po(1), Po(2), 50, 20, 'd', 'filled', 'b')
+s1 = scatter3(S(:,1), S(:,2), 50*ones(N,1), 20, 'v', 'filled', 'r');
+s2 = scatter3(Po(1), Po(2), 50, 20, 'd', 'filled', 'b');
 
 % plot the results of num_trials
 % scatter(P_new(:,1), P_new(:,2), '.', 'b')
@@ -185,7 +185,10 @@ ylim([0,240]);
 yticks(0:5:240)
 ylabel('Y (km)', 'fontweight','bold','FontSize',13);
 
+legend([s1, s2], {'Receivers', 'Initial Guess'}, 'location', 'southoutside', 'orientation', 'horizontal')
+
 ax = gca;
 % ax.Position = [0.08 0.09 0.89 0.86];
-ax.Position = [0.08 0.09 0.84 0.86];
+ax.Position = [0.08 0.15 0.84 0.80];
 
+plot_num = plot_num + 1;
