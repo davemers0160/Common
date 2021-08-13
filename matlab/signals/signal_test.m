@@ -9,8 +9,67 @@ global startpath
 full_path = mfilename('fullpath');
 [scriptpath,  filename, ext] = fileparts(full_path);
 plot_num = 1;
+line_width = 1.0;
 
 commandwindow;
+
+%% simple signals
+
+s = [];
+sc = [];
+
+% sine wave
+s(1, :) = cat(2, zeros(1,100), sin(2*pi*0.05*(0:100-1)), zeros(1,100));
+
+% square wave
+s(2, :) = cat(2, zeros(1,100), ones(1,100), zeros(1,100));
+
+% triangle wave
+s(3, :) = cat(2, zeros(1,100), (0:0.01:1-0.01), zeros(1,100));
+
+% random noise
+s(4, :) = cat(2, zeros(1,100), 2*rand(1,100)-1, zeros(1,100));
+
+
+num_sig = size(s,1);
+
+% plot the auto correlations
+for idx=1:num_sig
+    sc(idx, :) = conv(s(idx, :), s(idx, end:-1:1), 'same');
+end
+
+% plot the base signal 
+figure(plot_num)
+set(gcf,'position',([50,50,1400,600]),'color','w')
+
+for idx=1:num_sig
+    subplot(num_sig,1,idx);
+    hold on
+    grid on
+    box on
+    plot(s(idx, :), 'b', 'LineWidth', line_width)
+    set(gca,'fontweight','bold','FontSize',11);
+    ax = gca;
+    ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
+end
+
+plot_num  = plot_num + 1;
+
+% plot the base signal 
+figure(plot_num)
+set(gcf,'position',([50,50,1400,600]),'color','w')
+
+for idx=1:num_sig
+    subplot(num_sig,1,idx);hold on
+    grid on
+    box on
+    plot(sc(idx, :), 'g', 'LineWidth', line_width)
+    set(gca,'fontweight','bold','FontSize',11);
+    ax = gca;
+    ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
+end
+
+plot_num  = plot_num + 1;
 
 %% generate the base pulse train
 
@@ -29,22 +88,37 @@ sig_noise = 0.38;
 % x = x(:)';
 % sig_noise = 0.7;
 
-% x = maxmimal_length_seq(6);
-% sig_noise = 0.75;
+% maximal length sequence
+x = maxmimal_length_seq(6);
+sig_noise = 0.75;
 
 x_length = length(x);
 
+x2 = cat(2, zeros(1,20), x, zeros(1,20));
+x2c = conv(x2, x2(end:-1:1), 'same');
+
 % plot the base signal 
 figure(plot_num)
-set(gcf,'position',([50,50,1400,400]),'color','w')
-plot(x, 'b')
+set(gcf,'position',([50,50,1400,500]),'color','w')
+subplot(2,1,1)
+hold on
 grid on
 box on
-
-set(gca,'fontweight','bold','FontSize',12);
-xlim([0, numel(x)]);
+plot(x2, 'b', 'LineWidth', line_width)
+set(gca,'fontweight','bold','FontSize',11);
+xlim([0, numel(x2)]);
 ax = gca;
-ax.Position = [0.05 0.1 0.92 0.83];
+ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
+
+subplot(2,1,2)
+hold on
+grid on
+box on
+plot(x2c, 'g', 'LineWidth', line_width)
+set(gca,'fontweight','bold','FontSize',12);
+xlim([0, numel(x2)]);
+ax = gca;
+ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
 
 plot_num  = plot_num + 1;
 
@@ -64,8 +138,8 @@ signal = [zeros(1, start) signal];
 
 %% plot the base signal 
 figure(plot_num)
-set(gcf,'position',([50,50,1400,400]),'color','w')
-plot(signal, 'b')
+set(gcf,'position',([50,50,1400,500]),'color','w')
+plot(signal, 'b', 'LineWidth', line_width)
 grid on
 box on
 
@@ -111,7 +185,7 @@ set(gcf,'position',([50,50,1400,700]),'color','w')
 
 for idx=1:num
     subplot(num,1,idx);
-    plot(sn(idx,:), cm(idx))
+    plot(sn(idx,:), cm(idx), 'LineWidth', line_width)
     grid on
     box on
     
@@ -138,7 +212,7 @@ set(gcf,'position',([50,50,1400,700]),'color','w')
 
 for idx=1:num
     subplot(num,1,idx);
-    plot(rxy(idx,:), cm(idx))
+    plot(rxy(idx,:), cm(idx), 'LineWidth', line_width)
     grid on
     box on
     
@@ -160,7 +234,8 @@ bxy = cell(num, num);
 for idx=1:size(sn,1)
     for jdx=1:size(sn,1)
         %if jdx ~= idx
-            bxy{idx,jdx} = conv(sn(idx, 1:bxy_length), sn(jdx, bxy_length:-1:1), 'same');
+%             bxy{idx,jdx} = conv(sn(idx, 1:bxy_length), sn(jdx, bxy_length:-1:1), 'same');
+            bxy{idx,jdx} = conv(sn(jdx, 1:bxy_length), sn(idx, bxy_length:-1:1), 'same');
         %end
     end
 end
@@ -198,7 +273,7 @@ for idx=1:num
     
     for jdx=1:num
         if(idx ~= jdx)
-            plot(bxy{idx,jdx}, cm(jdx));
+            plot(bxy{idx,jdx}, cm(jdx), 'LineWidth', line_width);
         end
     end
     
