@@ -57,7 +57,7 @@ public:
         //}
 
         //map_handle_ = ::CreateFileMapping(file_handle_, NULL, PAGE_READWRITE, 0, 0, NULL);
-        map_handle_ = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 256, name.c_str());
+        map_handle_ = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, data_size, name.c_str());
 
         if (map_handle_ == NULL) 
         {                    
@@ -66,7 +66,7 @@ public:
             return;
         }
 
-        map_address_ = ::MapViewOfFile(map_handle_, FILE_MAP_ALL_ACCESS, 0, 0, 256);
+        map_address_ = ::MapViewOfFile(map_handle_, FILE_MAP_ALL_ACCESS, 0, 0, data_size);
                 
     #else
 //        file_handle_ = open(name.c_str(), O_RDWR | O_CREAT | O_TRUNC);
@@ -83,18 +83,18 @@ public:
 //}
 //        file_size_ = sb.st_size;
 
-        file_handle_ = shm_open(name.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-        if (file_handle_ == -1)
+        map_handle_ = shm_open(name.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+        if (map_handle_ == -1)
         {
             std::cout << "Error opening shared memory..." << std::endl;
         }
 
-        if (ftruncate(file_handle_, data_size) == -1)
+        if (ftruncate(map_handle_, data_size) == -1)
         {
             std::cout << "Error configuring the size of the shared memory object..." << std::endl;
         }
 
-        map_address_ = mmap(NULL, data_size, PROT_READ | PROT_WRITE, MAP_SHARED, file_handle_, 0);
+        map_address_ = mmap(NULL, data_size, PROT_READ | PROT_WRITE, MAP_SHARED, map_handle_, 0);
 
     #endif
 
@@ -151,80 +151,73 @@ public:
     }   // end of close
         
 // ----------------------------------------------------------------------------
-template <typename T>
-inline void read(uint64_t &position, T &data)
-{
-    uint8_t* bytes = reinterpret_cast<uint8_t*>(&data);
-
-    for (uint8_t idx = 0; idx < sizeof(T); ++idx)
+    template <typename T>
+    inline void read(uint64_t &position, T &data)
     {
-        read_data(position, bytes[idx]);
+        uint8_t* bytes = reinterpret_cast<uint8_t*>(&data);
+
+        for (uint8_t idx = 0; idx < sizeof(T); ++idx)
+        {
+            read_data(position, bytes[idx]);
+        }
     }
-}
 
 // ----------------------------------------------------------------------------
-template <typename T>
-inline void read_range(uint64_t &position, uint64_t length, std::vector<T> &data)
-{
-            
-    //if (position + length >= file_size_)
-    //    return;
-
-    data.clear();
-            
-    for(uint64_t idx=0; idx<length; ++idx)
+    template <typename T>
+    inline void read_range(uint64_t &position, uint64_t length, std::vector<T> &data)
     {
-        T d;
-        read(position, d);
-        data.push_back(d);       
-    }         
+        data.clear();
             
-}   // end of read_range
+        for(uint64_t idx=0; idx<length; ++idx)
+        {
+            T d;
+            read(position, d);
+            data.push_back(d);       
+        }         
+    }   // end of read_range
 
 // ----------------------------------------------------------------------------------------
-template <typename T>
-inline void write(uint64_t &position, T data)
-{
-    uint8_t* bytes = reinterpret_cast<uint8_t*>(&data);
-
-    for (uint8_t idx = 0; idx < sizeof(T); ++idx)
+    template <typename T>
+    inline void write(uint64_t &position, T data)
     {
-        write_data(position, bytes[idx]);
-    }
-}   // end of write
+        uint8_t* bytes = reinterpret_cast<uint8_t*>(&data);
+
+        for (uint8_t idx = 0; idx < sizeof(T); ++idx)
+        {
+            write_data(position, bytes[idx]);
+        }
+    }   // end of write
 
 // ----------------------------------------------------------------------------------------
-template <typename T>
-inline void write_range(uint64_t &position, std::vector<T> data)
-{
-    //if (position+data.size() >= file_size_)
-    //    return;
-
-    for (uint64_t idx = 0; idx < data.size(); ++idx)
+    template <typename T>
+    inline void write_range(uint64_t &position, std::vector<T> data)
     {
-        write(position, data[idx]);
+        //if (position+data.size() >= file_size_)
+        //    return;
+
+        for (uint64_t idx = 0; idx < data.size(); ++idx)
+        {
+            write(position, data[idx]);
+        }
     }
-}
 
 // ----------------------------------------------------------------------------------------
 private:
         
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-    //HANDLE file_handle_;
     HANDLE map_handle_;
 #else
-    int32_t file_handle_;
+    int32_t map_handle_;
 #endif
         
-    //uint64_t file_size_;
     void* map_address_;
 
     std::string name;
 
 // ----------------------------------------------------------------------------           
-    inline void read_data(uint64_t& position, uint8_t& data_out)
+    inline void read_data(uint64_t& position, uint8_t& data)
     {
-        data_out = *((uint8_t*)(map_address_)+position);
+        data = *((uint8_t*)(map_address_)+position);
         ++position;
     }   // end of read_data
             
