@@ -178,28 +178,41 @@ public:
 
 // ----------------------------------------------------------------------------------------
     template <typename T>
-    inline void write(uint64_t &position, T data)
+    inline void write(uint64_t position, T data)
     {
         uint8_t* bytes = reinterpret_cast<uint8_t*>(&data);
 
         for (uint8_t idx = 0; idx < sizeof(T); ++idx)
         {
-            write_data(position, bytes[idx]);
+            write_data(position+idx, bytes[idx]);
         }
     }   // end of write
 
 // ----------------------------------------------------------------------------------------
     template <typename T>
-    inline void write_range(uint64_t &position, std::vector<T> data)
+    inline void write_range(uint64_t position, std::vector<T> data)
     {
         //if (position+data.size() >= file_size_)
         //    return;
 
         for (uint64_t idx = 0; idx < data.size(); ++idx)
         {
-            write(position, data[idx]);
+            write(position+idx, data[idx]);
         }
-    }
+    }   // end of write_range
+
+    template <typename T>
+    inline void write_range(uint64_t position, uint64_t length, T *data)
+    {
+        //if (position+data.size() >= file_size_)
+        //    return;
+
+        for (uint64_t idx = 0; idx < length; ++idx)
+        {
+            write(position + idx, data[idx]);
+        }
+    }   // end of write_range
+
 
 // ----------------------------------------------------------------------------------------
 private:
@@ -221,7 +234,7 @@ private:
         ++position;
     }   // end of read_data
             
-    inline void write_data(uint64_t& position, uint8_t data)
+    inline void write_data(uint64_t position, uint8_t data)
     {
         uint8_t* d = ((uint8_t*)(map_address_)+position);
         *d = data;
