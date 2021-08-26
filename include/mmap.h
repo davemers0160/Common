@@ -23,15 +23,19 @@ const int MAP_FAILED = NULL;
 #endif
 
 
-// ----------------------------------------------------------------------------           
+// ----------------------------------------------------------------------------
+template<typename data_struct>
 class mem_map
 {
 public:
             
-    mem_map(std::string name_, uint64_t ds_) : name(name_), data_size(ds_)
+//    mem_map(std::string name_, uint64_t ds_) : name(name_), data_size(ds_)
+    mem_map(std::string name_, data_struct* map_address) : name(name_)
     {
 
-                
+//        data_size = sizeof(*ma);
+        data_size = sizeof(data_struct);
+
     #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 
         map_handle = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, data_size, name.c_str());
@@ -39,12 +43,14 @@ public:
         if (map_handle == NULL) 
         {                    
             std::cout << "Error mapping file: " << GetLastError() << std::endl;
-            close();
+            close(map_address);
             return;
         }
 
-        map_address = ::MapViewOfFile(map_handle, FILE_MAP_ALL_ACCESS, 0, 0, data_size);
-                
+//        map_address = ::MapViewOfFile(map_handle, FILE_MAP_ALL_ACCESS, 0, 0, data_size);
+//        map_address = reinterpret_cast<data_struct*>(::MapViewOfFile(map_handle, FILE_MAP_ALL_ACCESS, 0, 0, data_size));
+        map_address = (data_struct*)(::MapViewOfFile(map_handle, FILE_MAP_ALL_ACCESS, 0, 0, data_size));
+
     #else
 
         map_handle = shm_open(name.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
@@ -65,13 +71,13 @@ public:
         if (map_address == MAP_FAILED) 
         {
             std::cout << "Error getting map address..." << std::endl;
-            close();
+            close(map_address);
         }                
                                          
     }   // end of open
             
 // ----------------------------------------------------------------------------           
-    void close()
+    void close(data_struct* map_address)
     {
     #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
         if (map_address != MAP_FAILED) 
@@ -101,7 +107,7 @@ public:
     #endif
 
     }   // end of close
-        
+ /*
 // ----------------------------------------------------------------------------
     template <typename T>
     inline T* get_address(uint64_t position)
@@ -172,7 +178,7 @@ public:
         }
     }   // end of write_range
 
-
+    */
 // ----------------------------------------------------------------------------------------
 private:
         
@@ -182,12 +188,13 @@ private:
     int32_t map_handle;
 #endif
         
-    void* map_address;
+    //void* map_address;
+    //data_struct* map_address;
 
     std::string name;
     
     uint64_t data_size;
-
+/*
 // ----------------------------------------------------------------------------           
     inline void read_data(uint64_t position, uint8_t& data)
     {
@@ -199,7 +206,7 @@ private:
         uint8_t* d = ((uint8_t*)(map_address)+position);
         *d = data;
     }   // end of write_data
-
+*/
 
 };   // end of class
 
