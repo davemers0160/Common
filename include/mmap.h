@@ -17,7 +17,6 @@
 #include <fcntl.h>
 #endif
 
-
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 const int MAP_FAILED = NULL;
 #endif
@@ -30,10 +29,9 @@ class mem_map
 public:
             
 //    mem_map(std::string name_, uint64_t ds_) : name(name_), data_size(ds_)
-    mem_map(std::string name_, data_struct* map_address) : name(name_)
+    mem_map(std::string name_, data_struct*& map_object) : name(name_)
     {
 
-//        data_size = sizeof(*ma);
         data_size = sizeof(data_struct);
 
     #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
@@ -43,13 +41,11 @@ public:
         if (map_handle == NULL) 
         {                    
             std::cout << "Error mapping file: " << GetLastError() << std::endl;
-            close(map_address);
+            close(map_object);
             return;
         }
 
-//        map_address = ::MapViewOfFile(map_handle, FILE_MAP_ALL_ACCESS, 0, 0, data_size);
-//        map_address = reinterpret_cast<data_struct*>(::MapViewOfFile(map_handle, FILE_MAP_ALL_ACCESS, 0, 0, data_size));
-        map_address = (data_struct*)(::MapViewOfFile(map_handle, FILE_MAP_ALL_ACCESS, 0, 0, data_size));
+        map_object = reinterpret_cast<data_struct*>(::MapViewOfFile(map_handle, FILE_MAP_ALL_ACCESS, 0, 0, data_size));
 
     #else
 
@@ -64,26 +60,26 @@ public:
             std::cout << "Error configuring the size of the shared memory object..." << std::endl;
         }
 
-        map_address = mmap(NULL, data_size, PROT_READ | PROT_WRITE, MAP_SHARED, map_handle, 0);
+        map_object = reinterpret_cast<data_struct*>(mmap(NULL, data_size, PROT_READ | PROT_WRITE, MAP_SHARED, map_handle, 0));
 
     #endif
 
-        if (map_address == MAP_FAILED) 
+        if (map_object == MAP_FAILED)
         {
             std::cout << "Error getting map address..." << std::endl;
-            close(map_address);
+            close(map_object);
         }                
                                          
     }   // end of open
             
 // ----------------------------------------------------------------------------           
-    void close(data_struct* map_address)
+    void close(data_struct*& map_object)
     {
     #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-        if (map_address != MAP_FAILED) 
+        if (map_object != MAP_FAILED)
         {
-            ::UnmapViewOfFile(map_address);
-            map_address = MAP_FAILED;
+            ::UnmapViewOfFile(map_object);
+            map_object = NULL;
         }
 
         if (map_handle) 
@@ -93,13 +89,11 @@ public:
         }
             
     #else
-        if (map_address != MAP_FAILED) 
+        if (map_object != MAP_FAILED)
         {
-            munmap(map_address, data_size);
-            map_address = NULL;
+            munmap(map_object, data_size);
+            map_object = NULL;
         }
-
-        //close();
 
         // remove the shared memory object
         shm_unlink(name.c_str());
@@ -112,7 +106,7 @@ public:
     template <typename T>
     inline T* get_address(uint64_t position)
     {
-        return (reinterpret_cast<T*>(map_address) + position);
+        return (reinterpret_cast<T*>(map_object) + position);
     }
 
 // ----------------------------------------------------------------------------
@@ -187,23 +181,19 @@ private:
 #else
     int32_t map_handle;
 #endif
-        
-    //void* map_address;
-    //data_struct* map_address;
 
-    std::string name;
-    
+    std::string name;    
     uint64_t data_size;
 /*
 // ----------------------------------------------------------------------------           
     inline void read_data(uint64_t position, uint8_t& data)
     {
-        data = *((uint8_t*)(map_address)+position);
+        data = *((uint8_t*)(map_object)+position);
     }   // end of read_data
             
     inline void write_data(uint64_t position, uint8_t data)
     {
-        uint8_t* d = ((uint8_t*)(map_address)+position);
+        uint8_t* d = ((uint8_t*)(map_object)+position);
         *d = data;
     }   // end of write_data
 */
