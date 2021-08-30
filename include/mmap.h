@@ -28,10 +28,12 @@ class mem_map
 {
 public:
             
-//    mem_map(std::string name_, uint64_t ds_) : name(name_), data_size(ds_)
-    mem_map(std::string name_, data_struct*& map_object) : name(name_)
-    {
+    mem_map() = default;
 
+//    mem_map(std::string name_, uint64_t ds_) : name(name_), data_size(ds_)
+    inline void init(std::string name_, data_struct*& map_object)
+    {
+        name = name_;
         data_size = sizeof(data_struct);
 
     #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
@@ -73,7 +75,7 @@ public:
     }   // end of open
             
 // ----------------------------------------------------------------------------           
-    void close(data_struct*& map_object)
+    inline void close(data_struct*& map_object)
     {
     #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
         if (map_object != MAP_FAILED)
