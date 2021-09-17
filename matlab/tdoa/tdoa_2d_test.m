@@ -40,7 +40,7 @@ S(3,:) = [140, 40];
 num_trials = 100;
 
 % guess/calculate an initial position
-Po = [80, 80];
+Po = [120, 30];
 
 % times
 T = [0; 0; 0];
@@ -50,17 +50,17 @@ iter = zeros(num_trials, 1);
 err = zeros(num_trials, 1);
 Sn = zeros(N, D, num_trials);
 
-aou = zeros(240, 160);
+% aou = zeros(240, 160);
 %aou=[];
 
-r = 1;
-c = 1;
-for y=0:5:240-1
-    c = 1;
-    for x=0:5:160-1
+% r = 1;
+% c = 1;
+% for y=0:5:240-1
+%     c = 1;
+%     for x=0:5:160-1
         
         % target location
-        P = [x, y];
+        P = [60, 200];
 
         % calculate the arrival times
         for idx=1:N
@@ -81,59 +81,57 @@ for y=0:5:240-1
 
 %         [tmp_aou, ecc, r_ellipse] = calc_aou(P_new);
 
-        tmp_error = sqrt(sum((P-C').*(P-C')));
-        aou((y:y+5-1)+1, (x:x+5-1)+1) = tmp_error*ones(5);
-        c = c + 1;
-        
-    end
-    r = r + 1;
+%         tmp_error = sqrt(sum((P-C').*(P-C')));
+%         aou((y:y+5-1)+1, (x:x+5-1)+1) = tmp_error*ones(5);
+%         c = c + 1;
+%         
+%     end
+%     r = r + 1;
+% end
+
+%% get the covariance matrix, just do 2D for now
+Pn = P_new(:,1:2).';
+
+% calculate the covariance matrix
+Rp = (1/num_trials)*((Pn-C)*(Pn-C).');
+
+% find the eigenvalues (V) and the eigenvectors (E)
+[Ep, Vp] = eig(Rp, 'vector');
+
+% get the confidence interval 
+p = 0.95;
+s = -2 * log(1 - p);
+Vp = Vp*s;
+
+% get the max eigen value
+[max_eig_val, max_eig_ind] = max(Vp);
+[min_eig_val, min_eig_ind] = min(Vp);
+
+max_eig_vec = Ep(:, max_eig_ind);
+min_eig_vec = Ep(:, min_eig_ind);
+
+% calculate the angle between the x-axis and the largest eigenvector
+angle = atan2(max_eig_vec(2), max_eig_vec(1));
+
+% This angle is between -pi and pi.
+% Let's shift it such that the angle is between 0 and 2pi
+if(angle < 0)
+    angle = angle + 2*pi;
 end
 
-% %% get the covariance matrix, just do 2D for now
-% Pn = P_new(:,1:2).';
-% 
-% 
-% 
-% % calculate the covariance matrix
-% Rp = (1/num_trials)*((Pn-C)*(Pn-C).');
-% 
-% % find the eigenvalues (V) and the eigenvectors (E)
-% [Ep, Vp] = eig(Rp, 'vector');
-% 
-% % get the confidence interval 
-% p = 0.95;
-% s = -2 * log(1 - p);
-% Vp = Vp*s;
-% 
-% % get the max eigen value
-% [max_eig_val, max_eig_ind] = max(Vp);
-% [min_eig_val, min_eig_ind] = min(Vp);
-% 
-% max_eig_vec = Ep(:, max_eig_ind);
-% min_eig_vec = Ep(:, min_eig_ind);
-% 
-% % calculate the angle between the x-axis and the largest eigenvector
-% angle = atan2(max_eig_vec(2), max_eig_vec(1));
-% 
-% % This angle is between -pi and pi.
-% % Let's shift it such that the angle is between 0 and 2pi
-% if(angle < 0)
-%     angle = angle + 2*pi;
-% end
-% 
-% % set the ellipse plotting segments
-% theta = linspace(0, 2*pi, 100);
-% 
-% % calculate the ellipse
-% r_ellipse = (Ep * (sqrt(diag(Vp)))) * [cos(theta(:))'; sin(theta(:))'];
-% 
-% % [V, D] = eig(Rp * s);
-% % r_ellipse = (V * sqrt(D)) * [cos(theta(:))'; sin(theta(:))'];
-% ecc = sqrt(1-(min(Vp)/max(Vp)));
-% aou = prod(sqrt(Vp))*pi();
+% set the ellipse plotting segments
+theta = linspace(0, 2*pi, 100);
 
-% fprintf('AOU = %2.5f\n', aou);
-% fprintf('Eccentricity = %2.5f\n', ecc);
+% calculate the ellipse
+r_ellipse = (Ep * (sqrt(diag(Vp)))) * [cos(theta(:))'; sin(theta(:))'];
+
+% [V, D] = eig(Rp * s);
+% r_ellipse = (V * sqrt(D)) * [cos(theta(:))'; sin(theta(:))'];
+ecc = sqrt(1-(min(Vp)/max(Vp)));
+aou = prod(sqrt(Vp))*pi();
+
+fprintf('AOU = %2.5f\n', aou);
+fprintf('Eccentricity = %2.5f\n', ecc);
 
 bp = 1;
 %% plot the data
@@ -144,33 +142,32 @@ hold on
 grid on
 box on
 
-aou(aou(:,:)>52) = 50;
-% surf(abs(aou), 'FaceAlpha',0.5)
-surf(abs(aou), 'FaceAlpha',1.0)
+% aou(aou(:,:)>52) = 50;
+% surf(abs(aou), 'FaceAlpha',1.0)
 
-colormap(blues(100))
-shading flat
-colorbar
+% colormap(blues(100))
+% shading flat
+% colorbar
 
-% for idx=1:N
-%     rectangle('Position',[S(idx,1)-range_err, S(idx,2)-range_err, 2*range_err, 2*range_err], 'FaceColor', [0.8 0.8 0.8 0.3], 'EdgeColor', [0 0 0], 'Curvature',[1,1]);  
-% end
+for idx=1:N
+    rectangle('Position',[S(idx,1)-range_err, S(idx,2)-range_err, 2*range_err, 2*range_err], 'FaceColor', [0.8 0.8 0.8 0.3], 'EdgeColor', [0 0 0], 'Curvature',[1,1]);  
+end
 
 % plot each of the receiver stations and the intial guess
-% scatter(S(:,1), S(:,2), 20, 'v', 'filled', 'r')
-% scatter(Po(1), Po(2), 20, 'd', 'filled', 'b')
-s1 = scatter3(S(:,1), S(:,2), 50*ones(N,1), 20, 'v', 'filled', 'r');
-s2 = scatter3(Po(1), Po(2), 50, 20, 'd', 'filled', 'b');
+s1 = scatter(S(:,1), S(:,2), 20, 'v', 'filled', 'c');
+s2 = scatter(Po(1), Po(2), 20, 'd', 'filled', 'b');
+% s1 = scatter3(S(:,1), S(:,2), 50*ones(N,1), 20, 'v', 'filled', 'r');
+% s2 = scatter3(Po(1), Po(2), 50, 20, 'd', 'filled', 'b');
 
 % plot the results of num_trials
-% scatter(P_new(:,1), P_new(:,2), '.', 'b')
+ scatter(P_new(:,1), P_new(:,2), '.', 'b');
 
 % plot the center point of the solution and the actual target location
-% scatter(C(1), C(2), 'o', 'filled', 'g')
-% scatter(P(1), P(2), 'o', 'filled', 'r')
+scatter(C(1), C(2), 'o', 'filled', 'g');
+s3 = scatter(P(1), P(2), 'o', 'filled', 'r');
 
 % plot the ellipse
-% plot(r_ellipse(1,:) + C(1), r_ellipse(2,:) + C(2), '-g')
+plot(r_ellipse(1,:) + C(1), r_ellipse(2,:) + C(2), '-g')
 
 % make the graph look pretty
 set(gca,'fontweight','bold','FontSize',13);
@@ -185,7 +182,7 @@ ylim([0,240]);
 yticks(0:5:240)
 ylabel('Y (km)', 'fontweight','bold','FontSize',13);
 
-legend([s1, s2], {'Receivers', 'Initial Guess'}, 'location', 'southoutside', 'orientation', 'horizontal')
+legend([s1, s2, s3], {'Receivers', 'Initial Guess', 'Tx'}, 'location', 'southoutside', 'orientation', 'horizontal')
 
 ax = gca;
 % ax.Position = [0.08 0.09 0.89 0.86];
