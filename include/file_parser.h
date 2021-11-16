@@ -94,7 +94,7 @@ static inline void trim(std::string &s) {
 }  */ // end of existence_check
 
 // ----------------------------------------------------------------------------------------
-void parse_line(std::string input, const char delimiter, std::vector<std::string> &params)
+inline void parse_line(std::string input, const char delimiter, std::vector<std::string> &params)
 {
     //params.clear();
 
@@ -121,7 +121,7 @@ void parse_line(std::string input, const char delimiter, std::vector<std::string
 
 // ----------------------------------------------------------------------------------------
 template<typename T>
-void parse_input_range(std::string input, std::vector<T> &range)
+inline void parse_input_range(std::string input, std::vector<T> &range)
 {
     range.clear();
     std::vector<std::string> params;
@@ -170,7 +170,7 @@ void parse_input_range(std::string input, std::vector<T> &range)
 
 //-----------------------------------------------------------------------------
 template<typename T>
-void validate_input_range(std::string input, T min_value, T max_value, std::vector<T>& range)
+inline void validate_input_range(std::string input, T min_value, T max_value, std::vector<T>& range)
 {
     range.clear();
     std::vector<std::string> params;
@@ -219,7 +219,7 @@ void validate_input_range(std::string input, T min_value, T max_value, std::vect
 
 
 // ----------------------------------------------------------------------------------------
-void parse_csv_line(std::string line, std::vector<std::string> &line_params)
+inline void parse_csv_line(std::string line, std::vector<std::string> &line_params)
 {
     stringstream ss(line);
     while (ss.good())
@@ -236,7 +236,7 @@ void parse_csv_line(std::string line, std::vector<std::string> &line_params)
 }   // end of parseCSVLine
 
 // ----------------------------------------------------------------------------------------
-void parse_csv_file(std::string parse_filename, std::vector<std::vector<std::string>> &params)
+inline void parse_csv_file(std::string parse_filename, std::vector<std::vector<std::string>> &params)
 {
 	std::ifstream csv_file(parse_filename);
 	std::string next_line;
@@ -268,7 +268,7 @@ void parse_csv_file(std::string parse_filename, std::vector<std::vector<std::str
 
 // ----------------------------------------------------------------------------------------
 //void parse_group_line(std::string line, const char open, const char close, std::vector<std::string> &params, std::vector<std::string> &group_params)
-void parse_group_line(std::string line, const char open, const char close, std::vector<std::string> &params)
+inline void parse_group_line(std::string line, const char open, const char close, std::vector<std::string> &params)
 {
 
     std::string sec_start = "";
@@ -310,7 +310,7 @@ void parse_group_line(std::string line, const char open, const char close, std::
 
 // ----------------------------------------------------------------------------------------
 //void parse_group_csv_file(std::string parse_filename, const char open, const char close, std::vector<std::vector<std::string>> &params, std::vector < std::vector<std::string>> &group_params)
-void parse_group_csv_file(std::string parse_filename, const char open, const char close, std::vector<std::vector<std::string>> &params)
+inline void parse_group_csv_file(std::string parse_filename, const char open, const char close, std::vector<std::vector<std::string>> &params)
 {
     std::ifstream csv_file(parse_filename);
     std::string next_line;
