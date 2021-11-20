@@ -126,5 +126,5 @@ CMD ["bash"]
 # To get into an existing/open conatainer while it is running execute the following
 # docker exec -it dlib_docker /bin/bash
 
-
+#RUN mkdir -p /etc/OpenCL/vendors && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
