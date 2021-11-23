@@ -52,15 +52,14 @@ box on
 grid on
 hold on
 
-b1 = bar3(ssim_val);
-% s1 = surf(ssim_val);
+% b1 = bar3(ssim_val);
+% for k = 1:length(b1)
+%     zdata = b1(k).ZData;
+%     b1(k).CData = zdata;
+%     b1(k).FaceColor = 'interp';
+% end
 
-
-for k = 1:length(b1)
-    zdata = b1(k).ZData;
-    b1(k).CData = zdata;
-    b1(k).FaceColor = 'interp';
-end
+s1 = surf([0:(2*b_w-1)], [0:(2*b_w-1)], ssim_val);
 
 % for i = 1:2*b_h
 %     zdata = ones(6*2*b_h,4);
@@ -83,3 +82,5 @@ ylabel('Y Offset', 'fontweight','bold','FontSize',12);
 zlabel('SSIM Value', 'fontweight','bold','FontSize',12);
 
 view(-25, 25);
+
+plot_count = plot_count + 1;
