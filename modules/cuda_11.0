@@ -1,0 +1,43 @@
+#%Module
+#
+# CUDA 11.0 Module for the NVIDIA HPC-SDK 20.9
+#
+
+conflict nvidia nvhpc
+
+set NVIDIA_LEVEL 20.9
+set NVIDIA_CURPATH /opt/nvidia/hpc_sdk/Linux_x86_64/$NVIDIA_LEVEL
+set CUDNN_PATH $HOME/cudnn_11.0                                                                                                                                                                                                                                                    
+set CUDNN_INCLUDE_DIRS $CUDNN_PATH/include
+
+prepend-path PATH $CUDNN_PATH/lib64
+prepend-path PATH $NVIDIA_CURPATH/math_libs/include
+prepend-path PATH $NVIDIA_CURPATH/cuda/11.0/bin
+prepend-path PATH $NVIDIA_CURPATH/math_libs/11.0/targets/x86_64-linux/lib
+                                                                                                                                                                         
+prepend-path LD_LIBRARY_PATH $CUDNN_PATH/lib64
+prepend-path LD_LIBRARY_PATH $CUDNN_INCLUDE_DIRS
+prepend-path LD_LIBRARY_PATH $NVIDIA_CURPATH/math_libs/11.0/targets/x86_64-linux/include
+prepend-path LD_LIBRARY_PATH $NVIDIA_CURPATH/math_libs/11.0/targets/x86_64-linux/lib
+                                                                                                                                   
+prepend-path CPATH $CUDNN_PATH/lib64
+prepend-path CPATH $CUDNN_INCLUDE_DIRS
+prepend-path CPATH $NVIDIA_CURPATH/math_libs/include   
+  
+setenv NVIDIA_PATH             $NVIDIA_CURPATH
+setenv NVIDIA_VERSION          $NVIDIA_LEVEL
+
+proc ModulesHelp { } {
+    puts stderr "This modulefile fixes the default system paths and environment"
+    puts stderr "variables needed to use the Nvidia HPC Compilers."
+    puts stderr ""
+    puts stderr "==================================================================="
+    puts stderr "To see Nvidia HPC SDK $NVIDIA_LEVEL release information,"
+    puts stderr "  visit https://docs.nvidia.com/hpc-sdk/"
+    puts stderr "==================================================================="
+    puts stderr ""
+    puts stderr "Certain components, files or programs contained within this package or product are Copyright 2021 Hewlett Packard Enterprise Development LP."
+    puts stderr ""
+}  
+
+module-whatis "NVIDIA HPC Compilers - CUDA 11.0" 
