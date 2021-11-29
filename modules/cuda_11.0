@@ -5,7 +5,7 @@
 
 conflict nvidia nvhpc
 
-getenv HOME HOME
+set HOME $::env(HOME)
 
 set NVIDIA_LEVEL 20.9
 set NVIDIA_CURPATH /opt/nvidia/hpc_sdk/Linux_x86_64/$NVIDIA_LEVEL
