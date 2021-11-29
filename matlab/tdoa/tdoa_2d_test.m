@@ -23,16 +23,15 @@ range_err = 0.1;
 
 % estimating +/- arrival time error
 % time_err = 0.0;
-time_err = 2e-7;
+time_err = 1e-7;
 
 % set the receiver station locations (S) and the emitter location (P)
 
 % 2D
 % receiver station locations
-S(1,:) = [20, 40];
-S(2,:) = [80, 25];
-S(3,:) = [140, 40];
-
+S(1,:) = [101.62, 117.93];
+S(2,:) = [100, 100];
+S(3,:) = [120, 50];
 % get the dimensions of the data
 [N, D] = size(S);
 
@@ -40,7 +39,7 @@ S(3,:) = [140, 40];
 num_trials = 100;
 
 % guess/calculate an initial position
-Po = [120, 30];
+Po = [101, 90];
 
 % times
 T = [0; 0; 0];
@@ -60,7 +59,7 @@ Sn = zeros(N, D, num_trials);
 %     for x=0:5:160-1
         
         % target location
-        P = [60, 200];
+        P = [200, 100];
 
         % calculate the arrival times
         for idx=1:N
@@ -154,7 +153,7 @@ for idx=1:N
 end
 
 % plot each of the receiver stations and the intial guess
-s1 = scatter(S(:,1), S(:,2), 20, 'v', 'filled', 'c');
+s1 = scatter(S(:,1), S(:,2), 20, 'v', 'filled', 'k');
 s2 = scatter(Po(1), Po(2), 20, 'd', 'filled', 'b');
 % s1 = scatter3(S(:,1), S(:,2), 50*ones(N,1), 20, 'v', 'filled', 'r');
 % s2 = scatter3(Po(1), Po(2), 50, 20, 'd', 'filled', 'b');
