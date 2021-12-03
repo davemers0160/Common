@@ -1,27 +1,5 @@
-%function [g_best, err, itr] = pso_2(pso_params, object_function, particle_params, position_limits, velocity_limits)
-
-
-    
-
-
-    %% PSO params/member setup
-    pso_params = struct();
-    pso_params.c1 = 2.4;
-    pso_params.c2 = 2.1;
-    pso_params.phi = pso_params.c1 + pso_params.c2;
-    pso_params.kap = 2/(abs(2 - pso_params.phi - sqrt(pso_params.phi^2 - 4*pso_params.phi)));
-    pso_params.itr_max = 100;                                       % number of iterations
-    pso_params.N = 40;                                              % population size         
-    pso_params.position_limits = [0, 0, 0; 100, 100, 100];          % bounds to place on the search area
-    pso_params.velocity_limits = [-1, -1, -0.5; 1, 1, 0.5];         % bounds to place on how fas the particle can move
-    pso_params.D = 3;
-    pso_params.ZN = 5;
-    
-    % used to define the data type for each of the members within the particle
-    particle = struct('x', 'double', 'y', 'double', 'z', 'double');
-    
-    
-    %% set up the basic data structures
+function [Pg, G, g_best, itr] = pso_2(objective_function, pso_params)%, function_params)
+%% set up the basic data structures
 
     % F represents the results of evaluating the objective function
     F = zeros(pso_params.N, pso_params.itr_max+1);
@@ -33,7 +11,8 @@
     V = cell(pso_params.N, 1);
 
     % P represents the best poplation member for that iteration
-    P = cell(pso_params.N, pso_params.itr_max+1);
+%    P = cell(pso_params.N, pso_params.itr_max+1);
+    P = cell(pso_params.N, 1);
     
     % G represents the best population member for all iterations
     G = cell(pso_params.itr_max+1, 1);
@@ -46,19 +25,104 @@
     
     itr = 1;
     
-    %% init X and V
+%% init X and V
     for idx=1:pso_params.N
-        X{idx, 1} = pso_params.position_limits(1) + (pso_params.position_limits(2)-pso_params.position_limits(1))*rand(pso_params.ZN, pso_params.D);
-        V{idx, 1} = pso_params.velocity_limits(1) + (pso_params.velocity_limits(2)-pso_params.velocity_limits(1))*rand(pso_params.ZN, pso_params.D);
-        
-        % [err] = calc_tdoa_error(P, T, S, v)
-        %F(idx, itr) = calc_tdoa_error(X{idx,1}, );
+        X{idx, 1} = limit_position(pso_params.position_limits(1) + (pso_params.position_limits(2)-pso_params.position_limits(1))*rand(pso_params.ZN, pso_params.D), pso_params.position_limits);
+        V{idx, 1} = limit_velocity(pso_params.velocity_limits(1) + (pso_params.velocity_limits(2)-pso_params.velocity_limits(1))*rand(pso_params.ZN, pso_params.D), pso_params.velocity_limits);
+        F(idx, itr) = objective_function(X{idx,1});
+    end
+    
+    % get the population statistics values
+    [p_best(1, itr), f_min_idx] = min(F(:,itr));
+    p_best(2, itr) = mean(F(:,itr));
+    p_best(3, itr) = max(F(:,itr));
+    g_best(itr) = p_best(1, itr);
+    
+    fprintf('Iteration: %03d   F_min(%03d): %2.10f\n', itr,  f_min_idx, F(f_min_idx, itr)); 
+    
+    % Update P and G
+    for idx=1:pso_params.N
+        P{idx,itr} = X{idx,1};    
     end
 
-    bp = 1;
+    G{itr} = X{f_min_idx, 1};
+
+        
+%% update V and X
+    for idx=1:pso_params.N
+        %V(idx, itr+1).con = kap * (V(idx,itr).con + (c1*R).*(P(idx,itr).con - X(idx,itr).con) + (c2*S).*(G(itr).con - X(idx,itr).con));
+        R = rand(pso_params.ZN, pso_params.D);
+        S = rand(pso_params.ZN, pso_params.D);
+        V{idx, 1} = limit_velocity(pso_params.kap*(V{idx, 1} + (pso_params.c1*R).*(P{idx,1} - X{idx,1}) + (pso_params.c2*S).*(G{itr} - X{idx,1})), pso_params.velocity_limits);
+
+        X{idx, 1} = limit_position(X{idx, 1} + V{idx, 1}, pso_params.position_limits);          
+    end
+     
+%% start the PSO loop
+    while((itr <= pso_params.itr_max) && (g_best(itr) > pso_params.min_error))  
+        
+        itr = itr + 1; 
+     
+        % evaluate F(X,Z)
+        %d = cell(pso_params.ZN, pso_params.N);
+        %m_idx = zeros(pso_params.ZN, pso_params.N);
+        for idx=1:pso_params.N
+            F(idx, itr) = objective_function(X{idx,1});
+        end        
+        
+        % get the population statistics values
+        [p_best(1, itr), f_min_idx] = min(F(:,itr));
+        p_best(2, itr) = mean(F(:,itr));
+        p_best(3, itr) = max(F(:,itr));
+
+        fprintf('Iteration: %03d   F_min(%03d): %2.10f\n', itr,  f_min_idx, F(f_min_idx, itr));         
+   
+        % Update P and G
+        for idx=1:pso_params.N
+            if(F(idx,itr) < F(idx,itr-1))
+                P{idx,1} = X{idx,1};
+%             else
+%                 P{idx,1} = P{idx,itr-1};
+            end
+        end
+
+        if(p_best(1, itr) < g_best(itr-1))
+            G{itr} = X{f_min_idx, 1};
+            g_best(itr) = p_best(1, itr);
+        else
+            G{itr} = G{itr-1};
+            g_best(itr) = g_best(itr-1);
+        end         
+
+        
+        % update V and X
+        for idx=1:pso_params.N
+            %V(idx, itr+1).con = kap * (V(idx,itr).con + (c1*R).*(P(idx,itr).con - X(idx,itr).con) + (c2*S).*(G(itr).con - X(idx,itr).con));
+            R = rand(pso_params.ZN, pso_params.D);
+            S = rand(pso_params.ZN, pso_params.D);
+            V{idx, 1} = limit_velocity(pso_params.kap*(V{idx, 1} + (pso_params.c1*R).*(P{idx,1} - X{idx,1}) + (pso_params.c2*S).*(G{itr} - X{idx,1})), pso_params.velocity_limits);
+
+            X{idx, 1} = limit_position(X{idx, 1} + V{idx, 1}, pso_params.position_limits);          
+        end
+         
+    end
     
+    Pg = G{itr};
 
+end
 
-%end
+%% particle limiting function
+function X = limit_position(X, position_limits)
+      
+    X = max(min(X, position_limits(2,:)), position_limits(1,:));
+        
+end
 
+%% velocity limiting function
+function V = limit_velocity(V, velocity_limits)
 
+    %for idx=1:numel(V)
+    V = max(min(V, velocity_limits(2,:)), velocity_limits(1,:));
+    %end
+
+end
