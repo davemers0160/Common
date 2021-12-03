@@ -1,5 +1,9 @@
-function [Pg, G, g_best, itr] = pso_2(objective_function, pso_params)%, function_params)
+function [Pg, G, g_best, P, itr] = pso_2(objective_function, pso_params)
 %% set up the basic data structures
+
+    pso_fig = figure;
+    set(pso_fig,'position',([50,200,1400,600]),'color','w')
+    ax = gca;
 
     % F represents the results of evaluating the objective function
     F = zeros(pso_params.N, pso_params.itr_max+1);
@@ -27,8 +31,8 @@ function [Pg, G, g_best, itr] = pso_2(objective_function, pso_params)%, function
     
 %% init X and V
     for idx=1:pso_params.N
-        X{idx, 1} = limit_position(pso_params.position_limits(1) + (pso_params.position_limits(2)-pso_params.position_limits(1))*rand(pso_params.ZN, pso_params.D), pso_params.position_limits);
-        V{idx, 1} = limit_velocity(pso_params.velocity_limits(1) + (pso_params.velocity_limits(2)-pso_params.velocity_limits(1))*rand(pso_params.ZN, pso_params.D), pso_params.velocity_limits);
+        X{idx, 1} = pso_params.position_limits(1,:) + (pso_params.position_limits(2,:)-pso_params.position_limits(1,:)).*rand(pso_params.ZN, pso_params.D);
+        V{idx, 1} = pso_params.velocity_limits(1,:) + (pso_params.velocity_limits(2,:)-pso_params.velocity_limits(1,:)).*rand(pso_params.ZN, pso_params.D);
         F(idx, itr) = objective_function(X{idx,1});
     end
     
@@ -38,15 +42,16 @@ function [Pg, G, g_best, itr] = pso_2(objective_function, pso_params)%, function
     p_best(3, itr) = max(F(:,itr));
     g_best(itr) = p_best(1, itr);
     
-    fprintf('Iteration: %03d   F_min(%03d): %2.10f\n', itr,  f_min_idx, F(f_min_idx, itr)); 
+    fprintf('Iteration: %04d   F_min(%04d): %2.14f\n', itr,  f_min_idx, F(f_min_idx, itr)); 
     
     % Update P and G
     for idx=1:pso_params.N
-        P{idx,itr} = X{idx,1};    
+        P{idx,1} = X{idx,1};    
     end
 
     G{itr} = X{f_min_idx, 1};
 
+    plot_pso(ax, P, G, itr)
         
 %% update V and X
     for idx=1:pso_params.N
@@ -75,7 +80,7 @@ function [Pg, G, g_best, itr] = pso_2(objective_function, pso_params)%, function
         p_best(2, itr) = mean(F(:,itr));
         p_best(3, itr) = max(F(:,itr));
 
-        fprintf('Iteration: %03d   F_min(%03d): %2.10f\n', itr,  f_min_idx, F(f_min_idx, itr));         
+        fprintf('Iteration: %04d   F_min(%04d): %2.14f\n', itr,  f_min_idx, F(f_min_idx, itr));         
    
         % Update P and G
         for idx=1:pso_params.N
@@ -94,6 +99,9 @@ function [Pg, G, g_best, itr] = pso_2(objective_function, pso_params)%, function
             g_best(itr) = g_best(itr-1);
         end         
 
+        if (mod(itr, 50) == 0)
+            plot_pso(ax, P, G, itr)
+        end
         
         % update V and X
         for idx=1:pso_params.N
@@ -107,6 +115,8 @@ function [Pg, G, g_best, itr] = pso_2(objective_function, pso_params)%, function
          
     end
     
+    plot_pso(ax, P, G, itr)
+
     Pg = G{itr};
 
 end
@@ -124,5 +134,18 @@ function V = limit_velocity(V, velocity_limits)
     %for idx=1:numel(V)
     V = max(min(V, velocity_limits(2,:)), velocity_limits(1,:));
     %end
+
+end
+
+%%
+function plot_pso(fig_handle, P, G, itr)
+
+    P = cell2mat(P);
+    hold off
+    scatter3(fig_handle, P(:,1), P(:,2), P(:,3), 15, 'filled', 'b');
+    hold on
+    scatter3(fig_handle, G{itr,1}(1), G{itr,1}(2), G{itr,1}(3), 20, 'filled', 'r');
+    title(num2str(G{itr,1}))
+    drawnow
 
 end
