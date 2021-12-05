@@ -94,7 +94,6 @@ def get_input():
 
     build_dataframes(cm_data)
 
-
     # run_detection(color_img)
     update_plot()
 
@@ -137,21 +136,16 @@ def build_dataframes(cm_data):
     cm_err_df['err_cat'] = [str(cm_err_cat[x]) for x in range(dm_min, dm_max+1)]
     cm_err_source = ColumnDataSource(cm_err_df)
 
-    bp = 1
-
 
 def update_plot():
     global cm_source, cm_err_source, dm_values_str, cm_fig, err_fig
 
-    cm_fig = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
-                    x_range=dm_values_str, y_range=list(reversed(dm_values_str)),
-                    tools="save", toolbar_location="right"
-                    )
+    # update the cm_fig X and Y values
+    cm_fig.x_range.factors = dm_values_str
+    cm_fig.y_range.factors = list(reversed(dm_values_str))
 
-    err_fig = figure(plot_width=err_plot_w, plot_height=err_plot_h,
-                     y_range="1", x_range=dm_values_str,
-                     tools="save", toolbar_location="below"
-                     )
+    # update the err_fig X values
+    err_fig.x_range.factors = dm_values_str
 
     cm_fig.rect(x="Predicted", y="Actual", width=1.0, height=1.0, source=cm_source, fill_alpha=1.0, line_color='black',
                 fill_color=transform('color_value', cm_mapper))
@@ -173,7 +167,7 @@ def update_plot():
 
 ##-----------------------------------------------------------------------------
 
-file_select_btn = Button(label='Select File', width=100)
+file_select_btn = Button(label='Select File', width=90, height=28)
 file_select_btn.on_click(get_input)
 filename_div = Div(width=1450, text="File name: ", style={'font-size': '125%', 'font-weight': 'bold'})
 
@@ -218,8 +212,8 @@ err_fig.xaxis.axis_label_text_font_size = "16pt"
 err_fig.xaxis.axis_label_text_font_style = "bold"
 err_fig.xaxis.axis_label = "Actual Depthmap Errors"
 
-# input_layout = row(Spacer(width=30), file_select_btn, Spacer(width=10), filename_div)
-input_layout = row(Spacer(width=50), filename_div)
+input_layout = row(Spacer(width=30), file_select_btn, Spacer(width=10), filename_div)
+# input_layout = row(Spacer(width=50), filename_div)
 layout = column(input_layout, cm_fig, Spacer(height=15), err_fig)
 
 # show(layout)
