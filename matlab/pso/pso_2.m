@@ -1,8 +1,9 @@
-function [Pg, G, g_best, P, itr] = pso_2(objective_function, pso_params)
+function [Pg, G, g_best, P, itr, img] = pso_2(objective_function, pso_params)
 %% set up the basic data structures
 
     pso_fig = figure;
-    set(pso_fig,'position',([50,200,1400,600]),'color','w')
+    set(pso_fig,'position',([50,200,1000,600]),'color','w')
+    set(gca,'fontweight','bold','FontSize',13);
     ax = gca;
 
     % F represents the results of evaluating the objective function
@@ -28,6 +29,8 @@ function [Pg, G, g_best, P, itr] = pso_2(objective_function, pso_params)
     g_best = zeros(1, pso_params.itr_max+1);
     
     itr = 1;
+    img_count = 1;
+    img = {};
     
 %% init X and V
     for idx=1:pso_params.N
@@ -51,7 +54,7 @@ function [Pg, G, g_best, P, itr] = pso_2(objective_function, pso_params)
 
     G{itr} = X{f_min_idx, 1};
 
-    plot_pso(ax, P, G, itr)
+    img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N);
         
 %% update V and X
     for idx=1:pso_params.N
@@ -99,8 +102,8 @@ function [Pg, G, g_best, P, itr] = pso_2(objective_function, pso_params)
             g_best(itr) = g_best(itr-1);
         end         
 
-        if (mod(itr, 50) == 0)
-            plot_pso(ax, P, G, itr)
+        if (mod(itr, 10) == 0)
+            img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N);
         end
         
         % update V and X
@@ -115,7 +118,7 @@ function [Pg, G, g_best, P, itr] = pso_2(objective_function, pso_params)
          
     end
     
-    plot_pso(ax, P, G, itr)
+    img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N);
 
     Pg = G{itr};
 
@@ -138,14 +141,26 @@ function V = limit_velocity(V, velocity_limits)
 end
 
 %%
-function plot_pso(fig_handle, P, G, itr)
+function [img] = plot_pso(fig_handle, P, G, p_best, itr, N)
 
     P = cell2mat(P);
     hold off
-    scatter3(fig_handle, P(:,1), P(:,2), P(:,3), 15, 'filled', 'b');
+    s1 = scatter3(fig_handle, P(:,1), P(:,2), P(:,3), 5, 'filled', 'b');
     hold on
-    scatter3(fig_handle, G{itr,1}(1), G{itr,1}(2), G{itr,1}(3), 20, 'filled', 'r');
-    title(num2str(G{itr,1}))
+    s2 = scatter3(fig_handle, G{itr,1}(1), G{itr,1}(2), G{itr,1}(3), 25, 'filled', 'r');
+    set(gca,'fontweight','bold','FontSize',13);
+    xlim([-20, 100])
+    ylim([-20, 100])
+    zlim([-5, 15])
+    
+    xlabel('X (mi)','fontweight','bold','FontSize',13);
+    ylabel('Y (mi)','fontweight','bold','FontSize',13);
+    zlabel('Z (mi)','fontweight','bold','FontSize',13);
+    
+    title(strcat('Population:', 32, num2str(N), ', Iteration:', 32, num2str(itr, '%04d'), ', Error:', 32, num2str(p_best(1, itr), '%2.5g')), 'FontSize',13);
+    legend([s1, s2], {'Candidate Solutions', strcat('Global Best Solution: [', num2str(G{itr,1}(1),'%2.5f'),',',32,num2str(G{itr,1}(2),'%2.5f'),',',32,num2str(G{itr,1}(3),' %2.5f'),']')}, 'fontweight','bold', 'location', 'southoutside', 'orientation','horizontal'); 
     drawnow
+    
+    img = frame2im(getframe(gcf));
 
 end
