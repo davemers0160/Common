@@ -54,7 +54,7 @@ function [Pg, G, g_best, P, itr, img] = pso_2(objective_function, pso_params)
 
     G{itr} = X{f_min_idx, 1};
 
-    img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N);
+    img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N, pso_params.position_limits);
         
 %% update V and X
     for idx=1:pso_params.N
@@ -103,7 +103,7 @@ function [Pg, G, g_best, P, itr, img] = pso_2(objective_function, pso_params)
         end         
 
         if (mod(itr, 10) == 0)
-            img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N);
+            img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N, pso_params.position_limits);
         end
         
         % update V and X
@@ -118,7 +118,7 @@ function [Pg, G, g_best, P, itr, img] = pso_2(objective_function, pso_params)
          
     end
     
-    img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N);
+    img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N, pso_params.position_limits);
 
     Pg = G{itr};
 
@@ -141,7 +141,7 @@ function V = limit_velocity(V, velocity_limits)
 end
 
 %%
-function [img] = plot_pso(fig_handle, P, G, p_best, itr, N)
+function [img] = plot_pso(fig_handle, P, G, p_best, itr, N, position_limits)
 
     P = cell2mat(P);
     hold off
@@ -149,9 +149,9 @@ function [img] = plot_pso(fig_handle, P, G, p_best, itr, N)
     hold on
     s2 = scatter3(fig_handle, G{itr,1}(1), G{itr,1}(2), G{itr,1}(3), 25, 'filled', 'r');
     set(gca,'fontweight','bold','FontSize',13);
-    xlim([-20, 100])
-    ylim([-20, 100])
-    zlim([-5, 15])
+    xlim(position_limits(:,1))
+    ylim(position_limits(:,2))
+    zlim(position_limits(:,3))
     
     xlabel('X (mi)','fontweight','bold','FontSize',13);
     ylabel('Y (mi)','fontweight','bold','FontSize',13);
