@@ -119,6 +119,37 @@ inline void parse_line(std::string input, const char delimiter, std::vector<std:
     }
 }   // end of parse_line
 
+//-----------------------------------------------------------------------------
+template <typename T>
+inline void generate_range(T start, T stop, T step, std::vector<T>& range)
+{
+    range.clear();
+
+    T s = start;
+    if (step > 0)
+    {
+        while (s <= stop)
+        {
+            range.push_back(s);
+            s += step;
+        }
+    }
+    else if (step < 0)
+    {
+        while (s >= stop)
+        {
+            range.push_back(s);
+            s += step;
+        }
+    }
+    else
+    {
+        range.push_back(start);
+    }
+
+}   // end of generate_range
+
+
 // ----------------------------------------------------------------------------------------
 template<typename T>
 inline void parse_input_range(std::string input, std::vector<T> &range)
