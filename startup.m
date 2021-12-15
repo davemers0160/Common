@@ -5,13 +5,14 @@ fprintf('Start Up...\n\n');
 
 fprintf('Setting code root folders...\n');
 if(ispc)
-    cd('D:/Projects/');
-    dfd_root = 'D:/Projects/dfd/common/matlab/';
-    common_root = 'D:/Common/matlab/';
+    root_dir = 'C:';
+    cd(strcat(root_dir, '/Projects/'));
+    dfd_root = strcat(root_dir, '/Projects/dfd/common/matlab/');
+    common_root = strcat(root_dir, '/Projects/Common/matlab/');
 else
     cd('~/Projects/');
     dfd_root = '~/Projects/dfd/common/matlab/';
-    common_root = '~/Common/matlab/';
+    common_root = '~/Projects/Common/matlab/';
 end
 
 %% dfd root path
@@ -27,7 +28,7 @@ for idx=1:length(listing)
     end    
 end
 
-%% cOmmon root path
+%% common root path
 listing = dir(common_root);
 listing = listing(3:end);
 
@@ -42,4 +43,4 @@ end
 
 fprintf('Current directory: %s\n\n', pwd);
 
-clear idx listing dfd_root common_root
+clear root_dir idx listing dfd_root common_root
