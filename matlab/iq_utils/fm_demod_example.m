@@ -27,10 +27,10 @@ fs = 1e6;
 f_offset = 50000; 
 
 % the FM broadcast signal has a bandwidth of approximately 10 kHz
-fm_bw = 12500;
+channel_bw = 25000; %12500;
 
 % decimation rate
-dec_rate = floor(fs / fm_bw);
+dec_rate = floor(fs / channel_bw);
 
 % number of taps to create a filter
 n_taps = 64;
@@ -39,9 +39,13 @@ n_taps = 64;
 block_size = 65536*4;
 
 % create a low pass filter using the blackman window
-% lpf = blackman(n_taps, 'symmetric');
-filter_half_bw = pi()/fs * (fm_bw / 4.0);
-lpf = fir1(n_taps, filter_half_bw);
+% need to generate a conversion from the sampling rate to +/- pi
+% as an added bonus matlab goes from 0 - 1, where 1 is sampling rate / 2
+% fs/fs = 1; channel_bw/fs = 
+%freq_cutoff = pi()/(fs/2) * (channel_bw / 4.0);
+freq_cutoff = (channel_bw/2)/fs;
+
+lpf = fir1(n_taps, freq_cutoff, 'low');
 
 % create a frequency shift vector to mix the data down, generate a digital complex exponential 
 fc1 = exp(-1.0j*2.0*pi()* f_offset/fs*(0:(block_size-1)));
@@ -50,19 +54,36 @@ fc1 = exp(-1.0j*2.0*pi()* f_offset/fs*(0:(block_size-1)));
 fs_d = fs/dec_rate;
 
 % scaling for tangent
-phasor_scale = 1/((2 * pi()) / (fs_d / fm_bw));
+phasor_scale = 1/((2 * pi()) / (fs_d / channel_bw));
+
+% find a decimation rate to achieve audio sampling rate between 44-48 kHz
+audio_freq = 20000.0; 
+dec_audio = floor(fs_d/audio_freq);  
+fs_audio = fs_d / dec_audio;
 
 % number of total blocks
 num_blocks = floor(numel(iqc)/block_size);
 
 lpf_fft = fft(lpf, block_size);
 
+% print out all of the specs
+fprintf('------------------------------------------------------------------\n');
+fprintf('fs:         %d\n', fs);
+fprintf('f_offset:   %d\n', f_offset);
+fprintf('channel_bw: %d\n', channel_bw);
+fprintf('dec_rate:   %d\n', dec_rate);
+fprintf('fs_d:       %d\n', fs_d);
+fprintf('audio_freq: %d\n', audio_freq);
+fprintf('dec_audio:  %d\n', dec_audio);
+fprintf('fs_audio:   %d\n', fs_audio);
+fprintf('------------------------------------------------------------------\n');
+
 %% plot the spectrogram
 figure;
 spectrogram(iqc(1:1e6), 4096, 1024, 4096, fs, 'centered');
     
 %% block processing loop
-for idx=1:num_blocks
+for idx=1:num_blocks-1
 
     x1 = iqc((1:block_size)+(idx-1)*block_size);
     
@@ -89,12 +110,13 @@ for idx=1:num_blocks
     x4 = x3(1:dec_rate:end);
     
 
+    figure(2);
+    plot(linspace(-fs/2, fs/2, numel(x3)), 20*log10(abs(fftshift(fft(x3)/numel(x3)))),'b');
 
-    % plot the spectrum
-%     figure(1);
-%     spectrogram(x4, 2048, 1024, 2048, fs_d, 'centered');
+%     ylim([0, 90]);
 
-%     figure(2);
+
+%     figure(3);
 %     scatter(real(x4), imag(x4), '.', 'b');
 
     y5 = x4(2:end) .* conj(x4(1:end-1));
@@ -107,17 +129,20 @@ for idx=1:num_blocks
     a = [1,-x];  
     x6 = filter(b,a,x5);  
 
-    % find a decimation rate to achieve audio sampling rate between 44-48 kHz
-    audio_freq = 10000.0; 
-    dec_audio = floor(fs_d/audio_freq);  
-    fs_audio = fs_d / dec_audio;
-    
-    x7 = decimate(x6, dec_audio);
+    freq_cutoff2 = (audio_freq/2)/fs_d;
+    lpf2 = fir1(n_taps, freq_cutoff2, 'low');
+
+    y7 = filter(lpf2, 1, x6);
+    x7 = y7(1:dec_audio:end);
+%     x7 = decimate(x6, dec_audio);
 
 %     x7 = x6(1:dec_audio:end);
     % x7 = int16(x7 * 10000 / max(abs(x7(:))));
+%    x7 = x7/ max(abs(x7(:)));
+    x7 = x7/0.4;
 
-    x7 = x7/ max(abs(x7(:)));
+    figure(4)
+    plot(linspace(-fs_audio/2, fs_audio/2, numel(x7)), 20*log10(abs(fftshift(fft(x7)/numel(x7)))),'b');
 
     % play the audio
     sound(x7, fs_audio);
