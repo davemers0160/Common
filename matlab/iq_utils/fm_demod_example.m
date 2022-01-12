@@ -15,7 +15,7 @@ commandwindow;
 data_type = 'int16';
 byte_order = 'ieee-le';
 
-test_case = 1;
+test_case = 2;
 
 switch test_case
 
@@ -55,7 +55,27 @@ switch test_case
         channel_bw = 200000;
 
         % find a decimation rate to achieve audio sampling rate between 44-48 kHz
-        audio_freq = 48000; 
+        audio_freq = 48000;
+       
+    % Weather
+    case 2
+%         filename = 'D:\Projects\bladerf\rx_record\recordings\137M000_1M__64s_test.bin';
+        filename = 'D:\Projects\bladerf\rx_record\recordings\137M500_2M__60s_test.bin';
+        
+        % this is the sample rate of the capture (Hz)
+        fs = 2.0e6;        
+        
+        % number of taps to create a low pass RF filter
+        n_taps = 100;
+        
+        % offset from the center where we want to demodulate (Hz)
+        f_offset = -40000; 
+        
+        % the FM broadcast signal has a bandwidth (Hz)
+        channel_bw = 34000;
+
+        % find a decimation rate to achieve audio sampling rate between 44-48 kHz
+        audio_freq = 17000;
              
 end
 
@@ -110,7 +130,7 @@ fprintf('------------------------------------------------------------------\n');
 
 %% plot the spectrogram
 figure;
-spectrogram(iqc(1:fs), 4096, 1024, 4096, fs, 'centered');
+spectrogram(iqc(1:4*fs), 4096, 1024, 4096, fs, 'centered');
     
 %% block processing loop
 for idx=1:num_blocks-1
@@ -136,7 +156,6 @@ for idx=1:num_blocks-1
 %     spectrogram(x3, 4096, 1024, 4096, fs, 'centered');
 
     % decimate the shifted signal
-%     x3 = ifft(x3);
     x4 = x3(1:dec_rate:end);
     
 
