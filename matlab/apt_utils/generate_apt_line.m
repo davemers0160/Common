@@ -1,27 +1,27 @@
 
-function line = generate_apt_line(sync_bits, line_num, img)
+function data_line = generate_apt_line(sync_bits, line_num, img)
 
-    line = [];
+    data_line = [];
     frame_line = mod(line_num, 128);
     
     % Sync
     for idx=1:numel(sync_data)
-        line(end+1) = 255*sync_bits(idx);
+        data_line(end+1) = 255*sync_bits(idx);
     end
     
     % Space
     for idx=1:47
-        line(end+1) = 0;
+        data_line(end+1) = 0;
     end
 
     % Image
     if (line_num <= size(img,1))
         for idx=1:size(img, 2)
-            line(end+1) = img(line_num, idx);
+            data_line(end+1) = img(line_num, idx);
         end
     else
         for idx=1:size(img, 2)
-            line(end+1) = 0;
+            data_line(end+1) = 0;
         end
     end
 
@@ -33,7 +33,7 @@ function line = generate_apt_line(sync_bits, line_num, img)
             wedge = wedge + 1;
             v = floor(255.0 * (mod(wedge, 8) / 8.0));
         end
-        line(end+1) = v;
+        data_line(end+1) = v;
     end
     
 end
