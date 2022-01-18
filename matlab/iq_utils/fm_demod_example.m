@@ -137,9 +137,11 @@ figure;
 fc_rot = exp(-1.0j*2.0*pi()* f_offset/fs*(0:(4*fs-1)));
 spectrogram(iqc(1:4*fs).*fc_rot(:), 4096, 1024, 4096, fs, 'centered');
 
-x7a = [];
+
     
 %% block processing loop
+x7a = [];
+
 for idx=1:num_blocks
 
     x1 = iqc((1:block_size)+(idx-1)*block_size);
