@@ -93,13 +93,13 @@ inline std::vector<float> blackman_window(uint64_t N)
 //-----------------------------------------------------------------------------
 inline std::vector<float> nuttall_window(uint64_t N)
 {
-    std::vector<float> w(N+1, 0.0f);
+    std::vector<float> w(N, 0.0f);
     float a0 = 0.355768;
     float a1 = 0.487396;
     float a2 = 0.144232;
     float a3 = 0.012604;
 
-    for (uint64_t idx = 0; idx <= N; ++idx)
+    for (uint64_t idx = 0; idx < N; ++idx)
     {
         w[idx] = a0 - a1 * std::cos(2.0f * M_PI * idx / (double)(N)) + a2 * std::cos(4.0f * M_PI * idx / (double)(N)) - a3 * std::cos(6.0f * M_PI * idx / (double)(N));
     }

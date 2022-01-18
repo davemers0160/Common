@@ -60,26 +60,30 @@ switch test_case
     % Weather
     case 2
 %         filename = 'D:\Projects\bladerf\rx_record\recordings\137M000_1M__64s_test.bin';
-        filename = 'D:\Projects\bladerf\rx_record\recordings\137M500_2M__60s_test.bin';
+%         filename = 'D:\Projects\bladerf\rx_record\recordings\137M500_1M4__64s_test3.bin';
+        filename = 'D:\Projects\bladerf\rx_record\recordings\137M800_0M624__640s_test.bin';
         
         % this is the sample rate of the capture (Hz)
-        fs = 2.0e6;        
+%         fs = 1.4e6;
+        fs = 624000;
         
         % number of taps to create a low pass RF filter
         n_taps = 100;
         
         % offset from the center where we want to demodulate (Hz)
-        f_offset = -40000; 
+        f_offset = 112500; 
+%         f_offset = -400000; 
+%         f_offset = 412000; 
         
         % the FM broadcast signal has a bandwidth (Hz)
-        channel_bw = 34000;
+        channel_bw = 62400;
 
         % find a decimation rate to achieve audio sampling rate between 44-48 kHz
-        audio_freq = 17000;
+        audio_freq = 20800;
              
 end
 
-[iq, iqc, i_data, q_data] = read_binary_iq_data(filename, data_type, byte_order);
+[~, iqc, ~, ~] = read_binary_iq_data(filename, data_type, byte_order);
 
 
 %% setup the fequency specifics
@@ -88,7 +92,7 @@ end
 dec_rate = floor(fs / channel_bw);
 
 % size of each block to process
-block_size = 65536*8;
+block_size = 2*fs;    %65536*8;
 
 % create a low pass filter using the blackman window
 % need to generate a conversion from the sampling rate to +/- pi
@@ -130,10 +134,13 @@ fprintf('------------------------------------------------------------------\n');
 
 %% plot the spectrogram
 figure;
-spectrogram(iqc(1:4*fs), 4096, 1024, 4096, fs, 'centered');
+fc_rot = exp(-1.0j*2.0*pi()* f_offset/fs*(0:(4*fs-1)));
+spectrogram(iqc(1:4*fs).*fc_rot(:), 4096, 1024, 4096, fs, 'centered');
+
+x7a = [];
     
 %% block processing loop
-for idx=1:num_blocks-1
+for idx=1:num_blocks
 
     x1 = iqc((1:block_size)+(idx-1)*block_size);
     
@@ -166,8 +173,8 @@ for idx=1:num_blocks-1
 %     ylim([0, 90]);
 
 
-    figure(3);
-    scatter(real(x4), imag(x4), '.', 'b');
+%     figure(3);
+%     scatter(real(x4), imag(x4), '.', 'b');
 
     y5 = x4(2:end) .* conj(x4(1:end-1));
     x5 = angle(y5) * phasor_scale;
@@ -179,11 +186,11 @@ for idx=1:num_blocks-1
     a = [1,-x];  
 %     x6 = filter(b,a,x5);  
     
-    lpf_de = fir1(128, 1/(d), 'low');
-    x6 = filter(lpf_de, 1, x5);
-    
+%     lpf_de = fir1(128, 1/(d), 'low');
+%     x6 = filter(lpf_de, 1, x5);
+    x6=x5;
 
-    freq_cutoff2 = (audio_freq/2)/fs_d;
+    freq_cutoff2 = (2400*3)/fs_d;
     lpf2 = fir1(n_taps, freq_cutoff2, 'low');
 
     y7 = filter(lpf2, 1, x6);
@@ -195,10 +202,22 @@ for idx=1:num_blocks-1
 %    x7 = x7/ max(abs(x7(:)));
     x7 = x7/0.4;
 
-%     figure(4)
+    figure(4)
 %     plot(linspace(-fs_audio/2, fs_audio/2, numel(x7)), 20*log10(abs(fftshift(fft(x7)/numel(x7)))),'b');
+    spectrogram(x7, 2048, 1024, 2048, fs_audio, 'centered');
 
     % play the audio
     sound(x7, fs_audio);
+    
+    x7a = cat(1, x7a, x7);
     pause(0.2);
 end
+
+return;
+
+%% section to save the audio to a wave file
+
+
+filename = 'd:/Projects/apt-decoder-master/examples/noaa_18_2.wav';
+audiowrite(filename,x7a,20800);
+
