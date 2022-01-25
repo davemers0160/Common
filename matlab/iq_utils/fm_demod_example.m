@@ -59,9 +59,9 @@ switch test_case
        
     % Weather
     case 2
-%         filename = 'D:\Projects\bladerf\rx_record\recordings\137M000_1M__64s_test.bin';
+%         filename = 'D:\Projects\bladerf\rx_record\recordings\137M000_0M624__640s_test2.bin';
 %         filename = 'D:\Projects\bladerf\rx_record\recordings\137M500_1M4__64s_test3.bin';
-        filename = 'D:\Projects\bladerf\rx_record\recordings\137M800_0M624__640s_test.bin';
+        filename = 'D:\Projects\bladerf\rx_record\recordings\137M800_0M624__640s_test2.bin';
         
         % this is the sample rate of the capture (Hz)
 %         fs = 1.4e6;
@@ -71,12 +71,11 @@ switch test_case
         n_taps = 100;
         
         % offset from the center where we want to demodulate (Hz)
+%         f_offset = 100000; 
         f_offset = 112500; 
-%         f_offset = -400000; 
-%         f_offset = 412000; 
         
         % the FM broadcast signal has a bandwidth (Hz)
-        channel_bw = 62400;
+        channel_bw = 62400*2;
 
         % find a decimation rate to achieve audio sampling rate between 44-48 kHz
         audio_freq = 20800;
@@ -85,6 +84,7 @@ end
 
 [~, iqc, ~, ~] = read_binary_iq_data(filename, data_type, byte_order);
 
+num_samples = numel(iqc);
 
 %% setup the fequency specifics
 
@@ -134,20 +134,122 @@ fprintf('------------------------------------------------------------------\n');
 
 %% plot the spectrogram
 figure;
-fc_rot = exp(-1.0j*2.0*pi()* f_offset/fs*(0:(4*fs-1)));
-spectrogram(iqc(1:4*fs).*fc_rot(:), 4096, 1024, 4096, fs, 'centered');
+fc_rot = exp(-1.0j*2.0*pi()* (f_offset+0)/fs*(0:(30*fs-1)));
+spectrogram(iqc(1:30*fs).*fc_rot(:), 4096, 1024, 4096, fs, 'centered');
+
+% spectrogram(iqc, 4096, 1024, 4096, fs, 'centered');
+
+%% test of pll
+% phase_in    =  0.1;     % input phase (error)
+% phase_out   = 0.181;        % output phase
+% freq_out    = 0;        % output frequency
+% alpha       =  0.010;   % loop filter bandwidth
+% beta        = alpha^2;  % frequency adjustment factor
+% freq_in     = 0.16;    % input frequency (error)
+% 
+% % run loop
+% y = zeros(floor(240*fs),1);   % output signal
+% 
+% for i=1:floor(240*fs)
+%     % mix input signal down
+%     y(i) = iqc(i) * exp(-1i*phase_out);
+% 
+%     % compute true phase and frequency errors
+% %     p = arg( exp(1i*phase_in)*exp(-1i*phase_out) );
+% %     f = freq_in - freq_out;
+% 
+%     % compute phase error estimate
+%     v = y(i).^2; % QPSK: use 4th-order moment
+%     e = imag(v) / abs(v);
+% 
+%     % apply loop filter
+%     phase_out = phase_out + alpha*e;
+%     freq_out = freq_out + beta*e;
+% 
+%     % update input and output phase values
+%     phase_in = phase_in + freq_in;
+%     phase_out = phase_out + freq_out;
+% end
+
+% phd_output = [];
+% %Initilize PLL Loop 
+% phi_hat = 30; 
+% x2 = iqc(1); 
+% phd_output(1) = 0; 
+% vco = 0;
+% 
+% %Define Loop Filter parameters(Sets damping)
+% kp = 0.15; %Proportional constant 
+% ki = 0.1; %Integrator constant 
+% 
+% %PLL implementation 
+% for n=2:floor(2*fs) 
+% %     vco(n)=conj(exp(1j*(2*pi*n*f/fs+phi_hat(n-1))));%Compute VCO 
+% %     phd_output(n)=imag(Signal(n)*vco(n));%Complex multiply VCO x Signal input 
+% %     e(n)=e(n-1)+(kp+ki)*phd_output(n)-ki*phd_output(n-1);%Filter integrator 
+% %     phi_hat(n)=phi_hat(n-1)+e(n);%Update VCO 
+% 
+%     vco = conj(exp(1j*(2*pi*n*f_offset/fs+phi_hat)));%Compute VCO 
+%     phd_output(n) = imag(iqc(n)*vco);%Complex multiply VCO x Signal input 
+% %     if(phd_output(n) > 2*pi)
+% %         phd_output(n) = phd_output(n) - 2*pi;
+% %     end
+%     x2(n) = x2(n-1) + (kp+ki)*phd_output(n)-ki*phd_output(n-1);%Filter integrator 
+%     phi_hat = phi_hat + x2(n);%Update VCO 
+% 
+% end
+
+% phase_offset = 0;
+% phi_hat = 0;
+% % [y, phase_offset, frequency_offset, phi_hat] = test_fm_pll_2(iqc(1:60*fs), phase_offset, f_offset/fs, phi_hat);
+% [y] = test_fm_pll_1(iqc(1:60*fs), 3.0, f_offset/fs, 0.05);
+% 
+% 
+% bp = 1;
+
+%%
+% figure
+% spectrogram(x2, 4096, 1024, 4096, fs, 'centered');
 
 
-    
 %% block processing loop
 x7a = [];
+
+%Initilize PLL Loop 
+phi_hat = 30; 
+x2 = 0; 
+% phd_output(1) = 0;
+phd_output_0 = 0;
+phd_output_1 = 0;
+vco(1) = 0; 
+%Define Loop Filter parameters(Sets damping)
+kp = 0.15; %Proportional constant 
+ki = 0.1; %Integrator constant 
 
 for idx=1:num_blocks
 
     x1 = iqc((1:block_size)+(idx-1)*block_size);
     
     % perform the frequency rotation to put the desired frequency at 0Hz
-    x2 = x1 .* fc1(:);
+%     x2 = x1 .* fc1(:);
+    x2(1) = x1(1);
+    
+    %PLL implementation 
+    for n=2:length(x1) 
+    %     vco(n)=conj(exp(1j*(2*pi*n*f/fs+phi_hat(n-1))));%Compute VCO 
+    %     phd_output(n)=imag(Signal(n)*vco(n));%Complex multiply VCO x Signal input 
+    %     e(n)=e(n-1)+(kp+ki)*phd_output(n)-ki*phd_output(n-1);%Filter integrator 
+    %     phi_hat(n)=phi_hat(n-1)+e(n);%Update VCO 
+
+        vco = conj(exp(1j*(2*pi*n*f_offset/fs+phi_hat)));%Compute VCO 
+        phd_output_1 = imag(x1(n)*vco);%Complex multiply VCO x Signal input 
+        x2(n) = x2(n-1) + (kp+ki)*phd_output_1 - ki*phd_output_0;%Filter integrator 
+
+        phi_hat = phi_hat + x2(n);          %Update VCO 
+
+        phd_output_0 = phd_output_1;
+
+    end
 
     % plot the spectrum
 %     figure(1);
@@ -201,8 +303,8 @@ for idx=1:num_blocks
 
 %     x7 = x6(1:dec_audio:end);
     % x7 = int16(x7 * 10000 / max(abs(x7(:))));
-%    x7 = x7/ max(abs(x7(:)));
-    x7 = x7/0.4;
+%     x7 = x7/ max(abs(x7(:)));
+    %x7 = x7/0.4;
 
     figure(4)
 %     plot(linspace(-fs_audio/2, fs_audio/2, numel(x7)), 20*log10(abs(fftshift(fft(x7)/numel(x7)))),'b');
@@ -220,6 +322,6 @@ return;
 %% section to save the audio to a wave file
 
 
-filename = 'd:/Projects/apt-decoder-master/examples/noaa_18_2.wav';
+filename = 'd:/Projects/apt-decoder-master/examples/noaa18_20220121_1140.wav';
 audiowrite(filename,x7a,20800);
 
