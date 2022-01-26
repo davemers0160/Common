@@ -72,7 +72,7 @@ switch test_case
         
         % offset from the center where we want to demodulate (Hz)
 %         f_offset = 100000; 
-        f_offset = 112500; 
+        f_offset = 115000; 
         
         % the FM broadcast signal has a bandwidth (Hz)
         channel_bw = 62400*2;
@@ -134,8 +134,8 @@ fprintf('------------------------------------------------------------------\n');
 
 %% plot the spectrogram
 figure;
-fc_rot = exp(-1.0j*2.0*pi()* (f_offset+0)/fs*(0:(30*fs-1)));
-spectrogram(iqc(1:30*fs).*fc_rot(:), 4096, 1024, 4096, fs, 'centered');
+fc_rot = exp(-1.0j*2.0*pi()* (f_offset+0)/fs*(0:(300*fs-1)));
+spectrogram(iqc(1:300*fs).*fc_rot(:), 4096, 1024, 4096, fs, 'centered');
 
 % spectrogram(iqc, 4096, 1024, 4096, fs, 'centered');
 
@@ -215,67 +215,50 @@ spectrogram(iqc(1:30*fs).*fc_rot(:), 4096, 1024, 4096, fs, 'centered');
 %% block processing loop
 x7a = [];
 
-%Initilize PLL Loop 
-phi_hat = 30; 
-x2 = 0; 
-% phd_output(1) = 0;
-phd_output_0 = 0;
-phd_output_1 = 0;
-vco(1) = 0; 
-%Define Loop Filter parameters(Sets damping)
-kp = 0.15; %Proportional constant 
-ki = 0.1; %Integrator constant 
+fft_size = 65536;
+fft_bin = floor((f_offset/fs) * fft_size);
+fft_width = 128;
+
+
+% %Initilize PLL Loop 
+% phi_hat = 30; 
+% x2 = 0; 
+% % phd_output(1) = 0;
+% phd_output_0 = 0;
+% phd_output_1 = 0;
+% vco(1) = 0; 
+% %Define Loop Filter parameters(Sets damping)
+% kp = 0.15; %Proportional constant 
+% ki = 0.1; %Integrator constant 
 
 for idx=1:num_blocks
 
     x1 = iqc((1:block_size)+(idx-1)*block_size);
     
+    % find the doppler shift
+    fft_bin = floor((f_offset/fs) * fft_size);
+    fft_x1 = fft(x1, fft_size);
+    
+    [~, max_fft_idx] = max(abs(fft_x1((fft_bin-fft_width):(fft_bin+fft_width))));
+    
+    f_offset = ((fft_bin-fft_width) + max_fft_idx) * fs/fft_size;
+    fc1 = exp(-1.0j*2.0*pi()* f_offset/fs*(0:(block_size-1)));
+    
     % perform the frequency rotation to put the desired frequency at 0Hz
-%     x2 = x1 .* fc1(:);
-    x2(1) = x1(1);
-    
-    %PLL implementation 
-    for n=2:length(x1) 
-    %     vco(n)=conj(exp(1j*(2*pi*n*f/fs+phi_hat(n-1))));%Compute VCO 
-    %     phd_output(n)=imag(Signal(n)*vco(n));%Complex multiply VCO x Signal input 
-    %     e(n)=e(n-1)+(kp+ki)*phd_output(n)-ki*phd_output(n-1);%Filter integrator 
-    %     phi_hat(n)=phi_hat(n-1)+e(n);%Update VCO 
-
-        vco = conj(exp(1j*(2*pi*n*f_offset/fs+phi_hat)));%Compute VCO 
-        phd_output_1 = imag(x1(n)*vco);%Complex multiply VCO x Signal input 
-        x2(n) = x2(n-1) + (kp+ki)*phd_output_1 - ki*phd_output_0;%Filter integrator 
-
-        phi_hat = phi_hat + x2(n);          %Update VCO 
-
-        phd_output_0 = phd_output_1;
-
-    end
-
-    % plot the spectrum
-%     figure(1);
-%     spectrogram(x2, 4096, 1024, 4096, fs, 'centered');
-    
-    %x2 = fft(x2);
+    x2 = x1 .* fc1(:);
 
     % double filter the frequency shifted signal since there is a close signal
     x3 = filter(lpf, 1, x2);
 %     x3 = filter(lpf, 1, x3);
 %     x3 = x2 .* lpf_fft(:);
-    
-    % plot the spectrum
-%     figure(2);
-%     spectrogram(x3, 4096, 1024, 4096, fs, 'centered');
-
+   
     % decimate the shifted signal
     x4 = x3(1:dec_rate:end);
     
-
 %     figure(2);
-%    plot(linspace(-fs/2, fs/2, numel(x3)), 20*log10(abs(fftshift(fft(x3)/numel(x3)))),'b');
+%     plot(linspace(-fs/2, fs/2, numel(x3)), 20*log10(abs(fftshift(fft(x3)/numel(x3)))),'b');
 %     plot(linspace(-fs_d/2, fs_d/2, numel(x4)), 20*log10(abs(fftshift(fft(x4)/numel(x4)))),'b');
-
 %     ylim([0, 90]);
-
 
 %     figure(3);
 %     scatter(real(x4), imag(x4), '.', 'b');
@@ -311,10 +294,10 @@ for idx=1:num_blocks
     spectrogram(x7, 2048, 1024, 2048, fs_audio, 'centered');
 
     % play the audio
-    sound(x7, fs_audio);
+%     sound(x7, fs_audio);
     
     x7a = cat(1, x7a, x7);
-    pause(0.2);
+%     pause(0.2);
 end
 
 return;
@@ -322,6 +305,6 @@ return;
 %% section to save the audio to a wave file
 
 
-filename = 'd:/Projects/apt-decoder-master/examples/noaa18_20220121_1140.wav';
+filename = 'd:/Projects/apt-decoder-master/examples/noaa18_20220121_1140_2.wav';
 audiowrite(filename,x7a,20800);
 
