@@ -1,6 +1,6 @@
 % https://noaa-apt.mbernardi.com.ar/how-it-works.html
 
-[data, fs_a] = audioread('D:\Projects\apt-decoder-master\examples\noaa18_20220121_1140_2.wav');
+[data, fs_a] = audioread('D:\Projects\apt-decoder-master\examples\noaa19_20220129_1923.wav');
 
 % bring this back to 16-bit int
 d1 = data*32768;
@@ -22,8 +22,8 @@ for idx=2:n
 end
 
 %%
-win_size = 128;
-lpf = fir1(win_size, fb/fs_a*1.5, 'low', nuttallwin(win_size+1,'periodic'));
+win_size = 256;
+lpf = fir1(win_size, fb/fs_a, 'low', nuttallwin(win_size+1,'periodic'));
 
 d3 = filter(lpf, 1, d2);
 

@@ -36,9 +36,12 @@ switch test_case
         channel_bw = 25000;
 
         % find a decimation rate to achieve audio sampling rate between 44-48 kHz
-        audio_freq = 20000; 
+        fs_audio = 20000; 
         
-    % FM radio
+        % audio filter cutoff frequency (Hz)
+        fc_audio = 12000;
+        
+        % FM radio
     case 1
         filename = 'D:\Projects\bladerf\rx_record\recordings\096M600_1M__10s_test.bin';
         
@@ -55,13 +58,17 @@ switch test_case
         channel_bw = 200000;
 
         % find a decimation rate to achieve audio sampling rate between 44-48 kHz
-        audio_freq = 48000;
-       
+        fs_audio = 48000;
+
+        % audio filter cutoff frequency (Hz)
+        fc_audio = 24000;
+        
+        
     % Weather
     case 2
 %         filename = 'D:\Projects\bladerf\rx_record\recordings\137M000_0M624__640s_test2.bin';
 %         filename = 'D:\Projects\bladerf\rx_record\recordings\137M500_1M4__64s_test3.bin';
-        filename = 'D:\Projects\bladerf\rx_record\recordings\137M800_0M624__640s_test2.bin';
+        filename = 'D:\Projects\bladerf\rx_record\recordings\137M800_0M624__640s_test3.bin';
         
         % this is the sample rate of the capture (Hz)
 %         fs = 1.4e6;
@@ -72,13 +79,19 @@ switch test_case
         
         % offset from the center where we want to demodulate (Hz)
 %         f_offset = 100000; 
-        f_offset = 115000; 
+        f_offset = 116000; 
+        
+        % rf frequency filter cutoff
+        fc_rf = 62400;
         
         % the FM broadcast signal has a bandwidth (Hz)
         channel_bw = 62400*2;
 
         % find a decimation rate to achieve audio sampling rate between 44-48 kHz
-        audio_freq = 20800;
+        fs_audio = 20800;
+        
+        % audio filter cutoff frequency (Hz)
+        fc_audio = 2400*3;
              
 end
 
@@ -92,14 +105,14 @@ num_samples = numel(iqc);
 dec_rate = floor(fs / channel_bw);
 
 % size of each block to process
-block_size = 2*fs;    %65536*8;
+block_size = fs;    %65536*8;
 
 % create a low pass filter using the blackman window
 % need to generate a conversion from the sampling rate to +/- pi
 % as an added bonus matlab goes from 0 - 1, where 1 is sampling rate / 2
 % fs/fs = 1; channel_bw/fs = 
 %freq_cutoff = pi()/(fs/2) * (channel_bw / 4.0);
-freq_cutoff = (channel_bw/2)/fs;
+freq_cutoff = fc_rf/fs;
 lpf = fir1(n_taps, freq_cutoff, 'low');
 
 % create a frequency shift vector to mix the data down, generate a digital complex exponential 
@@ -111,14 +124,13 @@ fs_d = fs/dec_rate;
 % scaling for tangent
 phasor_scale = 1/((2 * pi()) / (fs_d / channel_bw));
 
-
-dec_audio = floor(fs_d/audio_freq);  
+dec_audio = floor(fs_d/fs_audio);  
 fs_audio = fs_d / dec_audio;
 
 % number of total blocks
-num_blocks = floor(numel(iqc)/block_size);
+num_blocks = floor((num_samples)/block_size);
 
-lpf_fft = fft(lpf, block_size);
+% lpf_fft = fft(lpf, block_size);
 
 % print out all of the specs
 fprintf('------------------------------------------------------------------\n');
@@ -127,16 +139,32 @@ fprintf('f_offset:   %d\n', f_offset);
 fprintf('channel_bw: %d\n', channel_bw);
 fprintf('dec_rate:   %d\n', dec_rate);
 fprintf('fs_d:       %d\n', fs_d);
-fprintf('audio_freq: %d\n', audio_freq);
+fprintf('audio_freq: %d\n', fs_audio);
 fprintf('dec_audio:  %d\n', dec_audio);
 fprintf('fs_audio:   %d\n', fs_audio);
 fprintf('------------------------------------------------------------------\n');
 
-%% plot the spectrogram
-figure;
-fc_rot = exp(-1.0j*2.0*pi()* (f_offset+0)/fs*(0:(300*fs-1)));
-spectrogram(iqc(1:300*fs).*fc_rot(:), 4096, 1024, 4096, fs, 'centered');
 
+%% do a rough frequency shift and the filter and downsample
+
+fc_rot = exp(-1.0j*2.0*pi()* f_offset/fs*(0:(100*fs-1)));
+
+% perform the frequency rotation to put the desired frequency at 0Hz
+x2 = iqc(1:100*fs) .* fc_rot(:);
+
+% filter the frequency shifted signal since there is a close signal
+x3 = filter(lpf, 1, x2);
+
+% decimate the shifted signal
+iqc_d = x3(1:dec_rate:end);
+
+% plot the spectrogram
+figure;
+% fc_rot = exp(-1.0j*2.0*pi()* (f_offset+0)/fs*(0:(300*fs-1)));
+% spectrogram(iqc(1:300*fs).*fc_rot(:), 4096, 1024, 4096, fs, 'centered');
+spectrogram(iqc_d, 4096, 1024, 4096, fs_d, 'centered');
+
+bp = 1;
 % spectrogram(iqc, 4096, 1024, 4096, fs, 'centered');
 
 %% test of pll
@@ -215,7 +243,7 @@ spectrogram(iqc(1:300*fs).*fc_rot(:), 4096, 1024, 4096, fs, 'centered');
 %% block processing loop
 x7a = [];
 
-fft_size = 65536;
+fft_size = 65536*2;
 fft_bin = floor((f_offset/fs) * fft_size);
 fft_width = 128;
 
@@ -239,23 +267,27 @@ for idx=1:num_blocks
     fft_bin = floor((f_offset/fs) * fft_size);
     fft_x1 = fft(x1, fft_size);
     
-    [~, max_fft_idx] = max(abs(fft_x1((fft_bin-fft_width):(fft_bin+fft_width))));
+    [max_fft(idx), max_fft_idx] = max(abs(fft_x1((fft_bin-fft_width):(fft_bin+fft_width))));
     
     f_offset = ((fft_bin-fft_width) + max_fft_idx) * fs/fft_size;
     fc1 = exp(-1.0j*2.0*pi()* f_offset/fs*(0:(block_size-1)));
+    
+    f_off(idx) = f_offset;
     
     % perform the frequency rotation to put the desired frequency at 0Hz
     x2 = x1 .* fc1(:);
 
     % double filter the frequency shifted signal since there is a close signal
-    x3 = filter(lpf, 1, x2);
+     x3 = filter(lpf, 1, x2);
 %     x3 = filter(lpf, 1, x3);
 %     x3 = x2 .* lpf_fft(:);
    
     % decimate the shifted signal
-    x4 = x3(1:dec_rate:end);
+     x4 = x3(1:dec_rate:end);
     
 %     figure(2);
+%     subplot(1,2,1);
+%     spectrogram(x4, 2048, 1024, 2048, fs_d, 'centered');
 %     plot(linspace(-fs/2, fs/2, numel(x3)), 20*log10(abs(fftshift(fft(x3)/numel(x3)))),'b');
 %     plot(linspace(-fs_d/2, fs_d/2, numel(x4)), 20*log10(abs(fftshift(fft(x4)/numel(x4)))),'b');
 %     ylim([0, 90]);
@@ -263,6 +295,7 @@ for idx=1:num_blocks
 %     figure(3);
 %     scatter(real(x4), imag(x4), '.', 'b');
 
+    % https://www.veron.nl/wp-content/uploads/2014/01/FmDemodulator.pdf
     y5 = x4(2:end) .* conj(x4(1:end-1));
     x5 = angle(y5) * phasor_scale;
 
@@ -277,8 +310,8 @@ for idx=1:num_blocks
 %     x6 = filter(lpf_de, 1, x5);
     x6=x5;
 
-    freq_cutoff2 = (2400*3)/fs_d;
-    lpf2 = fir1(n_taps, freq_cutoff2, 'low');
+    freq_cutoff2 = fc_audio/fs_d;
+    lpf2 = fir1(256, freq_cutoff2, 'low');
 
     y7 = filter(lpf2, 1, x6);
     x7 = y7(1:dec_audio:end);
@@ -290,14 +323,17 @@ for idx=1:num_blocks
     %x7 = x7/0.4;
 
     figure(4)
+%     subplot(1,2,2);
+
 %     plot(linspace(-fs_audio/2, fs_audio/2, numel(x7)), 20*log10(abs(fftshift(fft(x7)/numel(x7)))),'b');
     spectrogram(x7, 2048, 1024, 2048, fs_audio, 'centered');
-
+    drawnow;
+    
     % play the audio
-%     sound(x7, fs_audio);
+    sound(x7, fs_audio);
     
     x7a = cat(1, x7a, x7);
-%     pause(0.2);
+    pause(0.2);
 end
 
 return;
@@ -305,6 +341,6 @@ return;
 %% section to save the audio to a wave file
 
 
-filename = 'd:/Projects/apt-decoder-master/examples/noaa18_20220121_1140_2.wav';
-audiowrite(filename,x7a,20800);
+filename = 'd:/Projects/apt-decoder-master/examples/noaa18_20220130_1130.wav';
+audiowrite(filename, x7a*2, 20800);
 
