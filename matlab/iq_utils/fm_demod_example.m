@@ -79,7 +79,7 @@ switch test_case
         
         % offset from the center where we want to demodulate (Hz)
 %         f_offset = 100000; 
-        f_offset = 116000; 
+        f_offset = 115000; 
         
         % rf frequency filter cutoff
         fc_rf = 62400;
@@ -162,7 +162,7 @@ iqc_d = x3(1:dec_rate:end);
 figure;
 % fc_rot = exp(-1.0j*2.0*pi()* (f_offset+0)/fs*(0:(300*fs-1)));
 % spectrogram(iqc(1:300*fs).*fc_rot(:), 4096, 1024, 4096, fs, 'centered');
-spectrogram(iqc_d, 4096, 1024, 4096, fs_d, 'centered');
+spectrogram(iqc_d/2048, 4096, 1024, 4096, fs_d, 'centered');
 
 bp = 1;
 % spectrogram(iqc, 4096, 1024, 4096, fs, 'centered');
@@ -322,18 +322,18 @@ for idx=1:num_blocks
 %     x7 = x7/ max(abs(x7(:)));
     %x7 = x7/0.4;
 
-    figure(4)
+%     figure(4)
 %     subplot(1,2,2);
 
 %     plot(linspace(-fs_audio/2, fs_audio/2, numel(x7)), 20*log10(abs(fftshift(fft(x7)/numel(x7)))),'b');
-    spectrogram(x7, 2048, 1024, 2048, fs_audio, 'centered');
-    drawnow;
+%     spectrogram(x7, 2048, 1024, 2048, fs_audio, 'centered');
+%     drawnow;
     
     % play the audio
-    sound(x7, fs_audio);
+%     sound(x7, fs_audio);
     
     x7a = cat(1, x7a, x7);
-    pause(0.2);
+%     pause(0.2);
 end
 
 return;
@@ -341,6 +341,6 @@ return;
 %% section to save the audio to a wave file
 
 
-filename = 'd:/Projects/apt-decoder-master/examples/noaa18_20220130_1130.wav';
-audiowrite(filename, x7a*2, 20800);
+filename = 'd:/Projects/apt-decoder-master/examples/noaa18_202202013_1201.wav';
+audiowrite(filename, x7a*3.5, 20800);
 

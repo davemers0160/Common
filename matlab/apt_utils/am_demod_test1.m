@@ -1,6 +1,6 @@
 % https://noaa-apt.mbernardi.com.ar/how-it-works.html
 
-[data, fs_a] = audioread('D:\Projects\apt-decoder-master\examples\noaa19_20220129_1923.wav');
+[data, fs_a] = audioread('D:\Projects\apt-decoder-master\examples\noaa18_202202013_1201.wav');
 
 % bring this back to 16-bit int
 d1 = data*32768;
