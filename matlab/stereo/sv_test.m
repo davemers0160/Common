@@ -30,7 +30,7 @@ a = 0.095;
 px_size = 3.45e-6;
 
 % max angle for each lens
-max_a = atan2(f, a/2);
+max_a = atan2(a/2, f);
 
 % location of point on x-axis (m)
 % x = 0.0*b;
@@ -80,4 +80,11 @@ scatter(x_r + b, f*ones(numel(x_r),1), 15, 'or', 'filled');
 scatter(x, z, 20, 'ok', 'filled');
 
 scatter(x, Z, 10, 'og', 'filled');
+
+plot([0, -1000*tan(max_a)], [0, 1000], 'k')
+plot([0, 1000*tan(max_a)], [0, 1000], 'k')
+
+plot([b, b-1000*tan(max_a)], [0, 1000], 'k')
+plot([b, b+1000*tan(max_a)], [0, 1000], 'k')
+
 
