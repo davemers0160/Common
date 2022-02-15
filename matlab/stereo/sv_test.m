@@ -13,16 +13,6 @@ commandwindow;
 
 %% setup a bunch of the parameters to describe the problem
 
-% number of measurements to try
-num = 1000;
-
-% min and max distances
-z_min = 500;
-z_max = 1100;
-
-% distance from camera to object (m)
-z = 10*randi([0 60], num, 1) + z_min;
-
 % focal length (m)
 f = 1.45;
 
@@ -38,6 +28,16 @@ px_size = (3.45e-6)/2;
 % max angle for each lens
 max_a = atan2(a/2, f);
 
+% number of measurements to try
+num = 1000;
+
+% min and max distances
+z_min = (b/2)/tan(max_a);       % intersection point of the limiting rays for the lenses
+z_max = 1100;
+
+% distance from camera to object (m)
+z = floor(((z_max-z_min)/60*randi([1 60], num, 1) + z_min)/10)*10;
+
 % location of point on x-axis (m)
 % r = a + (b-a).*rand(N,1).
 x = zeros(num, 1);
@@ -48,8 +48,8 @@ end
 %%
 
 % calculate angles
-theta_l = atan2(x, z);
-theta_r = atan2(x-b, z);
+theta_l = atan2(x, z+1e-6);
+theta_r = atan2(x-b, z+1e-6);
 
 % calculate the disparity parts
 x_l = f*tan(theta_l);
