@@ -24,7 +24,7 @@ z_max = 1100;
 z = 10*randi([0 60], num, 1) + z_min;
 
 % focal length (m)
-f = .45;
+f = 1.45;
 
 % camera baseline (distance between cameras) (m)
 b = 0.5;
@@ -72,11 +72,8 @@ hold on
 plot([-a/2,a/2], [f,f], 'k')
 plot([b-a/2, b+a/2], [f,f], 'k')
 
-
 for idx=1:numel(z)
-    
     plot([0, x(idx)], [0, z(idx)], 'b')
-
     plot([b, x(idx)], [0, z(idx)], 'r')
 end
 
@@ -101,6 +98,14 @@ z_range = z_min:0.5:z_max;
 
 [x_g, z_g] = meshgrid(x_range, z_range);
 
+for idx=1:numel(z_range)
+    x_map = (x_g(idx,:) >= (z_range(idx)*tan(-max_a))) & (x_g(idx,:) <= (z_range(idx)*tan(max_a)));
+    
+    x_g(idx, ~x_map) = NaN;
+    z_g(idx, ~x_map) = NaN;
+    bp = 1;
+end
+
 % calculate angles
 theta_lg = atan2(x_g, z_g);
 theta_rg = atan2(x_g-b, z_g);
@@ -114,9 +119,7 @@ x_rq = ceil(x_r/px_size) * px_size;
 
 % calculate the quantized distance
 d_q = x_lq - x_rq;
-
 Z_q = f * b ./ d_q;
-
 
 % calculate the error (L1)
 Z_err = abs(z_g - Z_q);
