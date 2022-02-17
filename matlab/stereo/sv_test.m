@@ -14,19 +14,26 @@ commandwindow;
 %% setup a bunch of the parameters to describe the problem
 
 % focal length (m)
-f = 1.45;
+f = 0.82;
 
 % camera baseline (distance between cameras) (m)
-b = 0.5;
+b = 0.4;
 
 % lens aperature (m)
-a = 0.095;
+%a = 0.095;
 
 % pixel size
-px_size = (3.45e-6)/2;
+px_size = (3.45e-6);
+half_px_size = px_size/2;
+
+% number of pixels in the image - equivalent to image width or height
+px_num = 1024;
+
+% size of image (m)
+imger_size = px_num * px_size;
 
 % max angle for each lens
-max_a = atan2(a/2, f);
+max_a = atan2(imger_size/2, f);
 
 % number of measurements to try
 num = 1000;
@@ -53,10 +60,10 @@ theta_r = atan2(x-b, z+1e-6);
 
 % calculate the disparity parts
 x_l = f*tan(theta_l);
-x_l = ceil(x_l/px_size) * px_size;
+x_l = ceil(x_l/half_px_size) * half_px_size;
 
 x_r = f * tan(theta_r);
-x_r = ceil(x_r/px_size) * px_size;
+x_r = ceil(x_r/half_px_size) * half_px_size;
 
 %% calculate the disparity
 
@@ -69,8 +76,8 @@ figure
 
 hold on
 
-plot([-a/2,a/2], [f,f], 'k')
-plot([b-a/2, b+a/2], [f,f], 'k')
+plot([-imger_size/2, imger_size/2], [f,f], 'k')
+plot([b - imger_size/2, b + imger_size/2], [f,f], 'k')
 
 for idx=1:numel(z)
     plot([0, x(idx)], [0, z(idx)], 'b')
@@ -112,10 +119,10 @@ theta_rg = atan2(x_g-b, z_g);
 
 % calculate the disparity parts
 x_l = f*tan(theta_lg);
-x_lq = ceil(x_l/px_size) * px_size;
+x_lq = ceil(x_l/half_px_size) * half_px_size;
 
 x_r = f * tan(theta_rg);
-x_rq = ceil(x_r/px_size) * px_size;
+x_rq = ceil(x_r/half_px_size) * half_px_size;
 
 % calculate the quantized distance
 d_q = x_lq - x_rq;
