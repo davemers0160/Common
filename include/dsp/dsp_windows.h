@@ -121,7 +121,7 @@ std::vector<float> create_fir_filter(uint64_t N, float fc, funct window_function
         if (abs((double)idx -  (N / 2.0f)) < 1e-6)
             g[idx] = w[idx] * fc;
         else
-            g[idx] = w[idx] * (std::sin(M_PI * fc * (idx - N / 2.0f)) / (M_PI * (idx - N / 2.0f)));
+            g[idx] = w[idx] * (std::sin(M_PI * fc * (idx - (N>>1))) / (M_PI * (idx - (N>>1))));
     }
 
     return g;
