@@ -1,6 +1,6 @@
 % function SR = maxmimal_length_seq(reg_length)
 %
-%	input: re_length => number of elements to use to generate the shift register
+%	input: reg_length => number of elements to use to generate the shift register
 %						to generate the Maximal Length Sequence
 %	output: SR => The final sequence condition to range between +1 and -1
 %

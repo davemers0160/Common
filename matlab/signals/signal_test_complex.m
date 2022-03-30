@@ -13,14 +13,20 @@ plot_num = 1;
 commandwindow;
 
 %% generate the base pulse train
-
 % 13-bit barker code
-%x = [1, 1, 1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1];
-x = maxmimal_length_seq(6);
+% x = [1, 1, 1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1];
+x = maxmimal_length_seq(4);
+
+% exapnd signal
+x = repelem(x, 10);
+
 x_length = length(x);
 
 % convert to complex
-xc = x.*((1j).^(0:x_length-1));
+% circular complex
+% xc = x.*((1j).^(0:x_length-1));
+xc = complex(x, zeros(1, x_length));
+
 ang = angle(xc)*180/pi;
 ang(ang < 0) = ang(ang < 0) + 360;
 
@@ -44,7 +50,7 @@ plot_num  = plot_num + 1;
 start = 50;
 
 % number of samples to place between pulses
-pulse_spacing = 200 - x_length;
+pulse_spacing = 1000 - x_length;
 
 % number of pulses
 pulse_num = 12;
@@ -77,7 +83,8 @@ plot_num  = plot_num + 1;
 %% generate 4 pulse trains that vary in start time
 num = 3;
 max_offset = 100;
-noise_factor = 0.75;
+noise_factor = 0.1;
+fs = 1e6;
 
 % generate a random offset
 off = [];
@@ -98,6 +105,10 @@ for idx=1:num
     fprintf('%d ', off(idx)+start+1);
     
 end
+
+figure(plot_num);
+spectrogram(sn(1,:), 512, 256, 1024, fs, 'centered');
+plot_num = plot_num + 1;
 
 fprintf('\n\n');
 
