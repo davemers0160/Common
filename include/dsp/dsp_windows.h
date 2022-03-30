@@ -123,7 +123,7 @@ inline std::vector<float> blackman_nuttall_window(int64_t N)
     }
 
     return w;
-}   // end of nuttall_window
+}   // end of blackman_nuttall_window
 
 
 //-----------------------------------------------------------------------------
