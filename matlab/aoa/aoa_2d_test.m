@@ -1,9 +1,10 @@
 %% Angle of Arrival Calculations
 % Assumptions:
 % 1. Everything is 3-D but if we assume that the Z component is at 0 height
-% we can project everything to a 2-D plane
-% 2. We are working in a Cartessian Coordinate System (CCS) (Local Tangent Plane,
-% ECEF, ect...)
+% we can project everything to a 2-D hyper-plane (either project to z=0 or 
+% a plane that passes through all points)
+% 2. We are working in a Cartesian Coordinate System (CCS) (Local Tangent Plane,
+% ECEF, etc...)
 % 3. The conversion from the CCS to a Polar Coordinate System and back is
 % well defined
 % 4. Solution uses Least Squares to solve and assumes we have all of the
