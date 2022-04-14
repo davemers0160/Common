@@ -1,4 +1,4 @@
-%% Angle of Arrival Calculations
+% Angle of Arrival Calculations
 % Assumptions:
 % 1. Everything is 3-D but if we assume that the Z component is at 0 height
 % we can project everything to a 2-D hyper-plane (either project to z=0 or 
@@ -41,7 +41,9 @@ T = [10, 180];
 % get the dimensions of the data
 [N, D] = size(P);
 
-% calculate the angles of arrival 
+% calculate the angles of arrival <- typically this is a measured value
+% but we can really do that here.  The AoA is in absolute angle 0-360
+% degrees
 AoA = zeros(N, 1);
 for idx=1:N
     AoA(idx) = atan2d(T(2)-P(idx,2), T(1)-P(idx,1));
