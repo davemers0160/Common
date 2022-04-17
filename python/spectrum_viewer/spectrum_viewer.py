@@ -44,7 +44,11 @@ adc_bits = Spinner(title="ADC Bits", low=-0, high=32, step=1, value=12, width=sp
 # stop_time = Spinner(title="Stop Time (s)", low=0, high=2e9, step=0.000001, value=1, width=spin_width)
 
 # source for the spectrogram
-spectrogram_source = ColumnDataSource(data=dict(spectrogram_img=[], x=[], y=[], dw=[], dh=[]))
+spectrogram_source = ColumnDataSource(data=dict(spectrogram_img=[], f=[], t=[], x=[], y=[], dw=[], dh=[]))
+
+hover = HoverTool(tooltips=[('Freq (MHz)', '@f'), ('Time (s)', '@t'), ('Amplitude (dBm)', '@spectrogram_img')])
+hover.point_policy = 'snap_to_data'
+hover.line_policy = 'nearest'  #'prev'
 
 # -----------------------------------------------------------------------------
 def jet_clamp(v):
@@ -112,7 +116,7 @@ def generate_spectrogram(iq_data, N, O, fs):
     quit_loop = False
 
     if O >= N:
-        O = N/2
+        O = N//2
 
     for k in range(0, iq_data.shape[0] + 1, N-O):
         iq = iq_data[k:(k + N)]
@@ -147,15 +151,15 @@ def update_plot(attr, old, new):
     global iq_data, spectrogram_data
 
     # print("update")
-    spectrogram_data, f, t = generate_spectrogram(iq_data, fft_length.value, fft_overlap.value, sample_rate.value*1e6)
+    spectrogram_data, freq, time = generate_spectrogram(iq_data, fft_length.value, fft_overlap.value, sample_rate.value*1e6)
     # f, t, spectrogram_data = signal.spectrogram(iq_data, sample_rate.value, window=signal.windows.hamming(fft_length.value, sym=True),
     #                                             nperseg=fft_length.value, noverlap=fft_overlap.value, return_onesided=False,
     #                                             detrend=False, mode='complex',
-    #                                             scaling='spectrum'
-    #                                             )
+    #                                             scaling='spectrum')
     # spectrogram_data = np.fft.fftshift(np.nan_to_num((20 * np.log10(np.abs(spectrogram_data*np.conj(spectrogram_data)))), neginf=-200, posinf=200).T, axes=1)
 
-    spectrogram_source.data = {'spectrogram_img': [spectrogram_data], 'x': [np.min(f)], 'y': [0], 'dw': [sample_rate.value], 'dh': [np.max(t)]}
+    spectrogram_source.data = {'spectrogram_img': [spectrogram_data], 'x': [np.min(freq)], 'y': [0],
+                               'dw': [sample_rate.value], 'dh': [np.max(time)], 't': [time], 'f': [freq]}
     # spectrogram_source.data = {'spectrogram_img': [spectrogram_data]}
 
     # spectrogram_fig.image(image='spectrogram_img', x=-10, y=0, dw=20, dh=0.5, global_alpha=1.0, dilate=False, palette=jet_1k, source=spectrogram_source)
@@ -166,8 +170,9 @@ def update_plot(attr, old, new):
 def get_input():
     global iq_filename, iq_data_path, iq_data, spectrogram_data, f, t
 
-    # iq_filename = QFileDialog.getOpenFileName(None, "Select a file",  iq_data_path, "IQ files (*.bin *.dat);;All files (*.*)")
-    iq_filename = ["D:/Projects/rf_zsl/data/sdr_test_10M_100m_0000.bin"]
+    iq_filename = QFileDialog.getOpenFileName(None, "Select a file",  iq_data_path, "IQ files (*.bin *.dat);;All files (*.*)")
+    # iq_filename = ["D:/Projects/rf_zsl/data/sdr_test_10M_100m_0000.bin"]
+
     filename_div.text = "File name: " + iq_filename[0]
     if(iq_filename[0] == ""):
         return
@@ -193,7 +198,7 @@ def get_input():
 # the main entry point into the code
 file_select_btn = Button(label='Select File', width=100)
 file_select_btn.on_click(get_input)
-filename_div = Div(width=800, text="File name: ", style={'font-size': '100%', 'font-weight': 'bold'})
+filename_div = Div(width=800, text="File name: ", style={'font-size': '120%', 'font-weight': 'bold'})
 
 jet_1k = jet_colormap(10)
 
@@ -201,21 +206,31 @@ get_input()
 
 # define the main plot
 spectrogram_fig = figure(plot_height=800, plot_width=1300, title="Spectrogram",
-                         # x_range=[str(x) for x in range(0, 2)], y_range=[str(x) for x in range(0, 2)],
                          toolbar_location="right",
-                         tooltips=[('Freq = ', '$x'), ('Time = ', '$y'), ('amp', '@spectrogram_img')],
-                         tools="hover, save, pan, box_zoom, reset, wheel_zoom", active_drag="box_zoom",
+                         tooltips=[('Freq (MHz)', '$x'), ('Time (s)', '$y'), ('Amplitude (dBm)', '@spectrogram_img')],
+                         tools="save, pan, box_zoom, reset, wheel_zoom, hover, crosshair", active_drag="box_zoom",
                          active_scroll="wheel_zoom", active_inspect=None)
 
-# update_plot(1, 1, 1)
-
+# spectrogram_fig.add_tools(hover)
 
 # spectrogram_fig.image(image='spectrogram_img', x=-5, y=0, dw=10, dh=0.1, global_alpha=1.0, dilate=False, palette=jet_1k, source=spectrogram_source)
 spectrogram_fig.image(image='spectrogram_img', x='x', y='y', dw='dw', dh='dh', global_alpha=1.0, dilate=False, palette=jet_1k, source=spectrogram_source)
-# spectrogram_fig.image_rgba(image=[img], x=0, y=0, dw=spectrogram_data.shape[1], dh=spectrogram_data.shape[0], global_alpha=1.0, dilate=False)
 spectrogram_fig.x_range.range_padding = 0
 spectrogram_fig.y_range.range_padding = 0
 
+# x-axis formatting
+spectrogram_fig.xaxis.major_label_text_font_size = "12pt"
+spectrogram_fig.xaxis.major_label_text_font_style= "bold"
+spectrogram_fig.xaxis.axis_label_text_font_size = "15pt"
+spectrogram_fig.xaxis.axis_label_text_font_style = "bold"
+spectrogram_fig.xaxis.axis_label = "Frequency (MHz)"
+
+# y-axis formatting
+spectrogram_fig.yaxis.major_label_text_font_size = "12pt"
+spectrogram_fig.yaxis.major_label_text_font_style= "bold"
+spectrogram_fig.yaxis.axis_label_text_font_size = "15pt"
+spectrogram_fig.yaxis.axis_label_text_font_style = "bold"
+spectrogram_fig.yaxis.axis_label = "Time (s)"
 
 # setup the event callbacks for the plot
 for w in [fft_length, fft_overlap, sample_rate]:
