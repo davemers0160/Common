@@ -5,6 +5,8 @@ import os
 import numpy as np
 import cv2 as cv
 
+from scipy import signal
+
 # File dialog stuff
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QFileDialog, QWidget, QApplication
@@ -22,24 +24,27 @@ iq_filename = ""
 iq_data_path = os.path.dirname(os.path.dirname(script_path))
 
 iq_data = []
+spectrogram_data = []
+f = []
+t = []
 
 spin_width = 110
 
 app = QApplication([""])
 
-# source for the spectrogram
-spectrogram_source = ColumnDataSource(data=dict(spectrogram_data=[], freq_range=[], time_range=[]))
 
 # interactive control definitions
-fft_length = Spinner(title="FFT Length", low=2, high=2**32, step=2, value=32, width=spin_width)
-fft_overlap = Spinner(title="FFT Overlap", low=0, high=2**32, step=1, value=0, width=spin_width)
-sample_rate = Spinner(title="Sample Rate (MHz)", low=0, high=2000, step=0.1, value=20, width=spin_width)
-start_time = Spinner(title="Start Time (s)", low=0, high=2e9, step=0.000001, value=0, width=spin_width)
-stop_time = Spinner(title="Stop Time (s)", low=0, high=2e9, step=0.000001, value=1, width=spin_width)
+fft_length = Spinner(title="FFT Length", low=2, high=2**32, step=2, value=2048, width=spin_width)
+fft_overlap = Spinner(title="FFT Overlap", low=0, high=2**32, step=1, value=1024, width=spin_width)
+sample_rate = Spinner(title="Sample Rate (MHz)", low=0, high=2000, step=0.1, value=10, width=spin_width)
+max_amp = Spinner(title="Max (dBm)", low=-200, high=100, step=0.1, value=0, width=spin_width)
+min_amp = Spinner(title="Min (dBm)", low=-200, high=100, step=0.1, value=-120, width=spin_width)
+adc_bits = Spinner(title="ADC Bits", low=-0, high=32, step=1, value=12, width=spin_width)
+# window_size = Spinner(title="Window Sie", low=0, high=2e9, step=1, value=2048, width=spin_width)
+# stop_time = Spinner(title="Stop Time (s)", low=0, high=2e9, step=0.000001, value=1, width=spin_width)
 
-# define the main plot
-spectrogram_fig = figure(plot_height=800, plot_width=1300)
-
+# source for the spectrogram
+spectrogram_source = ColumnDataSource(data=dict(spectrogram_img=[], x=[], y=[], dw=[], dh=[]))
 
 # -----------------------------------------------------------------------------
 def jet_clamp(v):
@@ -47,36 +52,45 @@ def jet_clamp(v):
     v[v > 1] = 1
     return v
 
-def blues(n):
+def jet_colormap(n):
+    t_max = n+100
+    t_min = 100
 
-    index = np.transpose(np.arange(n) * (12 / (n-1)))
+    t_range = t_max - 0
+    t_avg = (t_max + 0) / 2.0
+    t_m = (t_max - t_avg) / 2.0
 
-    color_map = np.empty((n, 3), dtype=np.uint8)
+    t = np.arange(0, t_max)
 
-    color_map[:, 0] = np.floor(255*(-0.0724*index + 0.93)).astype(np.uint8)
-    color_map[:, 1] = np.floor(255*(-0.0541*index + 0.95)).astype(np.uint8)
-    color_map[:, 2] = np.floor(255*(-0.0350*index + 1.00)).astype(np.uint8)
+    rgb = np.empty((t_max, 3), dtype=np.uint8)
+    rgb[:, 0] = (255*jet_clamp(1.5 - abs((4 / t_range)*(t - t_avg - t_m)))).astype(np.uint8)
+    rgb[:, 1] = (255*jet_clamp(1.5 - abs((4 / t_range)*(t - t_avg)))).astype(np.uint8)
+    rgb[:, 2] = (255*jet_clamp(1.5 - abs((4 / t_range)*(t - t_avg + t_m)))).astype(np.uint8)
 
-    return color_map
+    cm = ['#000000']
+    for z in rgb:
+        cm.append(("#" + ("{:0>2x}" * len(z))).format(*z))
+
+    return cm
 
 # -----------------------------------------------------------------------------
-def jet(n):
+def jet_color(t, t_min, t_max):
 
-    t_max = n
-    t_min = 0
     t_range = t_max - t_min
 
     p1 = t_min + t_range * (1 / 4)
     p2 = t_min + t_range * (2 / 4)
     p3 = t_min + t_range * (3 / 4)
 
-    color_map = np.empty((n, 3), dtype=np.uint8)
+    rgba = np.empty((t.shape[0], t.shape[1], 4), dtype=np.uint8)
 
-    color_map[:, 0] = (255*jet_clamp((1.0 / (p3 - p2)))).astype(np.uint8)
-    color_map[:, 1] = (255*jet_clamp(2.0 - (1.0 / (p1 - t_min)))).astype(np.uint8)
-    color_map[:, 2] = (255*jet_clamp((1.0 / (p1 - p2)))).astype(np.uint8)
+    rgba[:, :, 0] = (255*jet_clamp((1.0 / (p3 - p2)) * (t - p2))).astype(np.uint8)
+    rgba[:, :, 1] = (255*jet_clamp(2.0 - (1.0 / (p1 - t_min)) * abs(t - p2))).astype(np.uint8)
+    rgba[:, :, 2] = (255*jet_clamp((1.0 / (p1 - p2)) * (t - p2))).astype(np.uint8)
 
-    return color_map
+    rgba[:, :, 3] = np.full((t.shape[0], t.shape[1]), 255, dtype=np.uint8)
+
+    return rgba
 
 
 def rgb2hex(data):
@@ -90,96 +104,89 @@ def rgb2hex(data):
 
     return cm
 
-
 # -----------------------------------------------------------------------------
 def generate_spectrogram(iq_data, N, O, fs):
 
-    S = []
-    for k in range(0, iq_data.shape[0] + 1, N-O):
-        x = np.fft.fftshift(np.fft.fft(iq_data[k:k + N], n=N))//N
-        # assert np.allclose(np.imag(x*np.conj(x)), 0)
-        Pxx = 20 * np.log10(np.real(x*np.conj(x)))
-        S.append(Pxx)
+    spectrogram_data = []
+    win = np.hamming(N)
+    quit_loop = False
 
-    S = np.array(S)
+    if O >= N:
+        O = N/2
+
+    for k in range(0, iq_data.shape[0] + 1, N-O):
+        iq = iq_data[k:(k + N)]
+        if (iq.size < N):
+            iq = np.pad(iq, (0, N-iq.size), 'constant')
+            quit_loop = True
+
+        windowed_iq = iq * win
+        x = np.fft.fftshift(np.fft.fft(windowed_iq, n=N))/(N*100)
+
+        Pxx = 20 * np.log10(np.abs(x)) + 10
+        # Pxx = 20 * np.log10(np.abs(x*np.conj(x)))
+        spectrogram_data.append(Pxx)
+
+        if (quit_loop == True):
+            break
+
+    spectrogram_data = np.array(spectrogram_data)
+    spectrogram_data = np.nan_to_num(spectrogram_data, neginf=-200, posinf=200)
 
     # Frequencies:
-    f = np.fft.fftshift(np.fft.fftfreq(N, d=1 / fs))
+    f = np.arange(fs/-2.0, fs/2.0, fs/N)/1e6
 
     # Time Range:
-    t = np.fft.fftfreq(N, d=1 / fs)
-
-    return S, f, t
+    dt = (N-O)/fs
+    # t = np.linspace(0, iq_data.shape[0] / fs, spectrogram_data.shape[0])
+    t = np.arange(dt, iq_data.shape[0] / fs, dt)
+    return spectrogram_data, f, t
 
 
 def update_plot(attr, old, new):
-    global iq_data
+    global iq_data, spectrogram_data
 
+    # print("update")
     spectrogram_data, f, t = generate_spectrogram(iq_data, fft_length.value, fft_overlap.value, sample_rate.value*1e6)
+    # f, t, spectrogram_data = signal.spectrogram(iq_data, sample_rate.value, window=signal.windows.hamming(fft_length.value, sym=True),
+    #                                             nperseg=fft_length.value, noverlap=fft_overlap.value, return_onesided=False,
+    #                                             detrend=False, mode='complex',
+    #                                             scaling='spectrum'
+    #                                             )
+    # spectrogram_data = np.fft.fftshift(np.nan_to_num((20 * np.log10(np.abs(spectrogram_data*np.conj(spectrogram_data)))), neginf=-200, posinf=200).T, axes=1)
 
-    s_min = np.min(spectrogram_data)
-    s_max = np.max(spectrogram_data)
+    spectrogram_source.data = {'spectrogram_img': [spectrogram_data], 'x': [np.min(f)], 'y': [0], 'dw': [sample_rate.value], 'dh': [np.max(t)]}
+    # spectrogram_source.data = {'spectrogram_img': [spectrogram_data]}
 
-    # frequency string
-    freq_min = f[0]
-    freq_max = f[-1]
-    # freq_values_str = [str(x) for x in range(freq_min, freq_max+1)]
-    freq_values_str = [str(x) for x in np.linspace(freq_min, freq_max, f.shape[0])]
+    # spectrogram_fig.image(image='spectrogram_img', x=-10, y=0, dw=20, dh=0.5, global_alpha=1.0, dilate=False, palette=jet_1k, source=spectrogram_source)
 
-    # time string
-    time_min = t[0]
-    time_max = t[-1]
-    # time_values_str = [str(x) for x in range(time_min, time_max+1)]
-    time_values_str = [str(x) for x in np.linspace(freq_min, freq_max, spectrogram_data.shape[0])]
-
-    spectrogram_df = pd.DataFrame(data=spectrogram_data, index=time_values_str, columns=freq_values_str)
-    spectrogram_df.index.name = "Time"
-    spectrogram_df.columns.name = "Frequency"
-    spectrogram_df = spectrogram_df.stack().rename("value").reset_index()
-    spectrogram_df['color_value'] = spectrogram_data.reshape(-1)
-
-    spectrogram_source = ColumnDataSource(spectrogram_df)
-
-    # update the cm_fig X and Y values
-    # spectrogram_fig.x_range.factors = freq_values_str
-    # spectrogram_fig.y_range.factors = time_values_str
-
-    cm_colors = rgb2hex(blues(200))
-    cm_mapper = LinearColorMapper(palette=cm_colors, low=s_min, high=s_max)
-
-    spectrogram_fig.rect(x="Frequency", y="Time", width=1.0, height=1.0, source=spectrogram_source, fill_alpha=1.0, line_color='black',
-                fill_color=transform('color_value', cm_mapper))
-
+    bp = 1
 
 # -----------------------------------------------------------------------------
 def get_input():
-    global iq_filename, iq_data_path, iq_data
+    global iq_filename, iq_data_path, iq_data, spectrogram_data, f, t
 
-    iq_filename = QFileDialog.getOpenFileName(None, "Select a file",  iq_data_path, "IQ files (*.bin *.dat);;All files (*.*)")
+    # iq_filename = QFileDialog.getOpenFileName(None, "Select a file",  iq_data_path, "IQ files (*.bin *.dat);;All files (*.*)")
+    iq_filename = ["D:/Projects/rf_zsl/data/sdr_test_10M_100m_0000.bin"]
     filename_div.text = "File name: " + iq_filename[0]
     if(iq_filename[0] == ""):
         return
 
     print("Processing File: ", iq_filename[0])
-    # load in an image
+
+    bits = 2**(adc_bits.value-1)
+
+    # load in data
     iq_data_path = os.path.dirname(iq_filename[0])
-    x = np.fromfile(iq_filename[0], dtype=np.int16, count=-1, sep='', offset=0).astype(np.float32)
+    x = np.fromfile(iq_filename[0], dtype=np.int16, count=-1, sep='', offset=0).astype(np.float32)/bits
 
     # convert x into a complex numpy array
-    x2 = x.reshape(-1, 2)
+    x = x.reshape(-1, 2)
 
-    iq_data = np.empty(x2.shape[0], dtype=complex)
-    iq_data.real = x2[:, 0]
-    iq_data.imag = x2[:, 1]
+    iq_data = np.empty(x.shape[0], dtype=complex)
+    iq_data.real = x[:, 0]
+    iq_data.imag = x[:, 1]
 
-    # color_img = cv.imread(iq_filename[0])
-
-    # convert the image to RGBA for display
-    # rgba_img = cv.cvtColor(color_img, cv.COLOR_RGB2RGBA)
-    # p1_src.data = {'input_img': [np.flipud(rgba_img)]}
-    #p1.image_rgba(image=[np.flipud(rgba_img)], x=0, y=0, dw=400, dh=400)
-
-    # run_detection(color_img)
     update_plot(1, 1, 1)
 
 
@@ -188,27 +195,42 @@ file_select_btn = Button(label='Select File', width=100)
 file_select_btn.on_click(get_input)
 filename_div = Div(width=800, text="File name: ", style={'font-size': '100%', 'font-weight': 'bold'})
 
-# color palettes for plotting
-cm_colors = rgb2hex(blues(200))
-cm_mapper = LinearColorMapper(palette=cm_colors, low=-100, high=0)
+jet_1k = jet_colormap(10)
 
 get_input()
 
+# define the main plot
+spectrogram_fig = figure(plot_height=800, plot_width=1300, title="Spectrogram",
+                         # x_range=[str(x) for x in range(0, 2)], y_range=[str(x) for x in range(0, 2)],
+                         toolbar_location="right",
+                         tooltips=[('Freq = ', '$x'), ('Time = ', '$y'), ('amp', '@spectrogram_img')],
+                         tools="hover, save, pan, box_zoom, reset, wheel_zoom", active_drag="box_zoom",
+                         active_scroll="wheel_zoom", active_inspect=None)
+
+# update_plot(1, 1, 1)
+
+
+# spectrogram_fig.image(image='spectrogram_img', x=-5, y=0, dw=10, dh=0.1, global_alpha=1.0, dilate=False, palette=jet_1k, source=spectrogram_source)
+spectrogram_fig.image(image='spectrogram_img', x='x', y='y', dw='dw', dh='dh', global_alpha=1.0, dilate=False, palette=jet_1k, source=spectrogram_source)
+# spectrogram_fig.image_rgba(image=[img], x=0, y=0, dw=spectrogram_data.shape[1], dh=spectrogram_data.shape[0], global_alpha=1.0, dilate=False)
+spectrogram_fig.x_range.range_padding = 0
+spectrogram_fig.y_range.range_padding = 0
+
 
 # setup the event callbacks for the plot
-for w in [fft_length, fft_overlap, sample_rate, start_time, stop_time]:
+for w in [fft_length, fft_overlap, sample_rate]:
     w.on_change('value', update_plot)
 
 
 # create the layout for the controls
-btn_layout = row(Spacer(width=30), file_select_btn, Spacer(width=10), filename_div)
-input_layout = column(fft_length, fft_overlap, sample_rate, start_time, stop_time)
+btn_layout = row(file_select_btn, Spacer(width=15), filename_div)
+input_layout = column(fft_length, fft_overlap, sample_rate, adc_bits)
 
 layout = column(btn_layout, row(input_layout, Spacer(width=20, height=20), spectrogram_fig))
 
-#show(layout)
+# show(layout)
 
 doc = curdoc()
-doc.title = "Confusion Matrix Viewer"
+doc.title = "Spectrum Viewer"
 doc.add_root(layout)
 
