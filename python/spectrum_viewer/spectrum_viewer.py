@@ -147,7 +147,7 @@ def generate_spectrogram(iq_data, N, O, fs):
 
 
 def update_plot(attr, old, new):
-    global iq_data, spectrogram_data, color_bar
+    global iq_data, spectrogram_data, color_bar, spectrogram_img
 
     # print("update")
     spectrogram_data, freq, time = generate_spectrogram(iq_data, fft_length.value, fft_overlap.value, sample_rate.value*1e6)
@@ -165,6 +165,8 @@ def update_plot(attr, old, new):
     # spectrogram_source.data = {'spectrogram_img': [spectrogram_data]}
     jet_mapper = LinearColorMapper(palette=jet_colormap(200), low=min_amp.value, high=max_amp.value)
     color_bar = ColorBar(color_mapper=jet_mapper, label_standoff=6)
+
+    spectrogram_img.glyph.color_mapper.low = min_amp.value
     # spectrogram_fig.image(image='spectrogram_img', x=-10, y=0, dw=20, dh=0.5, global_alpha=1.0, dilate=False, palette=jet_1k, source=spectrogram_source)
 
     bp = 1
@@ -221,7 +223,7 @@ spectrogram_fig = figure(plot_height=800, plot_width=1300, title="Spectrogram",
 
 
 # spectrogram_fig.image(image='spectrogram_img', x=-5, y=0, dw=10, dh=0.1, global_alpha=1.0, dilate=False, palette=jet_1k, source=spectrogram_source)
-spectrogram_fig.image(image='spectrogram_img', x='x', y='y', dw='dw', dh='dh', global_alpha=1.0, dilate=False, color_mapper=jet_mapper, source=spectrogram_source)   # palette=jet_1k,
+spectrogram_img = spectrogram_fig.image(image='spectrogram_img', x='x', y='y', dw='dw', dh='dh', global_alpha=1.0, dilate=False, color_mapper=jet_mapper, source=spectrogram_source)   # palette=jet_1k,
 
 spectrogram_fig.add_layout(color_bar, 'right')
 
