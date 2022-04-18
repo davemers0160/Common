@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import QFileDialog, QWidget, QApplication
 
 # import pandas as pd
 from bokeh.io import curdoc
-from bokeh.models import ColumnDataSource, Spinner, HoverTool, Button, Div, Slider, LinearColorMapper
+from bokeh.models import ColumnDataSource, Spinner, HoverTool, Button, Div, Slider, LinearColorMapper, ColorBar
 from bokeh.plotting import figure, show
 from bokeh.layouts import column, row, Spacer
 # from bokeh.transform import dodge, factor_cmap, transform
@@ -147,7 +147,7 @@ def generate_spectrogram(iq_data, N, O, fs):
 
 
 def update_plot(attr, old, new):
-    global iq_data, spectrogram_data
+    global iq_data, spectrogram_data, color_bar
 
     # print("update")
     spectrogram_data, freq, time = generate_spectrogram(iq_data, fft_length.value, fft_overlap.value, sample_rate.value*1e6)
@@ -157,10 +157,14 @@ def update_plot(attr, old, new):
     #                                             scaling='spectrum')
     # spectrogram_data = np.fft.fftshift(np.nan_to_num((20 * np.log10(np.abs(spectrogram_data*np.conj(spectrogram_data)))), neginf=-200, posinf=200).T, axes=1)
 
+    freq = np.tile(freq, spectrogram_data.shape[0])
+    time = np.repeat(time, spectrogram_data.shape[1])
+
     spectrogram_source.data = {'spectrogram_img': [spectrogram_data], 'x': [np.min(freq)], 'y': [0],
                                'dw': [sample_rate.value], 'dh': [np.max(time)], 't': [time], 'f': [freq]}
     # spectrogram_source.data = {'spectrogram_img': [spectrogram_data]}
-
+    jet_mapper = LinearColorMapper(palette=jet_colormap(200), low=min_amp.value, high=max_amp.value)
+    color_bar = ColorBar(color_mapper=jet_mapper, label_standoff=6)
     # spectrogram_fig.image(image='spectrogram_img', x=-10, y=0, dw=20, dh=0.5, global_alpha=1.0, dilate=False, palette=jet_1k, source=spectrogram_source)
 
     bp = 1
@@ -199,46 +203,55 @@ file_select_btn = Button(label='Select File', width=100)
 file_select_btn.on_click(get_input)
 filename_div = Div(width=800, text="File name: ", style={'font-size': '120%', 'font-weight': 'bold'})
 
-jet_1k = jet_colormap(10)
+jet_1k = jet_colormap(200)
+
+jet_mapper = LinearColorMapper(palette=jet_colormap(200), low=min_amp.value, high=max_amp.value)
+color_bar = ColorBar(color_mapper=jet_mapper, label_standoff=6)
 
 get_input()
 
 # define the main plot
 spectrogram_fig = figure(plot_height=800, plot_width=1300, title="Spectrogram",
                          toolbar_location="right",
-                         tooltips=[('Freq (MHz)', '$x'), ('Time (s)', '$y'), ('Amplitude (dBm)', '@spectrogram_img')],
+                         tooltips=[('Freq (MHz)', '@f'), ('Time (s)', '@t'), ('Amplitude (dBm)', '@spectrogram_img')],
                          tools="save, pan, box_zoom, reset, wheel_zoom, hover, crosshair", active_drag="box_zoom",
                          active_scroll="wheel_zoom", active_inspect=None)
 
 # spectrogram_fig.add_tools(hover)
 
+
 # spectrogram_fig.image(image='spectrogram_img', x=-5, y=0, dw=10, dh=0.1, global_alpha=1.0, dilate=False, palette=jet_1k, source=spectrogram_source)
-spectrogram_fig.image(image='spectrogram_img', x='x', y='y', dw='dw', dh='dh', global_alpha=1.0, dilate=False, palette=jet_1k, source=spectrogram_source)
+spectrogram_fig.image(image='spectrogram_img', x='x', y='y', dw='dw', dh='dh', global_alpha=1.0, dilate=False, color_mapper=jet_mapper, source=spectrogram_source)   # palette=jet_1k,
+
+spectrogram_fig.add_layout(color_bar, 'right')
+
 spectrogram_fig.x_range.range_padding = 0
 spectrogram_fig.y_range.range_padding = 0
 
+spectrogram_fig.title.text_font_size = "12pt"
+
 # x-axis formatting
 spectrogram_fig.xaxis.major_label_text_font_size = "12pt"
-spectrogram_fig.xaxis.major_label_text_font_style= "bold"
+spectrogram_fig.xaxis.major_label_text_font_style = "bold"
 spectrogram_fig.xaxis.axis_label_text_font_size = "15pt"
 spectrogram_fig.xaxis.axis_label_text_font_style = "bold"
 spectrogram_fig.xaxis.axis_label = "Frequency (MHz)"
 
 # y-axis formatting
 spectrogram_fig.yaxis.major_label_text_font_size = "12pt"
-spectrogram_fig.yaxis.major_label_text_font_style= "bold"
+spectrogram_fig.yaxis.major_label_text_font_style = "bold"
 spectrogram_fig.yaxis.axis_label_text_font_size = "15pt"
 spectrogram_fig.yaxis.axis_label_text_font_style = "bold"
 spectrogram_fig.yaxis.axis_label = "Time (s)"
 
 # setup the event callbacks for the plot
-for w in [fft_length, fft_overlap, sample_rate]:
+for w in [fft_length, fft_overlap, sample_rate, max_amp, min_amp]:
     w.on_change('value', update_plot)
 
 
 # create the layout for the controls
 btn_layout = row(file_select_btn, Spacer(width=15), filename_div)
-input_layout = column(fft_length, fft_overlap, sample_rate, adc_bits)
+input_layout = column(fft_length, fft_overlap, sample_rate, adc_bits, max_amp, min_amp)
 
 layout = column(btn_layout, row(input_layout, Spacer(width=20, height=20), spectrogram_fig))
 
