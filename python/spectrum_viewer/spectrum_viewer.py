@@ -3,20 +3,19 @@ import os
 
 # numpy
 import numpy as np
-import cv2 as cv
 
-from scipy import signal
+# from scipy import signal
 
 # File dialog stuff
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QFileDialog, QWidget, QApplication
 
-import pandas as pd
+# import pandas as pd
 from bokeh.io import curdoc
 from bokeh.models import ColumnDataSource, Spinner, HoverTool, Button, Div, Slider, LinearColorMapper
 from bokeh.plotting import figure, show
 from bokeh.layouts import column, row, Spacer
-from bokeh.transform import dodge, factor_cmap, transform
+# from bokeh.transform import dodge, factor_cmap, transform
 
 # set up some global variables that will be used throughout the code
 script_path = os.path.realpath(__file__)
