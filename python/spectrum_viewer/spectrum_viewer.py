@@ -168,24 +168,19 @@ def update_color_scale(attr, old, new):
     spectrogram_img.glyph.color_mapper.high = max_amp.value
 
 
-# -----------------------------------------------------------------------------
-def get_input():
-    global iq_filename, iq_data_path, iq_data, spectrogram_data, f, t
-
-    # iq_filename = QFileDialog.getOpenFileName(None, "Select a file",  iq_data_path, "IQ files (*.bin *.dat);;All files (*.*)")
-    iq_filename = ["D:/Projects/rf_zsl/data/sdr_test_10M_100m_0000.bin"]
-
-    filename_div.text = "File name: " + iq_filename[0]
-    if(iq_filename[0] == ""):
-        return
-
+def load_iq_data(attr, old, new):
+    global iq_filename, iq_data_path, iq_data
     print("Processing File: ", iq_filename[0])
 
     bits = 2**(adc_bits.value-1)
 
     # load in data
     iq_data_path = os.path.dirname(iq_filename[0])
-    x = np.fromfile(iq_filename[0], dtype=np.int16, count=-1, sep='', offset=0).astype(np.float32)/bits
+
+    if adc_bits.value > 8:
+        x = np.fromfile(iq_filename[0], dtype=np.int16, count=-1, sep='', offset=0).astype(np.float32) / bits
+    else:
+        x = np.fromfile(iq_filename[0], dtype=np.int8, count=-1, sep='', offset=0).astype(np.float32) / bits
 
     # convert x into a complex numpy array
     x = x.reshape(-1, 2)
@@ -195,6 +190,19 @@ def get_input():
     iq_data.imag = x[:, 1]
 
     update_plot(1, 1, 1)
+
+# -----------------------------------------------------------------------------
+def get_input():
+    global iq_filename, iq_data_path, iq_data
+
+    iq_filename = QFileDialog.getOpenFileName(None, "Select a file",  iq_data_path, "IQ files (*.bin *.dat);;All files (*.*)")
+    # iq_filename = ["D:/Projects/rf_zsl/data/sdr_test_10M_100m_0000.bin"]
+
+    filename_div.text = "File name: " + iq_filename[0]
+    if(iq_filename[0] == ""):
+        return
+
+    load_iq_data(1, 1, 1)
 
 
 # -----------------------------------------------------------------------------
@@ -223,19 +231,19 @@ spectrogram_fig.add_layout(color_bar, 'right')
 spectrogram_fig.x_range.range_padding = 0
 spectrogram_fig.y_range.range_padding = 0
 
-spectrogram_fig.title.text_font_size = "12pt"
+spectrogram_fig.title.text_font_size = "13pt"
 
 # x-axis formatting
 spectrogram_fig.xaxis.major_label_text_font_size = "12pt"
 spectrogram_fig.xaxis.major_label_text_font_style = "bold"
-spectrogram_fig.xaxis.axis_label_text_font_size = "15pt"
+spectrogram_fig.xaxis.axis_label_text_font_size = "14pt"
 spectrogram_fig.xaxis.axis_label_text_font_style = "bold"
 spectrogram_fig.xaxis.axis_label = "Frequency (MHz)"
 
 # y-axis formatting
 spectrogram_fig.yaxis.major_label_text_font_size = "12pt"
 spectrogram_fig.yaxis.major_label_text_font_style = "bold"
-spectrogram_fig.yaxis.axis_label_text_font_size = "15pt"
+spectrogram_fig.yaxis.axis_label_text_font_size = "14pt"
 spectrogram_fig.yaxis.axis_label_text_font_style = "bold"
 spectrogram_fig.yaxis.axis_label = "Time (s)"
 
@@ -245,6 +253,9 @@ for w in [fft_length, fft_overlap, sample_rate]:
 
 for w in [max_amp, min_amp]:
     w.on_change('value', update_color_scale)
+
+for w in [adc_bits]:
+    w.on_change('value', load_iq_data)
 
 # create the layout for the controls
 btn_layout = row(file_select_btn, Spacer(width=15), filename_div)
