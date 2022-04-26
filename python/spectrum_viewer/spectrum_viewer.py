@@ -221,7 +221,7 @@ get_input()
 # define the main plot
 spectrogram_fig = figure(plot_height=800, plot_width=1300, title="Spectrogram",
                          toolbar_location="right",
-                         tooltips=[('Freq (MHz)', '@f'), ('Time (s)', '@t'), ('Amplitude (dBm)', '@spectrogram_img')],
+                         tooltips=[('Freq (MHz)', '@f{0.0000}'), ('Time (s)', '@t{0.000000}'), ('Amplitude (dBm)', '@spectrogram_img{0.0}')],
                          tools="save, pan, box_zoom, reset, wheel_zoom, hover, crosshair", active_drag="box_zoom",
                          active_scroll="wheel_zoom", active_inspect=None)
 
