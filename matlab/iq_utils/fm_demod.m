@@ -1,4 +1,4 @@
-function [audio_out] = fm_demod(iq_data, rf_fs, rf_ch_bw, rf_fc, rf_taps, f_offset, audio_fs, audio_fc, audio_taps)
+function [audio_out, audio_fs_actual] = fm_demod(iq_data, rf_fs, rf_ch_bw, rf_fc, rf_taps, f_offset, audio_fs, audio_fc, audio_taps)
 % INPUTS:
 %   iq_data - complex IQ data in a single column
 %
@@ -45,17 +45,18 @@ function [audio_out] = fm_demod(iq_data, rf_fs, rf_ch_bw, rf_fc, rf_taps, f_offs
     
     % calculate the new sampling rate based on the original and the decimated sample rate
     rf_fs_decimated = rf_fs/rf_decimation_rate;
-
+    %rf_fs_actual = rf_fs/rf_fs_decimated;
+    
     % scaling for tangent
     phasor_scale = 1/((2 * pi()) / (rf_fs_decimated / rf_ch_bw));
 
     % calculate the audio decimate rate and the new sample rate
     audio_decimation_rate = floor(rf_fs_decimated/audio_fs);  
-    %audio_fs_decimated = rf_fs_decimated / audio_decimation_rate;
+    audio_fs_actual = rf_fs_decimated / audio_decimation_rate;
     
     % generate the low pass filter for audio processing using the Hamming window
 %     audio_freq_cutoff = audio_fc/rf_fs_decimated;
-    audio_lpf = fir1(audio_taps, audio_fc/rf_fs_decimated, 'low');
+    audio_lpf = fir1(audio_taps, audio_fc/audio_fs_actual, 'low');
     
     % calculate the frequency rotation based on the supplied offset value
     freq_rotation = exp(-1.0j*2.0*pi()* f_offset/rf_fs*(0:(num_samples-1)));
