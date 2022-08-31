@@ -39,6 +39,7 @@ cm_data = np.array([[1, 0], [0, 1]])
 
 cm_source = []
 cm_err_source = []
+hist_source = []
 
 cm_fig = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
                 x_range=dm_values_str, y_range=list(reversed(dm_values_str)),
@@ -48,6 +49,13 @@ cm_fig = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
 err_fig = figure(plot_width=err_plot_w, plot_height=err_plot_h,
                  y_range="1", x_range=dm_values_str,
                  tools="save", toolbar_location="below"
+                 )
+
+hist_fig = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
+                 #x_range=dm_values_str, y_range="1",
+                 #tools="save",
+                 tools="save, pan, box_zoom, reset, wheel_zoom, hover, crosshair",
+                 toolbar_location="below"
                  )
 
 ##-----------------------------------------------------------------------------
@@ -101,7 +109,7 @@ def get_input():
 
 
 def build_dataframes(cm_data):
-    global cm_source, cm_err_source, dm_values_str
+    global cm_source, cm_err_source, dm_values_str, hist_source
 
     # cm_data_size = cm_data.shape[0]
 
@@ -111,6 +119,10 @@ def build_dataframes(cm_data):
 
     # sum up the total number of times a depthmap value is in the dataset
     cm_err_sum = np.sum(cm_data, axis=1)
+
+    # format the data for a histogram view, use cm_err_sum for the data portion
+    bins = np.linspace(dm_min-1, dm_max, dm_max+2)
+    hist_source = ColumnDataSource(data=dict(left=bins[:-1], right=bins[1:], data=cm_err_sum))
 
     # calculate how many times the prediction is correct
     cm_err_diag = np.diag(cm_data)
@@ -138,7 +150,7 @@ def build_dataframes(cm_data):
 
 
 def update_plot():
-    global cm_source, cm_err_source, dm_values_str, cm_fig, err_fig
+    global cm_source, cm_err_source, hist_source, dm_values_str, cm_fig, err_fig, hist_fig
 
     # update the cm_fig X and Y values
     cm_fig.x_range.factors = dm_values_str
@@ -162,6 +174,13 @@ def update_plot():
     err_fig.text(x="Label", y="Error", text="str_value", source=cm_err_source, text_align="center",
                  text_color=transform('err_cat', CategoricalColorMapper(palette=["#000000", "#000000", "#FFFFFF"], factors=["0", "1", "2"])),
                  text_font_size="13px", text_baseline="middle", text_font_style="bold")
+
+    # histogram plot
+    # hist_fig.x_range.factors = dm_values_str
+    # hist_fig.y_range.factors = ["0", "50000", "100000", "150000", "200000"]
+    hist_fig.y_range.start = 0
+    hist_fig.quad(top="data", bottom=0, left="left", right="right", source=hist_source,
+                  fill_color="skyblue", line_color="white")
 
     bp = 1
 
@@ -212,9 +231,24 @@ err_fig.xaxis.axis_label_text_font_size = "16pt"
 err_fig.xaxis.axis_label_text_font_style = "bold"
 err_fig.xaxis.axis_label = "Actual Depthmap Errors"
 
+# histogram figure formatting
+hist_fig.xaxis.major_label_text_font_size = "13pt"
+hist_fig.xaxis.major_label_text_font_style= "bold"
+hist_fig.xaxis.axis_label_text_font_size = "16pt"
+hist_fig.xaxis.axis_label_text_font_style = "bold"
+hist_fig.xaxis.axis_label = "Depthmap Value"
+
+hist_fig.yaxis.major_label_text_font_size = "13pt"
+hist_fig.yaxis.major_label_text_font_style = "bold"
+hist_fig.yaxis.axis_label_text_font_size = "16pt"
+hist_fig.yaxis.axis_label_text_font_style = "bold"
+hist_fig.yaxis.axis_label = "Depthmap Count"
+
+
+
 input_layout = row(Spacer(width=30), file_select_btn, Spacer(width=10), filename_div)
 # input_layout = row(Spacer(width=50), filename_div)
-layout = column(input_layout, cm_fig, Spacer(height=15), err_fig)
+layout = column(input_layout, cm_fig, Spacer(height=15), err_fig, Spacer(height=15), hist_fig)
 
 # show(layout)
 
