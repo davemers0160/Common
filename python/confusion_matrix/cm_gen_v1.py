@@ -4,7 +4,7 @@ import numpy as np
 
 from bokeh import events
 from bokeh.io import curdoc, output_file
-from bokeh.models import ColumnDataSource, Button, Div, Legend, CustomJS, HoverTool, LinearColorMapper, CategoricalColorMapper
+from bokeh.models import ColumnDataSource, Button, Div, Legend, CustomJS, HoverTool, LinearColorMapper, CategoricalColorMapper, Range1d
 from bokeh.plotting import figure, show, output_file
 from bokeh.layouts import column, row, Spacer
 from bokeh.palettes import Magma, Magma256, magma, viridis
@@ -121,7 +121,8 @@ def build_dataframes(cm_data):
     cm_err_sum = np.sum(cm_data, axis=1)
 
     # format the data for a histogram view, use cm_err_sum for the data portion
-    bins = np.linspace(dm_min-1, dm_max, dm_max+2)
+    bins = np.linspace(dm_min-0.5, dm_max, dm_max+2)
+    # hist, edges = np.histogram(cm_err_sum, Density=False, bins=cm_data.shape[0])
     hist_source = ColumnDataSource(data=dict(left=bins[:-1], right=bins[1:], data=cm_err_sum))
 
     # calculate how many times the prediction is correct
@@ -179,6 +180,8 @@ def update_plot():
     # hist_fig.x_range.factors = dm_values_str
     # hist_fig.y_range.factors = ["0", "50000", "100000", "150000", "200000"]
     hist_fig.y_range.start = 0
+    # hist_fig.x_range.start = -0.5
+    hist_fig.x_range = Range1d(-0.5, 22+0.5)
     hist_fig.quad(top="data", bottom=0, left="left", right="right", source=hist_source,
                   fill_color="skyblue", line_color="white")
 
