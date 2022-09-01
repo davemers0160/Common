@@ -53,8 +53,6 @@ err_fig = figure(plot_width=err_plot_w, plot_height=err_plot_h,
 
 # hover = HoverTool(tooltips=[("Value: ", "$x"),  ("Count: ", "$data")], point_policy="snap_to_data", line_policy="nearest", mode="mouse")
 hist_fig = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
-                 #x_range=dm_values_str, y_range="1",
-                 #tools="save",
                  tooltips=[('Value:', '@x{0}'), ('Count:', '@data{0}')],
                  tools="save, pan, box_zoom, reset, wheel_zoom, hover", toolbar_location="right"
                  )
@@ -122,10 +120,7 @@ def build_dataframes(cm_data):
     cm_err_sum = np.sum(cm_data, axis=1)
 
     # format the data for a histogram view, use cm_err_sum for the data portion
-    # bins = np.linspace(dm_min-0.5, dm_max, dm_max+2)
     bins = np.linspace(dm_min, dm_max, dm_max+1)
-    # hist, edges = np.histogram(cm_err_sum, Density=False, bins=cm_data.shape[0])
-    # hist_source = ColumnDataSource(data=dict(left=bins[:-1], right=bins[1:], data=cm_err_sum))
     hist_source = ColumnDataSource(data=dict(x=bins, data=cm_err_sum))
 
     # calculate how many times the prediction is correct
@@ -172,6 +167,7 @@ def update_plot():
 
     cm_fig.text(x="Predicted", y="Actual", text=str("value"), text_color=transform('color_value', text_mapper), **text_props)
 
+    # error figure
     err_fig.rect(x="Label", y="Error", width=1.0, height=1.0, source=cm_err_source, fill_alpha=1.0, line_color='black',
                  fill_color=transform('err_cat', CategoricalColorMapper(palette=error_colors, factors=["0", "1", "2"])))
 
@@ -180,15 +176,10 @@ def update_plot():
                  text_font_size="13px", text_baseline="middle", text_font_style="bold")
 
     # histogram plot
-    # hist_fig.x_range.factors = dm_values_str
-    # hist_fig.y_range.factors = ["0", "50000", "100000", "150000", "200000"]
-    hist_fig.y_range.start = 0
-    # hist_fig.x_range.start = -0.5
-    hist_fig.x_range = Range1d(-0.5, 22+0.5)
-    # hist_fig.quad(top="data", bottom=0, left="left", right="right", source=hist_source,
-    #               fill_color="skyblue", line_color="white")
+    hist_fig.renderers = []
     hist_fig.vbar(x="x", top="data", width=0.9, source=hist_source, fill_color="blue", line_color="white")
-    bp = 1
+    hist_fig.y_range.start = 0
+    hist_fig.x_range = Range1d(-0.5, 22+0.5)
 
 ##-----------------------------------------------------------------------------
 
@@ -204,11 +195,11 @@ error_colors = ["#00FF00", "#FFA700", "#FF0000"]
 
 text_mapper = LinearColorMapper(palette=["#000000", "#FFFFFF"], low=75, high=cm_max)
 
-# cm_data = pd.read_csv('D:/Projects/dfd/dfd_dnn_analysis/results/tb23b_test/tb23b_confusion_matrix_results.txt', header=None).values
 get_input()
 # build_dataframes(cm_data)
 # update_plot()
 
+# confusion matrix figure formatting
 cm_fig.axis.major_tick_line_color = None
 cm_fig.grid.grid_line_color = None
 
@@ -226,10 +217,9 @@ cm_fig.yaxis.axis_label_text_font_size = "16pt"
 cm_fig.yaxis.axis_label_text_font_style = "bold"
 cm_fig.yaxis.axis_label = "Actual Depthmap Values"
 
-
+# error figure formatting
 err_fig.axis.major_tick_line_color = None
 err_fig.grid.grid_line_color = None
-# p2.xaxis.major_label_text_font_size = '0pt'  # turn off x-axis tick labels
 err_fig.yaxis.major_label_text_font_size = '0pt'  # turn off y-axis tick labels
 err_fig.xaxis.major_label_text_font_size = "13pt"
 err_fig.xaxis.major_label_text_font_style= "bold"
@@ -250,8 +240,7 @@ hist_fig.yaxis.axis_label_text_font_size = "16pt"
 hist_fig.yaxis.axis_label_text_font_style = "bold"
 hist_fig.yaxis.axis_label = "Depthmap Count"
 
-
-
+# layout
 input_layout = row(Spacer(width=30), file_select_btn, Spacer(width=10), filename_div)
 # input_layout = row(Spacer(width=50), filename_div)
 layout = column(input_layout, cm_fig, Spacer(height=15), err_fig, Spacer(height=15), hist_fig)
