@@ -51,11 +51,12 @@ err_fig = figure(plot_width=err_plot_w, plot_height=err_plot_h,
                  tools="save", toolbar_location="below"
                  )
 
+# hover = HoverTool(tooltips=[("Value: ", "$x"),  ("Count: ", "$data")], point_policy="snap_to_data", line_policy="nearest", mode="mouse")
 hist_fig = figure(plot_width=cm_plot_w, plot_height=cm_plot_h,
                  #x_range=dm_values_str, y_range="1",
                  #tools="save",
-                 tools="save, pan, box_zoom, reset, wheel_zoom, hover, crosshair",
-                 toolbar_location="below"
+                 tooltips=[('Value:', '@x{0}'), ('Count:', '@data{0}')],
+                 tools="save, pan, box_zoom, reset, wheel_zoom, hover", toolbar_location="right"
                  )
 
 ##-----------------------------------------------------------------------------
@@ -121,9 +122,11 @@ def build_dataframes(cm_data):
     cm_err_sum = np.sum(cm_data, axis=1)
 
     # format the data for a histogram view, use cm_err_sum for the data portion
-    bins = np.linspace(dm_min-0.5, dm_max, dm_max+2)
+    # bins = np.linspace(dm_min-0.5, dm_max, dm_max+2)
+    bins = np.linspace(dm_min, dm_max, dm_max+1)
     # hist, edges = np.histogram(cm_err_sum, Density=False, bins=cm_data.shape[0])
-    hist_source = ColumnDataSource(data=dict(left=bins[:-1], right=bins[1:], data=cm_err_sum))
+    # hist_source = ColumnDataSource(data=dict(left=bins[:-1], right=bins[1:], data=cm_err_sum))
+    hist_source = ColumnDataSource(data=dict(x=bins, data=cm_err_sum))
 
     # calculate how many times the prediction is correct
     cm_err_diag = np.diag(cm_data)
@@ -182,9 +185,9 @@ def update_plot():
     hist_fig.y_range.start = 0
     # hist_fig.x_range.start = -0.5
     hist_fig.x_range = Range1d(-0.5, 22+0.5)
-    hist_fig.quad(top="data", bottom=0, left="left", right="right", source=hist_source,
-                  fill_color="skyblue", line_color="white")
-
+    # hist_fig.quad(top="data", bottom=0, left="left", right="right", source=hist_source,
+    #               fill_color="skyblue", line_color="white")
+    hist_fig.vbar(x="x", top="data", width=0.9, source=hist_source, fill_color="blue", line_color="white")
     bp = 1
 
 ##-----------------------------------------------------------------------------
