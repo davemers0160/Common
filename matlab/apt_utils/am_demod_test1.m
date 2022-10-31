@@ -1,6 +1,8 @@
 % https://noaa-apt.mbernardi.com.ar/how-it-works.html
 
-[data, fs_a] = audioread('D:\Projects\apt-decoder-master\examples\noaa18_202202013_1201.wav');
+filename = 'C:\Projects\data\noaa\noaa18_20220121_1140_2.wav';
+
+[data, fs_a] = audioread(filename);
 
 % bring this back to 16-bit int
 d1 = data*32768;
@@ -11,6 +13,15 @@ n = numel(d1);
 
 figure;
 spectrogram(d1, 8192, 4096, 8192, fs_a, 'centered')
+
+%% load in LUT
+lut_filename = 'wx-star.com_GOES-R_ABI_False-Color-LUT.png';
+lut_filename = 'usradioguycustomlut.png';
+
+lut = imread(lut_filename);
+
+figure;
+image(lut)
 
 %%
 d2 = zeros(n,1);
@@ -93,9 +104,11 @@ colormap(gray(256));
 
 
 
+%% apply lut
+lut_img = apply_false_color(img, lut);
 
-
-
+figure
+image(uint8(lut_img));
 
 %% try to clip 
 % x2 = prctile(c5, 99.9);
