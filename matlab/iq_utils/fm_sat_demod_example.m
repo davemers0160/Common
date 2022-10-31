@@ -15,7 +15,7 @@ commandwindow;
 data_type = 'int16';
 byte_order = 'ieee-le';
 
-test_case = 0;
+test_case = 2;
 
 switch test_case
 
@@ -79,7 +79,7 @@ switch test_case
         
         % offset from the center where we want to demodulate (Hz)
 %         f_offset = 100000; 
-        f_offset = 115000; 
+        f_offset = 115750; 
         
         % rf frequency filter cutoff
         fc_rf = 62400;
@@ -105,7 +105,7 @@ num_samples = numel(iqc);
 dec_rate = floor(fs / channel_bw);
 
 % size of each block to process
-block_size = fs;    %65536*8;
+block_size = floor(fs/2);    %65536*8;
 
 % create a low pass filter using the blackman window
 % need to generate a conversion from the sampling rate to +/- pi
@@ -243,9 +243,9 @@ bp = 1;
 %% block processing loop
 x7a = [];
 
-fft_size = 65536*2;
+fft_size = 8192;%65536*2;
 fft_bin = floor((f_offset/fs) * fft_size);
-fft_width = 128;
+fft_width = 28;
 
 
 % %Initilize PLL Loop 
@@ -258,6 +258,7 @@ fft_width = 128;
 % %Define Loop Filter parameters(Sets damping)
 % kp = 0.15; %Proportional constant 
 % ki = 0.1; %Integrator constant 
+figure(2);
 
 for idx=1:num_blocks
 
@@ -265,7 +266,7 @@ for idx=1:num_blocks
     
     % find the doppler shift
     fft_bin = floor((f_offset/fs) * fft_size);
-    fft_x1 = fft(x1, fft_size);
+    fft_x1 = fft(x1, fft_size)/fft_size;
     
     [max_fft(idx), max_fft_idx] = max(abs(fft_x1((fft_bin-fft_width):(fft_bin+fft_width))));
     
@@ -273,10 +274,14 @@ for idx=1:num_blocks
     fc1 = exp(-1.0j*2.0*pi()* f_offset/fs*(0:(block_size-1)));
     
     f_off(idx) = f_offset;
-    
+       
     % perform the frequency rotation to put the desired frequency at 0Hz
     x2 = x1 .* fc1(:);
-
+    
+    plot(linspace(-fs/2, fs/2, fft_size), 20*log10(abs(fftshift(fft(x2, fft_size)/fft_size))))
+    xlim([-1024, 1024])
+    drawnow;
+    
     % double filter the frequency shifted signal since there is a close signal
      x3 = filter(lpf, 1, x2);
 %     x3 = filter(lpf, 1, x3);
