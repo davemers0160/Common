@@ -1,18 +1,25 @@
 % https://noaa-apt.mbernardi.com.ar/how-it-works.html
 
-filename = 'C:\Projects\data\noaa\noaa18_20220121_1140_2.wav';
-
+% filename = 'C:\Projects\data\noaa\noaa18_20220121_1140_2.wav';
+% filename = 'D:\Projects\apt-decoder-master\examples\noaa18_202202013_1201.wav';
+filename = 'D:\Projects\apt-decoder-master\examples\noaa18_20221120_1110.wav';
+% filename = 'D:\Projects\apt-decoder-master\examples\noaa19_20220206_1930.wav';
 [data, fs_a] = audioread(filename);
 
+
+%%
 % bring this back to 16-bit int
-d1 = data*32768;
+% d1 = data*32768;
+d1 = data;
+
 fc = 2400;
 fb = 4160;
+% fb = 2080;
 
 n = numel(d1);
 
 figure;
-spectrogram(d1, 8192, 4096, 8192, fs_a, 'centered')
+spectrogram(d1, 8192, 6000, 4096, fs_a, 'centered')
 
 %% load in LUT
 lut_filename = 'wx-star.com_GOES-R_ABI_False-Color-LUT.png';
@@ -20,17 +27,27 @@ lut_filename = 'usradioguycustomlut.png';
 
 lut = imread(lut_filename);
 
-figure;
-image(lut)
+% figure;
+% image(lut)
 
 %%
-d2 = zeros(n,1);
+% d2 = zeros(n,1);
+% 
+% for idx=2:n
+% %     d2(idx) = sqrt( d1(idx)*d1(idx) +  d1(idx-1)*d1(idx-1) - 2*d1(idx)*d1(idx-1)*cos(2*pi()*fc/fs_a) )/sin(2*pi()*fc/fs_a);
+%     d2(idx) = sqrt( d1(idx)*d1(idx) +  d1(idx-1)*d1(idx-1) - 2*d1(idx)*d1(idx-1)*cos(2*pi()*fc/fs_a) );
+% end
 
-for idx=2:n
-    
-    d2(idx) = sqrt( d1(idx)*d1(idx) +  d1(idx-1)*d1(idx-1) - 2*d1(idx)*d1(idx-1)*cos(2*pi()*fc/fs_a) )/sin(2*pi()*fc/fs_a);
-    
-end
+fa_rot = exp(-1.0j*2.0*pi()* 2400/fs_a*(0:(n-1)));
+d2 = d1.*fa_rot';
+
+% 
+% d3a = d1.*d1;
+% d3b = d1(2:end).*d1(1:end-1) * 2*cos(2*pi()*fc/fs_a);
+% 
+% d3 = sqrt(d3a(1:end-1) + d3a(2:end) - d3b);
+% 
+% d2 = d3;
 
 %%
 win_size = 256;
@@ -38,11 +55,19 @@ lpf = fir1(win_size, fb/fs_a, 'low', nuttallwin(win_size+1,'periodic'));
 
 d3 = filter(lpf, 1, d2);
 
-d4 = d3(2:5:end);
+figure;
+spectrogram(d3, 8192, 6000, 4096, fs_a, 'centered')
+
+% d3 = abs(d3);
+
+d4 = abs(d3(5:5:end));
+
+figure;
+spectrogram(d4, 8192, 6000, 4096, fs_a/5, 'centered')
 
 %% digitize
 
-x = prctile(d4, [0.4, 99.75]);
+x = prctile(d4, [0.1, 99.8]);
 
 min_val = min(x);
 max_val = max(x);
@@ -50,7 +75,9 @@ max_val = max(x);
 delta = max_val - min_val;
 
 % Normalize the signal to px luminance values, discretize
-d5 = floor((255 * (d4 - min_val) / delta) + 0.5);
+d4a = floor((255 * (d4 - min_val) / delta) + 0.5);
+
+d5 = d4a;
 d5(d5 < 0) = 0;
 d5(d5 > 255) = 255;
 
@@ -58,7 +85,8 @@ d5(d5 > 255) = 255;
 
 d5s = d5 - 128;
 % sync = [0 0 255 255 0 0 255 255 0 0 255 255 0 0 255 255 0 0 255 255 0 0 255 255 0 0 255 255 0 0 0 0] - 128;
-sync = 2*[0 0 0 0 1 1 0 0 1 1 0 0 1 1 0 0 1 1 0 0 1 1 0 0 1 1 0 0 1 1 0 0 0 0 0 0 0 0 0] - 1;
+sync = 255*[0 0 0 0 1 1 0 0 1 1 0 0 1 1 0 0 1 1 0 0 1 1 0 0 1 1 0 0 1 1 0 0 0 0 0 0 0 0 0] - 128;
+% sync = 255*[0 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 0 0 0 0] - 128;
 
 % c5 = conv(d5s, sync(end:-1:1), 'same')/39;
 % 
@@ -68,8 +96,9 @@ mindistance = 2000;
 
 peaks = [1,0];
 
-
-for idx=1:numel(d5s)-numel(sync)
+idx = 1;
+while(idx <= numel(d5s)-numel(sync))
+% for idx=1:numel(d5s)-numel(sync)
 
     c5d(idx) = dot(sync, d5s(idx:idx+numel(sync)-1))/numel(sync);
 
@@ -78,10 +107,11 @@ for idx=1:numel(d5s)-numel(sync)
     % If previous peak is too far, we keep it but add this value as new
     if ((idx - peaks(end,1)) > mindistance)
         peaks(end+1,:) = [idx, corr];
+%         idx = idx + ceil(mindistance/2);
     elseif (corr > peaks(end,2))
         peaks(end,:) = [idx, corr];
     end
-
+    idx = idx + 1;
 end
 
 
@@ -89,19 +119,13 @@ end
 
 img = [];
 
-for idx=1:(size(peaks,1) - 1)
-
+for idx=1:(size(peaks,1) - 2)
     img = cat(1,img, d5(peaks(idx,1):peaks(idx,1)+2079)');
-
-%     matrix.append(signal[peaks[i][0] : peaks[i][0] + 2080])
-
 end
-
 
 figure
 image(uint8(img));
 colormap(gray(256));
-
 
 
 %% apply lut
@@ -162,14 +186,14 @@ if(max_telem > wedge_y)
     mean_9 = mean(wedge_9(:));
 end
 
-img = 255*(img-mean_9)/(mean_8-mean_9);
+img2 = 255*(img-mean_9)/(mean_8-mean_9);
 
-img(img>255) = 255;
-img(img<0) = 0;
+img2(img2>255) = 255;
+img2(img2<0) = 0;
 
 
 figure
-image(uint8(img));
+image(uint8(img2));
 colormap(gray(256));
 
 
