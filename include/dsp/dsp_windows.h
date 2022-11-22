@@ -127,10 +127,10 @@ inline std::vector<float> blackman_nuttall_window(int64_t N)
 
 
 //-----------------------------------------------------------------------------
-template <typename funct>
-std::vector<float> create_fir_filter(int64_t N, float fc, funct window_function)
+template <typename T, typename funct>
+std::vector<T> create_fir_filter(int64_t N, float fc, funct window_function)
 {
-    std::vector<float> g(N+1, 0);
+    std::vector<T> g(N+1, 0);
 
     std::vector<float> w = window_function(N);
 
