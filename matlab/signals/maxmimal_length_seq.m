@@ -4,9 +4,9 @@
 %						to generate the Maximal Length Sequence
 %	output: SR => The final sequence condition to range between +1 and -1
 %
-function SR = maxmimal_length_seq(reg_length)
+function SR = maxmimal_length_seq(reg_length, taps)
 
-    taps = [1,reg_length];
+%     taps = [1, 3, 5, reg_length];
     
     % initialize register
     register = zeros(1,reg_length);
@@ -19,7 +19,14 @@ function SR = maxmimal_length_seq(reg_length)
     for idx=1:sr_size
 
         SR(idx) = register(end);
-        temp = mod(register(taps(1))+register(taps(2)),2);
+        
+        tmp_sum = 0;
+        for jdx=1:numel(taps)
+            tmp_sum = tmp_sum + register(taps(jdx));
+        end
+        
+        
+        temp = mod(tmp_sum, 2);
     
         register(2:end) = register(1:end-1);
         register(1) = temp;
