@@ -30,6 +30,22 @@ lut = imread(lut_filename);
 % figure;
 % image(lut)
 
+%% test rotation
+
+f_rot =exp(-1.0j*2.0*pi()* -fc/fs_a*(0:(n-1)));
+
+d1_r = d1.*f_rot';
+
+win_size = 256;
+lpf = fir1(win_size, 400/fs_a, 'low', nuttallwin(win_size+1,'periodic'));
+
+d1_f = filter(lpf, 1, d1_r);
+
+figure;
+d1_y = spectrogram(d1_f, 64, 32, 64, fs_a, 'centered');
+
+d1_ds = abs(d1_y(32,2:5:end));
+
 %%
 % d2 = zeros(n,1);
 % 
