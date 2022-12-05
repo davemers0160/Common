@@ -11,7 +11,7 @@
 
 //-----------------------------------------------------------------------------
 template <typename T>
-void write_iq_data(std::string filename, std::vector<std::complex<T>> &samples)
+void write_iq_data(std::string filename, std::vector<T>& samples)
 {
     std::ofstream data_file;
 
@@ -26,6 +26,32 @@ void write_iq_data(std::string filename, std::vector<std::complex<T>> &samples)
         }
 
         data_file.write(reinterpret_cast<const char*>(samples.data()), samples.size() * sizeof(T));
+
+        data_file.close();
+    }
+    catch (std::exception e)
+    {
+        std::cout << "Could not open file to write data: " << e.what() << std::endl;
+    }
+}
+
+//-----------------------------------------------------------------------------
+template <typename T>
+void write_iq_data(std::string filename, std::vector<std::complex<T>> &samples)
+{
+    std::ofstream data_file;
+
+    try
+    {
+        data_file.open(filename, std::ios::out | std::ios::binary);
+
+        if (!data_file.is_open())
+        {
+            std::cout << "Could not open file to save data... " << std::endl;
+            return;
+        }
+
+        data_file.write(reinterpret_cast<const char*>(samples.data()), 2 * samples.size() * sizeof(T));
 
         data_file.close();
     }
