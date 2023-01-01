@@ -33,7 +33,7 @@ void write_iq_data(std::string filename, std::vector<T>& samples)
     {
         std::cout << "Could not open file to write data: " << e.what() << std::endl;
     }
-}
+}   // end of write_iq_data
 
 //-----------------------------------------------------------------------------
 template <typename T>
@@ -59,7 +59,42 @@ void write_iq_data(std::string filename, std::vector<std::complex<T>> &samples)
     {
         std::cout << "Could not open file to write data: " << e.what() << std::endl;
     }
-}
+}   // end of write_iq_data
+
+//-----------------------------------------------------------------------------
+template <typename T>
+void write_qi_data(std::string filename, std::vector<std::complex<T>>& qi_samples)
+{
+    std::ofstream data_file;
+
+    std::vector<std::complex<T>> samples(qi_samples.size());
+
+    try
+    {
+        for (uint64_t idx = 0; idx < qi_samples.size(); ++idx)
+        {
+            samples[idx] = std::complex<T>(qi_samples[idx].imag(), qi_samples[idx].real());
+        }
+
+
+
+        data_file.open(filename, std::ios::out | std::ios::binary);
+
+        if (!data_file.is_open())
+        {
+            std::cout << "Could not open file to save data... " << std::endl;
+            return;
+        }
+
+        data_file.write(reinterpret_cast<const char*>(samples.data()), 2 * samples.size() * sizeof(T));
+
+        data_file.close();
+    }
+    catch (std::exception e)
+    {
+        std::cout << "Could not open file to write data: " << e.what() << std::endl;
+    }
+}   // end of write_qi_data
 
 //-----------------------------------------------------------------------------
 template <typename T>
