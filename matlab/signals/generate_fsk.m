@@ -18,5 +18,4 @@ function [iq] = generate_fsk(data, amplitude, sample_rate, bit_length, freq_sepa
         
     end
 
-
 end
