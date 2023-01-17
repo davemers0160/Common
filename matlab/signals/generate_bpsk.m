@@ -11,6 +11,7 @@ function [iq] = generate_bpsk(data, amplitude, sample_rate, bit_length)
 
     end
     
-    iq = complex(iq, zeros(numel(iq),1));
+    % realmin("double") is used becuase MATLAB doesn't correctly handle complex values
+    iq = complex(iq, realmin("double")*ones(numel(iq),1));
 
 end
