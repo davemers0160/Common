@@ -15,7 +15,7 @@ function write_binary_iq_data(filename, data, data_type)
 %             fwrite(file_id, data(idx,:), data_type, 'ieee-le');
 %         end
     else
-        data = data(:);
+%         data = data(:);
         iq = [real(data) imag(data)].';
         fwrite(file_id, iq(:), data_type, 'ieee-le');
         
