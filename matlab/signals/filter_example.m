@@ -189,7 +189,7 @@ set(gca,'fontweight','bold','FontSize', 13);
 xlim([x_lpf(1), x_lpf(end)]/1e6);
 xlabel('Frequency (MHz)', 'fontweight', 'bold', 'FontSize', 13);
 ylabel('Amplitude', 'fontweight', 'bold', 'FontSize', 13);
-title('Frequency Response of Shifted Filter', 'fontweight', 'bold', 'FontSize', 14);
+title('Frequency Response of Shifted Filter --> Band Pass Filter', 'fontweight', 'bold', 'FontSize', 14);
 
 plot_num = plot_num + 1;
 
