@@ -11,7 +11,7 @@ plot_num = 1;
 
 %% select the folder where the images are stored
 
-data_path = uigetdir(startpath, 'Select directory where the data is stored');
+data_path = uigetdir("d:\projects\vs_gen", 'Select directory where the data is stored');
 
 if(data_path == 0)
     return;
@@ -32,7 +32,7 @@ commandwindow;
 %% read in the images and then create the movie
 
 % set the frame rate
-fps = 30;
+fps = 10;
 
 % get the file type for the video
 if(strcmp(video_ext, '.mp4'))
@@ -51,8 +51,8 @@ file_type = '*.png';
 listing = dir(strcat(data_path, filesep, file_type));
 
 %% run through the data
-data = cell(20,1);
-for idx=1:length(data) %length(listing)
+data = cell(20,1);%cell(length(listing),1);
+for idx=1:20%length(listing)
     fprintf('Opening: %s\n', fullfile(listing(idx).folder, listing(idx).name));
     tmp_img = imread(fullfile(listing(idx).folder, listing(idx).name)); 
     %tmp_img = imresize(tmp_img, 0.5, 'lanczos3');
