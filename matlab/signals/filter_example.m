@@ -16,9 +16,8 @@ line_width = 1;
 num_bits = 7;
 data = maxmimal_length_seq(num_bits, [1,3,4,num_bits]);
 sample_rate = 20e6;
-bit_length = 1e-3;
 amplitude = 1800;
-freq_separation = 200000;
+% freq_separation = 200000;
 
 % plot the chip sequence
 figure(plot_num)
