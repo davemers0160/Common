@@ -173,20 +173,6 @@ std::vector<float> create_fir_filter(int64_t N, float fc, std::vector<float> w)
 
 }   // end of create_fir_filter
 
-//-----------------------------------------------------------------------------
-std::vector<std::complex<double>> create_freq_rotation(uint64_t N, double fr)
-{
-    uint64_t idx;
-    std::vector<std::complex<double>> res(N, 0.0);
-
-    for (idx = 0; idx < N; ++idx)
-    {
-        res[idx] = std::exp(1i * 2.0 * M_PI * fr * (double)idx);
-    }
-
-    return res;
-}
-
 }  // end of namespace DSP
 
 #endif  // DSP_WINDOW_DEFINITION_H_
