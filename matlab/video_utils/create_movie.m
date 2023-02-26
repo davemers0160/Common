@@ -3,7 +3,12 @@ function create_movie(filename, data, fps, video_type)
     wb = waitbar(0,'Building Movie...');
     % create the video write object and set the properties
     v = VideoWriter(filename, video_type);
-    v.Quality = 100;
+    
+    if(~strcmp(video_type, 'Uncompressed AVI'))
+        v.Quality = 100;
+    end
+
+
     %v.LosslessCompression = 'true';
     v.FrameRate = fps;
     
@@ -15,7 +20,7 @@ function create_movie(filename, data, fps, video_type)
         writeVideo(v, data{idx})
         waitbar(idx/length(data), wb);
     end
-    waitbar(100,wb, 'Operations complete!');
+    waitbar(100,wb, 'Complete!');
     
     % close the object
     close(v);

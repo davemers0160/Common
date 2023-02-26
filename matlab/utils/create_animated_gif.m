@@ -21,7 +21,7 @@ function create_animated_gif(filename, delay, data, loop_count)
         waitbar(idx/frame_count,wb);
     end
 
-    waitbar(100,wb, 'Operations complete!');
+    waitbar(100,wb, 'Complete!');
     pause(1);
     delete(wb);
 end
