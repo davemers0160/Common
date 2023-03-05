@@ -11,7 +11,7 @@ plot_num = 1;
 
 %% select the folder where the images are stored
 
-data_path = uigetdir(startpath, 'Select directory where the data is stored');
+data_path = uigetdir("d:\projects\vs_gen", 'Select directory where the data is stored');
 
 if(data_path == 0)
     return;
@@ -32,15 +32,15 @@ commandwindow;
 %% read in the images and then create the movie
 
 % set the frame rate
-fps = 30;
+fps = 10;
 
 % get the file type for the video
 if(strcmp(video_ext, '.mp4'))
     video_type = 'MPEG-4';
 
 elseif (strcmp(video_ext, '.avi'))
-    video_type = 'Motion JPEG AVI';
-
+%     video_type = 'Motion JPEG AVI';
+    video_type = 'Uncompressed AVI';
 else
     fprintf('Incorrect video file type!\n');
     return;
@@ -51,11 +51,11 @@ file_type = '*.png';
 listing = dir(strcat(data_path, filesep, file_type));
 
 %% run through the data
-data = cell(length(listing),1);
-for idx=1:length(listing)
+data = cell(20,1);%cell(length(listing),1);
+for idx=1:20%length(listing)
     fprintf('Opening: %s\n', fullfile(listing(idx).folder, listing(idx).name));
     tmp_img = imread(fullfile(listing(idx).folder, listing(idx).name)); 
-    tmp_img = imresize(tmp_img, 0.5, 'lanczos3');
+    %tmp_img = imresize(tmp_img, 0.5, 'lanczos3');
     %data{idx} = insertMarker(tmp_img, [floor(size(tmp_img, 2)/2), floor(size(tmp_img,1)/2)], '+', 'color', 'red', 'size', 4);
     %data{idx} = insertShape(data{idx}, 'Rectangle', [floor(size(tmp_img, 2)/2)-64, floor(size(tmp_img,1)/2)-64, 128, 128], 'Color', 'yellow', 'LineWidth', 1, 'Opacity',1, 'SmoothEdges', false);
     data{idx} = tmp_img;
