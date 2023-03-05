@@ -130,16 +130,16 @@ inline std::vector<float> blackman_nuttall_window(int64_t N)
 template <typename T, typename funct>
 std::vector<T> create_fir_filter(int64_t N, float fc, funct window_function)
 {
-    std::vector<T> g(N+1, 0);
+    std::vector<T> g(N, 0);
 
-    std::vector<float> w = window_function(N);
+    std::vector<float> w = window_function(N-1);
 
-    for (int64_t idx = 0; idx <= N; ++idx)
+    for (int64_t idx = 0; idx < N; ++idx)
     {
-        if (abs((double)(idx -  (N >> 1))) < 1e-6)
+        if (abs((double)(idx -  ((N-1) >> 1))) < 1e-6)
             g[idx] = w[idx] * fc;
         else
-            g[idx] = w[idx] * (std::sin(M_PI * fc * (idx - (N >> 1))) / (M_PI * (idx - (N >> 1))));
+            g[idx] = w[idx] * (std::sin(M_PI * fc * (idx - ((N - 1) >> 1))) / (M_PI * (idx - ((N - 1) >> 1))));
     }
 
     return g;
