@@ -26,7 +26,7 @@ if(save_path == 0)
     return;
 end
 
-[~,  ~, video_ext] = fileparts(save_file);
+[~,  save_filename, video_ext] = fileparts(save_file);
 commandwindow;
 
 %% read in the images and then create the movie
@@ -63,6 +63,7 @@ end
 
 fprintf('\nBuilding movie...');
 create_movie(fullfile(save_path, save_file), data, fps, video_type);
+create_animated_gif(fullfile(save_path, strcat(save_filename, '.gif')), 1.0*ones(numel(data),1), data, Inf);
 
 fprintf('\nComplete!');
 
