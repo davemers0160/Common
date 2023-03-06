@@ -7,15 +7,15 @@ function create_animated_gif(filename, delay, data, loop_count)
     for idx = 1:frame_count
         
         if(size(data{idx},3)==3)
-            [A,map] = rgb2ind(data{idx},256);
+            [A, map] = rgb2ind(data{idx}, 256);
         else
-            [A,map] = gray2ind(data{idx},256);            
+            [A, map] = gray2ind(data{idx}, 256);            
         end
         
         if idx == 1
-            imwrite(A,map,filename,'gif','LoopCount',loop_count,'DelayTime',delay(idx));
+            imwrite(A, map, filename,'gif','LoopCount',loop_count,'DelayTime',delay(idx));
         else
-            imwrite(A,map,filename,'gif','WriteMode','append','DelayTime',delay(idx));
+            imwrite(A, map, filename,'gif','WriteMode','append','DelayTime',delay(idx));
         end
         
         waitbar(idx/frame_count,wb);
