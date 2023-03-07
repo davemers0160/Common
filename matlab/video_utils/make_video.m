@@ -51,8 +51,8 @@ file_type = '*.png';
 listing = dir(strcat(data_path, filesep, file_type));
 
 %% run through the data
-data = cell(20,1);%cell(length(listing),1);
-for idx=1:20%length(listing)
+data = cell(15,1);%cell(length(listing),1);
+for idx=1:length(data)
     fprintf('Opening: %s\n', fullfile(listing(idx).folder, listing(idx).name));
     tmp_img = imread(fullfile(listing(idx).folder, listing(idx).name)); 
     %tmp_img = imresize(tmp_img, 0.5, 'lanczos3');
@@ -63,7 +63,7 @@ end
 
 fprintf('\nBuilding movie...');
 create_movie(fullfile(save_path, save_file), data, fps, video_type);
-create_animated_gif(fullfile(save_path, strcat(save_filename, '.gif')), 1.0*ones(numel(data),1), data, Inf);
+create_animated_gif(fullfile(save_path, strcat(save_filename, '.gif')), 1.0/fps*ones(numel(data),1), data, Inf);
 
 fprintf('\nComplete!');
 
