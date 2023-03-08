@@ -7,7 +7,7 @@
 #include <opencv2/imgproc/imgproc.hpp>  
 
 template<typename T>
-void advanced_threshold(cv::Mat &src, cv::Mat &dst, T threshold, T min_val, T max_val)
+void advanced_threshold(cv::Mat &src, cv::Mat &dst, double threshold, T min_val, T max_val)
 {
 	// accept only single channel char type matrices
 	//CV_Assert(inputImage.depth() == CV_8U);
