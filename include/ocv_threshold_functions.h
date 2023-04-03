@@ -6,6 +6,29 @@
 #include <opencv2/highgui/highgui.hpp>     
 #include <opencv2/imgproc/imgproc.hpp>  
 
+
+template<typename T>
+void advanced_threshold(cv::Mat& src, double threshold, T min_val, T max_val)
+{
+    // accept only single channel char type matrices
+    //CV_Assert(inputImage.depth() == CV_8U);
+
+    cv::MatIterator_<T> it, end;
+
+    for (it = src.begin<T>(), end = src.end<T>(); it != end; ++it)
+    {
+        if (*it >= threshold)
+        {
+            *it = max_val;
+        }
+        else
+        {
+            *it = min_val;
+        }
+    }
+
+}	// end of advanced_threshold
+
 template<typename T>
 void advanced_threshold(cv::Mat &src, cv::Mat &dst, double threshold, T min_val, T max_val)
 {
