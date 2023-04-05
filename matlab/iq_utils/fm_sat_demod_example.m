@@ -68,7 +68,7 @@ switch test_case
     case 2
 %         filename = 'D:\Projects\bladerf\rx_record\recordings\137M000_0M624__640s_test2.bin';
 %         filename = 'D:\Projects\bladerf\rx_record\recordings\137M500_1M4__64s_test3.bin';
-        filename = 'D:\Projects\bladerf\rx_record\recordings\137M800_1M000__600s_20221120_1110.bin';
+        filename = 'D:\Projects\SDR\bladerf\rx_record\recordings\137M800_1M000__600s_20221120_1110.bin';
         
         % this is the sample rate of the capture (Hz)
 %         fs = 1.4e6;

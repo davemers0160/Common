@@ -16,7 +16,7 @@ commandwindow;
 data_type = 'int16';
 byte_order = 'ieee-le';
 
-filename = 'D:\Projects\bladerf\rx_record\recordings\137M000_1M000__600s_20221120_0955.bin';
+filename = 'D:\Projects\SDR\bladerf\rx_record\recordings\137M000_1M000__600s_20221120_0955.bin';
 % filename = 'D:\Projects\bladerf\rx_record\recordings\137M800_1M000__600s_20221120_1110.bin';
 
 [~, iqc, ~, ~] = read_binary_iq_data(filename, data_type, byte_order);
