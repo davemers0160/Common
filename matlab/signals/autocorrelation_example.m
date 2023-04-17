@@ -129,7 +129,7 @@ b_titles = {'Barker Code (13)', 'MLS (n=4)'};
 x(1,:) = cat(2, zeros(1,101), b13, zeros(1,101));
 
 % maximal length sequence
-x(2,:) = cat(2, zeros(1,100), maxmimal_length_seq(4), zeros(1,100));
+x(2,:) = cat(2, zeros(1,100), maxmimal_length_seq(4, [1,4]), zeros(1,100));
 
 num_sig = size(x,1);
 
@@ -155,7 +155,7 @@ for idx=1:num_sig
     hold on
     grid on
     box on
-    plot(x(idx, :), cm(idx), 'LineWidth', line_width)
+    stairs(x(idx, :), cm(idx), 'LineWidth', line_width)
     xlim([0, length(x(idx,:))]);
     set(gca,'fontweight','bold','FontSize',11);
     title(b_titles{idx}, 'fontweight','bold','FontSize',12);

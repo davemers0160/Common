@@ -13,7 +13,7 @@ function SR = maxmimal_length_seq(reg_length, taps)
     register(1) = 1;
     
     sr_size = (2^reg_length)-1;
-    SR = zeros(1,sr_size);
+    SR = ones(1,sr_size);
 
 
     for idx=1:sr_size

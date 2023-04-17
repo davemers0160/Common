@@ -32,7 +32,7 @@ b13 = [1, 1, 1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1];
 % sig_noise = 0.7;
 
 % maximal length sequence
-x = maxmimal_length_seq(6);
+x = maxmimal_length_seq(6, [2,3,6]);
 sig_noise = 0.80;
 
 x_length = length(x);
