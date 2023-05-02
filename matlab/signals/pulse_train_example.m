@@ -28,9 +28,9 @@ b13 = [1, 1, 1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1];
 % sig_noise = 0.7;
 
 % maximal length sequence
-taps = [1,6];
+taps = [1,3,6];
 x = maxmimal_length_seq(6, taps);
-sig_noise = 0.80;
+sig_noise = 0.20;
 
 x_length = length(x);
 
