@@ -294,6 +294,8 @@ inline void parse_csv_file(std::string parse_filename, std::vector<std::vector<s
 		}
 	}
 
+    csv_file.close();
+
 }	// end of parse_csv_file
 
 
