@@ -119,7 +119,7 @@ void read_iq_data(std::string filename, std::vector<std::complex<T>> &samples)
         data_file.seekg(0, std::ios::beg);
 
         // set the size of the samples container based on the file size and the size 
-        samples.resize(std::floor(file_size/sizeof(T)));
+        samples.resize(std::floor(file_size/(2.0*sizeof(T))));
         
         data_file.read(reinterpret_cast<char*>(samples.data()), file_size);
 
