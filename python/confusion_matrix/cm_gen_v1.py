@@ -30,7 +30,7 @@ cm_max = 100
 
 # plot specific variables that are used in plot formatting (size/color)...
 cm_plot_h = 750
-cm_plot_w = 1500
+cm_plot_w = 2100
 err_plot_h = 130
 err_plot_w = cm_plot_w
 
