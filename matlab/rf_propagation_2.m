@@ -77,6 +77,9 @@ el1 = plot3(r_ellipse(1,:) + p2(1), r_ellipse(2,:) + p2(2), zm*ones(1,segments),
 
 set(gca,'fontweight','bold','FontSize', 13);
 
+xlabel('meters (m)', 'fontweight','bold','FontSize', 13)
+ylabel('meters (m)', 'fontweight','bold','FontSize', 13)
+
 colormap(jet(256))
 colorbar
 
