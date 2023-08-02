@@ -255,6 +255,7 @@ DfD_Analysis/.vscode/launch.json
 *.dll
 
 /.idea
+/python/.idea
 /python/tdoa/.idea
 /python/confusion_matrix/.idea
 /python/confusion_matrix/*.html
