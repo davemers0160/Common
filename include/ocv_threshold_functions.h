@@ -7,8 +7,9 @@
 #include <opencv2/imgproc/imgproc.hpp>  
 
 
+//-----------------------------------------------------------------------------
 template<typename T>
-void advanced_threshold(cv::Mat& src, double threshold, T min_val, T max_val)
+inline void advanced_threshold(cv::Mat& src, double threshold, T min_val, T max_val)
 {
     // accept only single channel char type matrices
     //CV_Assert(inputImage.depth() == CV_8U);
@@ -29,8 +30,9 @@ void advanced_threshold(cv::Mat& src, double threshold, T min_val, T max_val)
 
 }	// end of advanced_threshold
 
+//-----------------------------------------------------------------------------
 template<typename T>
-void advanced_threshold(cv::Mat &src, cv::Mat &dst, double threshold, T min_val, T max_val)
+inline void advanced_threshold(cv::Mat &src, cv::Mat &dst, double threshold, T min_val, T max_val)
 {
 	// accept only single channel char type matrices
 	//CV_Assert(inputImage.depth() == CV_8U);
@@ -55,8 +57,9 @@ void advanced_threshold(cv::Mat &src, cv::Mat &dst, double threshold, T min_val,
 
 }	// end of advanced_threshold
 
+//-----------------------------------------------------------------------------
 template<typename T>
-void ranged_threshold(cv::Mat &src, cv::Mat &dst, T min_val, T max_val)
+inline void ranged_threshold(cv::Mat &src, cv::Mat &dst, T min_val, T max_val)
 {
     //CV_Assert(src.depth() == CV_8U);
 
@@ -83,7 +86,8 @@ void ranged_threshold(cv::Mat &src, cv::Mat &dst, T min_val, T max_val)
 
 }   // end of ranged_threshold
 
-void energy_threshold(cv::Mat &src, cv::Mat &dst, double energyVal, int &threshVal, int method)
+//-----------------------------------------------------------------------------
+inline void energy_threshold(cv::Mat &src, cv::Mat &dst, double energyVal, int &threshVal, int method)
 {
     //CV_Assert(src.depth() == CV_8U);
 
@@ -146,5 +150,16 @@ void energy_threshold(cv::Mat &src, cv::Mat &dst, double energyVal, int &threshV
 	}
 	
 }	// end of energy_threshold
+
+//-----------------------------------------------------------------------------
+inline void binarize_image(cv::Mat& src, cv::Mat& dst, double threshold, uint8_t se_size)
+{
+    advanced_threshold(src, dst, threshold, -1.0f, 1.0f);
+    cv::Mat SE5 = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(se_size, se_size));
+    //cv::Mat SE5 = (cv::Mat_<uint8_t>(5, 5) << 0, 0, 1, 0, 0,   0, 1, 1, 1, 0,   1, 1, 1, 1, 1,   0, 1, 1, 1, 0,   0, 0, 1, 0, 0);
+
+    cv::morphologyEx(dst, dst, cv::MORPH_CLOSE, SE5);
+}
+
 
 #endif	// end of THRESHOLD_FUNCTIONS_H
