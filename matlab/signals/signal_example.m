@@ -15,9 +15,9 @@ commandwindow;
 line_width = 1;
 num_bits = 7;
 data = maxmimal_length_seq(num_bits, [1,3,4,num_bits]);
-sample_rate = 20e6;
+sample_rate = 61440000;
 bit_length = 1e-3;
-amplitude = 1800;
+amplitude = 1950;
 freq_separation = 200000;
 
 % plot the chip sequence
@@ -124,6 +124,13 @@ samples_per_bit = floor(sample_rate*bit_length);
 [iq_bpsk] = generate_bpsk(data, amplitude, sample_rate, bit_length);
 
 [iq_qpsk] = generate_qpsk(data, amplitude, sample_rate, bit_length);
+
+fo = 1e6;
+% create a frequency shift vector to mix the data down, generate a digital complex exponential 
+f_r = exp(-1.0j*2.0*pi()* fo/sample_rate*(0:(numel(iq_qpsk)-1))).';
+iq_qpsk_r = iq_qpsk.*f_r;
+
+iq_qpsk = amplitude*(iq_qpsk_r/amplitude + 0.01*complex(randn(numel(iq_qpsk),1), randn(numel(iq_qpsk),1)));
 
 %% plot BPSK
 % do the FFT on the signal

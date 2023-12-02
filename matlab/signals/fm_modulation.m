@@ -32,7 +32,7 @@ num_samples = numel(y);
 fc = 5e3;
 fs = 1e6;
 
-beta = 0.5;
+beta = 1.1;
 
 m = exp(1i * beta * y);
 
