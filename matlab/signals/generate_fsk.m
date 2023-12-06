@@ -9,8 +9,8 @@ function [iq] = generate_fsk(data, amplitude, sample_rate, bit_length, center_fr
     f1 = (center_freq - freq_separation)/sample_rate;
     f2 = (center_freq + freq_separation)/sample_rate;
     
-    samples_per_cycle_f1 = floor(floor(samples_per_bit*f1 + 0.5)*(1/f1) + 0.5)
-    samples_per_cycle_f2 = floor(floor(samples_per_bit*f2 + 0.5)*(1/f2) + 0.5)    
+    samples_per_cycle_f1 = floor(floor(samples_per_bit*f1 + 0.5)*(1/f1) + 0.5);
+    samples_per_cycle_f2 = floor(floor(samples_per_bit*f2 + 0.5)*(1/f2) + 0.5);    
     
 
     
