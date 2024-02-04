@@ -1,7 +1,7 @@
 #!/bin/bash
 
 sudo apt-get update
-sudo apt-get install -y build-essential git cmake libusb-1*
+sudo apt-get install -y build-essential git cmake libusb-1* libsndfile1
 
 mkdir Projects
 cd Projects
@@ -18,9 +18,18 @@ cd ~/Projects
 
 mkdir data
 
-# grab the common repo and the rapipyaml repo
+# grab the common, python_common and the rapipyaml repos
 git clone https://github.com/davemers0160/Common
+git clone https://github.com/davemers0160/python_common
+
 git clone --recursive https://github.com/davemers0160/rapidyaml
+
+# create the python virtual environment and install required packages
+python -m venv ~/venv --system-site-packages --symlinks
+source ~/venv/bin/activate
+
+pip install numpy pyyaml soundfile
+
 
 # build the rapidyaml library
 cd rapidyaml
@@ -46,9 +55,9 @@ cmake --build . --config Release -- -j4
 sudo cp /home/${USER}/Projects/SDR/bladerf/tx_hop_example/bladerf.service /lib/systemd/system/.
 
 # reload the systemd daemon
-systemctl daemon-reload
+sudo systemctl daemon-reload
 
 # enable the bladerf serrvice and autostart
-systemctl enable bladerf.service
+sudo systemctl enable bladerf.service
 
 
