@@ -18,6 +18,7 @@ function [data] = upsample_data(data, N)
         n_taps = n_taps + 1;
     end
     
+    % filter cutoff frequency
     fc = 1/N;
     
     w = nuttall_window(n_taps);

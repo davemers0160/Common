@@ -19,6 +19,7 @@ function [iq, sample_rate, y2] = generate_fm(data, audio_fs, rf_fs, k)
     
     accum = 0;
     
+    % apply FM modulation
     for idx=1:num_rf_samples
         accum = accum + y2(idx); 
         iq(1,idx) = exp(scale * accum);
