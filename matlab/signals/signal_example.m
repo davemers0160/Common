@@ -13,10 +13,10 @@ commandwindow;
 
 %% setup some of the variables
 line_width = 1;
-num_bits = 7;
+num_bits = 9;
 data = maxmimal_length_seq(num_bits, [1,3,4,num_bits]);
-sample_rate = 61440000;
-bit_length = 1e-3;
+sample_rate = 20e6;
+bit_length = 0.5e-6;
 amplitude = 1950;
 freq_separation = 200000;
 
@@ -36,7 +36,7 @@ samples_per_bit = floor(sample_rate*bit_length);
 
 [iq_ask] = generate_ask(data, amplitude, sample_rate, bit_length);
 
-[iq_fsk] = generate_fsk(data, amplitude, sample_rate, bit_length, freq_separation);
+[iq_fsk] = generate_fsk(data, amplitude, sample_rate, bit_length, 0, freq_separation);
 
 
 %% plot ASK
