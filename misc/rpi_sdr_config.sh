@@ -53,7 +53,7 @@ cmake --build . --config Release -- -j4
 
 # copy the service that will start the bladeRF code
 # note: ${USER} in the bladerf.service file will need to be changed to the actual username
-sudo cp /home/${USER}/Projects/SDR/bladerf/tx_hop_example/bladerf.service /lib/systemd/system/.
+sudo cp /home/${USER}/Projects/SDR/bladerf/common/bladerf.service /lib/systemd/system/.
 
 # reload the systemd daemon
 sudo systemctl daemon-reload
