@@ -13,4 +13,8 @@ function [g] = create_fir_filter(fc, w)
         end
     end
 
+    g_sum = sum(g);
+
+    g = g / g_sum;
+
 end
