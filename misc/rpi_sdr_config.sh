@@ -3,9 +3,24 @@
 sudo apt-get update
 sudo apt-get install -y build-essential git cmake libusb-1* libsndfile1
 
+# create the python virtual environment and install required packages
+python -m venv ~/venv --system-site-packages --symlinks
+
+# create a script to activate the python virtual environment
+echo '#!/bin/bash' > activate_venv.sh
+echo 'source ~/venv/bin/activate' >> activate_venv.sh
+chmod +x ~/activate_venv.sh
+
+# have the venv startup when the terminal starts
+echo 'source activate_venv.sh' >> .bashrc
+
+# activate the venv to install some things
+source ~/venv/bin/activate
+pip install numpy pyyaml soundfile
+
+# grab all of the projects 
 mkdir Projects
 cd Projects
-
 
 git clone https://github.com/Nuand/bladeRF.git ./bladeRF
 cd ./bladeRF/host
@@ -23,13 +38,6 @@ git clone https://github.com/davemers0160/Common
 git clone https://github.com/davemers0160/python_common
 
 git clone --recursive https://github.com/davemers0160/rapidyaml
-
-# create the python virtual environment and install required packages
-python -m venv ~/venv --system-site-packages --symlinks
-source ~/venv/bin/activate
-
-pip install numpy pyyaml soundfile
-
 
 # build the rapidyaml library
 cd rapidyaml
@@ -61,4 +69,6 @@ sudo systemctl daemon-reload
 # enable the bladerf serrvice and autostart
 sudo systemctl enable bladerf.service
 
-
+echo "Run the following command:"
+echo "sudo nano /boot/firmware/cmdline.txt"
+echo "- add the following to the end of the line: \" usbcore.usbfs_memory_mb=2048 \" "
