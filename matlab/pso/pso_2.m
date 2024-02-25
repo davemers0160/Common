@@ -1,4 +1,4 @@
-function [Pg, G, g_best, P, itr, img] = pso_2(objective_function, pso_params)
+function [Pg, G, g_best, P, itr, img] = pso_2(objective_function, pso_params, X_in)
 %% set up the basic data structures
 
     pso_fig = figure;
@@ -33,7 +33,15 @@ function [Pg, G, g_best, P, itr, img] = pso_2(objective_function, pso_params)
     img = {};
     
 %% init X and V
-    for idx=1:pso_params.N
+    x_start = 1;
+    if(~isempty(X_in))
+        X{x_start, 1} = X_in;
+        V{x_start, 1} = pso_params.velocity_limits(1,:) + (pso_params.velocity_limits(2,:)-pso_params.velocity_limits(1,:)).*rand(pso_params.ZN, pso_params.D);
+        F(x_start, itr) = objective_function(X{x_start,1});
+        x_start = 2;
+    end
+    
+    for idx=x_start:pso_params.N
         X{idx, 1} = pso_params.position_limits(1,:) + (pso_params.position_limits(2,:)-pso_params.position_limits(1,:)).*rand(pso_params.ZN, pso_params.D);
         V{idx, 1} = pso_params.velocity_limits(1,:) + (pso_params.velocity_limits(2,:)-pso_params.velocity_limits(1,:)).*rand(pso_params.ZN, pso_params.D);
         F(idx, itr) = objective_function(X{idx,1});
@@ -54,7 +62,7 @@ function [Pg, G, g_best, P, itr, img] = pso_2(objective_function, pso_params)
 
     G{itr} = X{f_min_idx, 1};
 
-    img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N, pso_params.position_limits);
+%     img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N, pso_params.position_limits);
         
 %% update V and X
     for idx=1:pso_params.N
@@ -67,6 +75,10 @@ function [Pg, G, g_best, P, itr, img] = pso_2(objective_function, pso_params)
     end
      
 %% start the PSO loop
+
+    ZN = pso_params.ZN;
+    D = pso_params.D;
+
     while((itr <= pso_params.itr_max) && (g_best(itr) > pso_params.min_error))  
         
         itr = itr + 1; 
@@ -103,14 +115,14 @@ function [Pg, G, g_best, P, itr, img] = pso_2(objective_function, pso_params)
         end         
 
         if (mod(itr, 10) == 0)
-            img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N, pso_params.position_limits);
+%             img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N, pso_params.position_limits);
         end
         
         % update V and X
-        for idx=1:pso_params.N
+        parfor idx=1:pso_params.N
             %V(idx, itr+1).con = kap * (V(idx,itr).con + (c1*R).*(P(idx,itr).con - X(idx,itr).con) + (c2*S).*(G(itr).con - X(idx,itr).con));
-            R = rand(pso_params.ZN, pso_params.D);
-            S = rand(pso_params.ZN, pso_params.D);
+            R = rand(ZN, D);
+            S = rand(ZN, D);
             V{idx, 1} = limit_velocity(pso_params.kap*(V{idx, 1} + (pso_params.c1*R).*(P{idx,1} - X{idx,1}) + (pso_params.c2*S).*(G{itr} - X{idx,1})), pso_params.velocity_limits);
 
             X{idx, 1} = limit_position(X{idx, 1} + V{idx, 1}, pso_params.position_limits);          
@@ -118,7 +130,7 @@ function [Pg, G, g_best, P, itr, img] = pso_2(objective_function, pso_params)
          
     end
     
-    img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N, pso_params.position_limits);
+%     img{end+1} = plot_pso(ax, P, G, p_best, itr, pso_params.N, pso_params.position_limits);
 
     Pg = G{itr};
 
