@@ -99,7 +99,7 @@ switch test_case
 end
 
 %% load the data
-[~, iqc, ~, ~] = read_binary_iq_data(filename, data_type, byte_order);
+[~, iqc] = read_binary_iq_data(filename, data_type, byte_order);
 
 num_samples = numel(iqc);
 

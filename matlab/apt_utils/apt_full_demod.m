@@ -18,19 +18,21 @@ byte_order = 'ieee-le';
 
 filename = 'D:\Projects\SDR\bladerf\rx_record\recordings\137M000_1M000__600s_20221120_0955.bin';
 % filename = 'D:\Projects\bladerf\rx_record\recordings\137M800_1M000__600s_20221120_1110.bin';
+filename = 'D:\data\RF\20240224\blade_F137.912M_SR0.624M_20240224_222353.sc16';
 
-[~, iqc, ~, ~] = read_binary_iq_data(filename, data_type, byte_order);
+[~, iqc] = read_binary_iq_data(filename, data_type, byte_order);
 
 num_samples = numel(iqc);
 
-
 %% demod parameters
 % this is the sample rate of the capture (Hz)
-fs = 1000000;
+% sample_rate = 1000000;
+sample_rate = 624000;
 
 % offset from the center where we want to demodulate (Hz)
-% f_offset = 116000; 
-f_offset = 103000;
+% rf_freq_offset = 116000; 
+% rf_freq_offset = 103000;
+rf_freq_offset = 0;
 
 % number of taps to create a low pass RF filter
 rf_taps = 200;
@@ -39,7 +41,7 @@ rf_taps = 200;
 fc_rf = 45000;
 
 % the FM broadcast signal has a bandwidth (Hz)
-fs_rf2 = 100000;
+fs_rf2 = 104000;
 
 % FM cutoff frequency
 fc_fm = 20000;
@@ -49,27 +51,27 @@ fm_taps = 200;
 
 % plot the spectrogram
 figure;
-spectrogram(iqc(1:(5*fs)), 4096, 1024, 4096, fs, 'centered');
+spectrogram(iqc(1:(5*sample_rate)), 4096, 1024, 4096, sample_rate, 'centered');
 
 %% setup the specific decimation rates
 
 % RF decimation rate
-rf_dec_rate = (fs / fs_rf2);
+rf_decimation_factor = (sample_rate / fs_rf2);
+
+% calculate the new sampling rate based on the original and the decimated sample rate
+decimated_sample_rate = sample_rate/rf_decimation_factor;
 
 % create a low pass filter using the blackman window
 % need to generate a conversion from the sampling rate to +/- pi
 % as an added bonus matlab goes from 0 - 1, where 1 is sampling rate / 2
 % fs/fs = 1; channel_bw/fs = 
 %freq_cutoff = pi()/(fs/2) * (channel_bw / 4.0);
-lpf_rf = fir1(rf_taps, fc_rf/fs, 'low');
+lpf_rf = fir1(rf_taps, fc_rf/sample_rate, 'low');
 
 lpf_fm = fir1(fm_taps, fc_fm/fs_rf2, 'low');
 
-% calculate the new sampling rate based on the original and the decimated sample rate
-fs_d = fs/rf_dec_rate;
-
 % scaling for tangent
-phasor_scale = 1.0 /((2 * pi()) / (fs_d / fs_rf2));
+phasor_scale = 1.0 /((2 * pi()) / (decimated_sample_rate / fs_rf2));
 
 % dec_audio = (fs_d/fs_audio);  
 % fs_audio = fs_d / dec_audio;
@@ -81,24 +83,39 @@ fc_am = 2400;
 
 fs_am = 4160;
     
-am_dec_rate = fs_rf2/fs_am;
+am_decimation_factor = fs_rf2/fs_am;
 
 lpf_am = fir1(fm_taps, fc_am/fs_rf2, 'low');
 
+%% print out the parameters
+
+fprintf('sample_rate: %d\n', sample_rate);
+fprintf('frequency_offset: %d\n', rf_freq_offset);
+fprintf('rf_decimation_factor: %d\n', rf_decimation_factor);
+fprintf('decimated_sample_rate %d\n', decimated_sample_rate);
+fprintf('fc_fm: %d\n', fc_fm);
+fprintf('fc_rf: %d\n', fc_rf);
+fprintf('phasor_scale: %d\n', phasor_scale);
+fprintf('am_offset: %d\n', am_offset);
+fprintf('am_decimation_factor: %d\n', am_decimation_factor);
+% fprintf('am_sample_rate: %d\n', am_sample_rate);
+fprintf('fc_am: %d\n', fc_am);
+
+fprintf('\n');
 
 %% start block processing
 
 % number of samples to process at one time
-block_size = floor(fs);    %65536*8;
+block_size = floor(sample_rate);    %65536*8;
 
 fft_size = 8192;
-fft_bin = floor((f_offset/fs) * fft_size);
+fft_bin = floor((rf_freq_offset/sample_rate) * fft_size);
 fft_width = 28;
 
 % number of total blocks
 num_blocks = floor((num_samples)/block_size);
 
-rf_rot = exp(1.0j*2.0*pi() * (f_offset/fs) * (0:(block_size-1)))';
+rf_rot = exp(1.0j*2.0*pi() * (rf_freq_offset/sample_rate) * (0:(block_size-1)))';
 
 x10 = [];
 x4 = [];
@@ -120,9 +137,12 @@ for idx=1:num_blocks
 
     % downsample
 %     x4 = x3(floor(1:rf_dec_rate:numel(x3)));
-    x4 = cat(1, x4, x3(floor(1:rf_dec_rate:numel(x3))));
+    x4 = cat(1, x4, x3(floor(1:rf_decimation_factor:numel(x3))));
 end
 
+fprintf('Processing Complete!\n');
+
+%%
 % filter the downsampled RF
 x5 = filter(lpf_fm, 1, x4);
 
@@ -140,7 +160,7 @@ x8 = filter(lpf_am, 1, x7);
 x9 = abs(x8);
 
 % downsample the AM
-x10 = x9(floor(1:am_dec_rate:numel(x9)));   
+x10 = x9(floor(1:am_decimation_factor:numel(x9)));   
 
  
 %% digitize
