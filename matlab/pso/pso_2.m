@@ -1,4 +1,4 @@
-function [Pg, G, g_best, P, itr, img] = pso_2(objective_function, pso_params, X_in)
+function [Pg, G, g_best, P, itr, img, X, F] = pso_2(objective_function, pso_params, X_in)
 %% set up the basic data structures
 
     pso_fig = figure;

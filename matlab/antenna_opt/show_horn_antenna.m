@@ -1,4 +1,4 @@
-function show_horn_antenna(X, design_frequency)
+function [antennaObject] = show_horn_antenna(X, design_frequency)
 
     % Antenna Properties 
     antennaObject = design(horn, design_frequency);
@@ -28,4 +28,5 @@ function show_horn_antenna(X, design_frequency)
     figure;
     pattern(antennaObject, design_frequency);
     
+    antennaObject
 end

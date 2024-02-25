@@ -16,8 +16,8 @@ pso_params.c1 = 2.4;
 pso_params.c2 = 2.1;
 pso_params.phi = pso_params.c1 + pso_params.c2;
 pso_params.kap = 2/(abs(2 - pso_params.phi - sqrt(pso_params.phi^2 - 4*pso_params.phi)));
-pso_params.itr_max = 20;       % number of iterations
-pso_params.N = 12;              % population size              
+pso_params.itr_max = 10;       % number of iterations
+pso_params.N = 20;              % population size              
 pso_params.ZN = 1;
 pso_params.D = 9;
 pso_params.min_error = -30;     % objective function value to stop
@@ -36,11 +36,11 @@ pso_params.min_error = -30;     % objective function value to stop
 
 % pso_params.position_limits [min; max]
 pso_params.position_limits = [0.0005, 0.005, 0.008, 0.008, 0.010, 0.030, 0.010, 0.010, -0.020; ...
-                              0.0020, 0.010, 0.030, 0.060, 0.080, 0.150, 0.078, 0.078, 0.020];
+                              0.0020, 0.010, 0.060, 0.060, 0.100, 0.150, 0.078, 0.078, 0.020];
 
 % pso_params.velocity_limits [min; max]
-pso_params.velocity_limits = [-0.0002, -0.001, -0.001, -0.001, -0.001, -0.005, -0.005, -0.005, -0.005; ...
-                               0.0002,  0.001,  0.001,  0.001,  0.001,  0.005,  0.005,  0.005,  0.005];
+pso_params.velocity_limits = [-0.0005, -0.005, -0.005, -0.005, -0.005, -0.005, -0.005, -0.005, -0.005; ...
+                               0.0005,  0.005,  0.005,  0.005,  0.005,  0.005,  0.005,  0.005,  0.005];
 
 
                            
@@ -48,12 +48,12 @@ pso_params.velocity_limits = [-0.0002, -0.001, -0.001, -0.001, -0.001, -0.005, -
 
 X = [0.0009, 0.0075, 0.014, 0.028, 0.035, 0.053, 0.062, 0.070, -0.01]; 
 
-[Pg, G, g_best, P, itr, img] = pso_2(@horn_objective, pso_params, X);
+[Pg, G, g_best, P, itr, img, X2, F] = pso_2(@horn_objective, pso_params, X);
 
 
 %%
 
-show_horn_antenna(Pg, 9.35e9);
+ant = show_horn_antenna(Pg, 9.35e9);
 
 
 
