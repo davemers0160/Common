@@ -1,10 +1,10 @@
 function [Pg, G, g_best, P, itr, img, X, F] = pso_2(objective_function, pso_params, X_in)
 %% set up the basic data structures
 
-    pso_fig = figure;
-    set(pso_fig,'position',([50,200,1000,600]),'color','w')
-    set(gca,'fontweight','bold','FontSize',13);
-    ax = gca;
+%     pso_fig = figure;
+%     set(pso_fig,'position',([50,200,1000,600]),'color','w')
+%     set(gca,'fontweight','bold','FontSize',13);
+%     ax = gca;
 
     % F represents the results of evaluating the objective function
     F = zeros(pso_params.N, pso_params.itr_max+1);
