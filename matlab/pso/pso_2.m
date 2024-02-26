@@ -35,13 +35,16 @@ function [Pg, G, g_best, P, itr, img, X, F] = pso_2(objective_function, pso_para
 %% init X and V
     x_start = 1;
     if(~isempty(X_in))
-        X{x_start, 1} = X_in;
-        V{x_start, 1} = pso_params.velocity_limits(1,:) + (pso_params.velocity_limits(2,:)-pso_params.velocity_limits(1,:)).*rand(pso_params.ZN, pso_params.D);
-        F(x_start, itr) = objective_function(X{x_start,1});
-        x_start = 2;
+        num_x = min(numel(X_in), pso_params.N);
+        for idx=1:num_x
+            X{idx, 1} = X_in{idx};
+            V{idx, 1} = pso_params.velocity_limits(1,:) + (pso_params.velocity_limits(2,:)-pso_params.velocity_limits(1,:)).*rand(pso_params.ZN, pso_params.D);
+            F(idx, itr) = objective_function(X{idx,1});
+            x_start = x_start + 1;
+        end
     end
     
-    for idx=x_start:pso_params.N
+    parfor idx=x_start:pso_params.N
         X{idx, 1} = pso_params.position_limits(1,:) + (pso_params.position_limits(2,:)-pso_params.position_limits(1,:)).*rand(pso_params.ZN, pso_params.D);
         V{idx, 1} = pso_params.velocity_limits(1,:) + (pso_params.velocity_limits(2,:)-pso_params.velocity_limits(1,:)).*rand(pso_params.ZN, pso_params.D);
         F(idx, itr) = objective_function(X{idx,1});
@@ -86,7 +89,7 @@ function [Pg, G, g_best, P, itr, img, X, F] = pso_2(objective_function, pso_para
         % evaluate F(X,Z)
         %d = cell(pso_params.ZN, pso_params.N);
         %m_idx = zeros(pso_params.ZN, pso_params.N);
-        for idx=1:pso_params.N
+        parfor idx=1:pso_params.N
             F(idx, itr) = objective_function(X{idx,1});
         end        
         
