@@ -61,8 +61,10 @@ X = {};
 
 ant = show_conical_horn_antenna(Pg, 9.35e9);
 
+%%
+
 t = datetime('now','TimeZone','local','Format','yyyyMMdd_HHmmss');
 
 filename = strcat('c:\Projects\data\conical_horn_ant_',char(t),'.mat');
 
-save(filename, ant);
+save(filename, 'ant');
