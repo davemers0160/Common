@@ -19,7 +19,7 @@ if(data_filepath == 0)
     return;
 end
 
-[~,  ~, ext] = fileparts(data_file);
+[~,  fn, ext] = fileparts(data_file);
 
 if (strcmp(ext,'.fc32') == 1)
     scale = 32768/2048;
@@ -81,21 +81,33 @@ adss = abs(dss);
 tssi = tss(index);
 
 delta_tssi = (tssi(2:end) - tssi(1:end-1))*1000;
-
+%% plot
 figure(plot_num)
-plot(tss, adss, 'b')
+set(gcf,'position',([50,50,1400,500]),'color','w')
+% plot(tss, adss, 'b')
 hold on
 grid on
 box on
 stem(tss(index), 20*ones(numel(index),1), 'r');
+set(gca,'fontweight','bold','FontSize',12);
+xlabel('time (s)', 'fontweight','bold','FontSize',12);
+ylabel(' ', 'fontweight','bold','FontSize',12);
 
+savefig(strcat(data_filepath, '\', fn, '_bursts.fig'));
 plot_num = plot_num + 1;
 
 figure(plot_num)
+set(gcf,'position',([50,50,1400,500]),'color','w')
+
 stairs(delta_tssi, 'b')
 hold on
 grid on
 box on
+
+set(gca,'fontweight','bold','FontSize',12);
+xlabel('burst', 'fontweight','bold','FontSize',12);
+ylabel('burst to burst times (ms)', 'fontweight','bold','FontSize',12);
+savefig(strcat(data_filepath, '\', fn, '_b2b_timing.fig'));
 
 plot_num = plot_num + 1;
 
