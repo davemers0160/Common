@@ -11,12 +11,53 @@ plot_num = 1;
 
 line_width = 1.5;
 
+cd(startpath);
+commandwindow;
+
 %% conversions
 
 ft2m = 0.3048001109472;
 m2nmi = 0.000539957;
 yd2m = 0.9144;
 
+%% load ITM library
+
+lib_path = '../ITM/x64/';
+lib_name = 'itm';
+hfile = 'itm.h';
+
+if(~libisloaded(lib_name))
+    [notfound, warnings] = loadlibrary(strcat(lib_path, lib_name,'.dll'), strcat(lib_path,hfile));
+end
+
+if(~libisloaded(lib_name))
+   fprintf('\nThe %s library did not load correctly!',  strcat(lib_path, lib_name,'.dll'));    
+end
+
+%% ITM parameters
+
+sw_conductivity = 5.5;
+sw_permitivity = 68;
+
+N_0 = 301;
+delta_h = 0.1;
+
+time_var = 50;
+location_var = 50;
+situation_var = 50;
+
+site_criteria = int32(1);
+
+climate = int32(7);
+
+polarization = int32(0);
+
+mdvar = int32(0);
+
+loss_t = libpointer('doublePtr', 0.0);
+warn_t = libpointer('longPtr', 0);
+
+pfl_t = libpointer('doublePtr', [10, 100, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]);
 
 %% Loss - 20*LOG(R)+20*LOG(F)-27.55	
 frequency = 100;
@@ -96,7 +137,7 @@ plot_num = plot_num + 1;
 
 %% loss mapping
 
-RX = [0, 0, 1000];
+RX = [0, 0, z_max];
 
 dist_tx_rx = cell(num_TX, 1);
 loss_tx_rx = cell(num_TX, 1);
@@ -106,8 +147,14 @@ loss_ax_rx = cell(num_AX, 1);
 % calculate TX to RX distance and loss
 for idx=1:num_TX
     dist_tx_rx{idx,1} = sqrt((x-TX(idx, 1)).*(x-TX(idx, 1)) + (y-TX(idx, 2)).*(y-TX(idx, 2)) + (z-TX(idx, 3)).*(z-TX(idx, 3))); 
-    loss_tx_rx{idx,1} = -(20*log10(dist_tx_rx{idx,1}) + 20*log10(frequency) - 27.55);
+%     loss_tx_rx{idx,1} = -(20*log10(dist_tx_rx{idx,1}) + 20*log10(frequency) - 27.55);
 
+    for y_r = 1:numel(y_range)
+        for x_r = 1:numel(x_range)
+            res = calllib(lib_name,'ITM_AREA_TLS', TX(idx, 3), z_max, site_criteria, site_criteria, dist_tx_rx{idx,1}(y_r, x_r)/1000, delta_h, climate, N_0, frequency, polarization, sw_permitivity, sw_conductivity, mdvar, time_var, location_var, situation_var, loss_t, warn_t);
+            loss_tx_rx{idx,1}(y_r, x_r) = -loss_t.Value;
+        end
+    end
 end
 
 % calculate AX to RX distance and loss
@@ -128,6 +175,9 @@ end
 
 % for plotting
 z_plot = max(z_plot);
+
+%% close lib
+unloadlibrary(lib_name);
 
 %% ploting the loss delta map
 
