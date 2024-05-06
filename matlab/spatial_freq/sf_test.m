@@ -10,28 +10,51 @@ plot_num = 1;
 
 commandwindow;
 
-%%
+%% setup the example
 
-% setup the example
-scale = 1;     % number of nanometers per pixel
+kernel_size = 69;
+sigma = 20.0;
 
-% setup an example
-data = [0.5*ones(1,10), -0.5*ones(1,10)];
-data = repmat(data, 1,10);
+k = create_1D_gauss_kernel(kernel_size, sigma);
 
-w = size(data, 2);
+pixels_per_um = 2.5;     % number of nanometers per pixel
+s = 70;     %um
+
+pixels_per_um * s/2
 
 % sample rate
-N = w/2;
+scale = 1/pixels_per_um;
+
+% create example data set
+data = [0.9*ones(1,87), zeros(1,87)];
+data = repmat(data, 1,6);
+
+data = data - mean(data(:));
+
+data = conv(data, k(end:-1:1), 'same');
+
+num_data = size(data, 2);
+
+%%
+figure;
+plot(scale*(0:num_data-1), data,'b')
+
+xlabel('um', 'fontweight','bold');
 
 %%
 
-Y = fft(data)/w;
+fft_half = floor(num_data/2);
 
-Y_abs = 20*log10(abs(fftshift(Y))) + 1e-6;
+S = scale*(0:num_data-1);
+
+Y = fft(data)/num_data;
+
+Y_abs = 20*log10(abs((Y))) + 1e-6;
+
+Y_abs(isinf(Y_abs)) = -200;
 
 figure;
-plot(Y_abs, '--b')
+plot(S(1:fft_half), Y_abs(1:fft_half), 'b')
 
 
 
