@@ -10,14 +10,18 @@ full_path = mfilename('fullpath');
 plot_num = 1;
 
 line_width = 1;
-ft2m = 0.3048001109472;
-m2nmi = 0.000539957;
-
-
 % clear tempdir
 % setenv('TMP','C:/temper');
 
 commandwindow;
+
+%% conversions
+
+ft2m = 0.3048001109472;
+m2nmi = 0.000539957;
+yd2m = 0.9144;
+m2yd = 1/yd2m;
+m2ft = 1/ft2m;
 
 %% setup propagation model
 sw_conductivity = 5.5;
@@ -26,11 +30,10 @@ sw_permitivity = 68;
 pm_lr = propagationModel("longley-rice", 'ClimateZone', 'maritime-over-sea', 'GroundPermittivity', sw_permitivity, 'GroundConductivity', sw_conductivity);
 pm_fsl = propagationModel("freespace");
 
-
 %% tx parameters
 latitude = 42.0;
 longitude = -68.0;
-tx_antenna_height = 2000*ft2m;          % meters
+tx_antenna_height = 3*ft2m;          % meters
 tx_power = 1;                       % Watts
 tx_freq = 1000e6;                   % Hz
 
@@ -38,9 +41,9 @@ tx = txsite('Name','M', 'Latitude', latitude, 'Longitude', longitude, 'Transmitt
 
 %% rx parameters
 
-latitude = linspace(42.000, 44.0, 201);
+latitude = linspace(42.000, 42.08, 201);
 longitude = -68.0*ones(numel(latitude),1);
-rx_antenna_height = 145*ft2m;       % meters
+rx_antenna_height = 1.7*ft2m;       % meters
 rx_sensitivity = -200;              % dBm
 
 rx = rxsite('Name','R', 'Latitude', latitude, 'Longitude', longitude, 'ReceiverSensitivity',rx_sensitivity, 'AntennaHeight',rx_antenna_height);
@@ -56,11 +59,16 @@ rx_gain = 0;                        % dB
 coverage(tx, "PropagationModel", pm_fsl, 'MaxRange',max_range, 'SignalStrengths',signal_strength, 'ReceiverGain',rx_gain, 'Transparency',transparency, 'ReceiverAntennaHeight',rx_height);
 
 %% try pathloss
-d = distance(tx, rx);
+wgs84 = wgs84Ellipsoid("m");
+for idx=1:numel(rx)
+    d(1,idx) = distance(tx.Latitude, tx.Longitude, rx(idx).Latitude, rx(idx).Longitude, referenceEllipsoid('GRS 1980'));
+end
 
-pl_fsl = pathloss(pm_fsl, rx, tx);
-% pl_lr = pathloss(pm_lr, rx, tx);
-
+viewer = siteviewer;
+% pl_fsl = pathloss(pm_fsl, rx, tx);
+for idx=1:numel(rx)
+    pl_lr(1,idx) = pathloss(pm_lr, rx(idx), tx, 'Map',viewer);
+end
 %% plot
 
 x_min = 0;
@@ -70,11 +78,11 @@ y_max = -15;
 
 figure(plot_num)
 set(gcf,'position',([50,50,1400,700]),'color','w')
-plot(m2nmi*d, -pl_fsl, '.-b', 'LineWidth', line_width);
+% plot(m2nmi*d, -pl_fsl, '.-b', 'LineWidth', line_width);
 box on
 grid on
 hold on
-% plot(m2nmi*d, -pl_lr, '.-g', 'LineWidth', line_width);
+plot(d, -pl_lr, '.-g', 'LineWidth', line_width);
 plot([x_min,x_max], [-120, -120], '--g', 'LineWidth', line_width);
 
 set(gca,'fontweight','bold','FontSize', 13);

@@ -19,6 +19,8 @@ commandwindow;
 ft2m = 0.3048001109472;
 m2nmi = 0.000539957;
 yd2m = 0.9144;
+m2yd = 1/yd2m;
+m2ft = 1/ft2m;
 
 %% load ITM library
 
