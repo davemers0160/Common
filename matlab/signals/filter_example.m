@@ -33,7 +33,7 @@ title('Data', 'fontweight', 'bold', 'FontSize', 14);
 plot_num = plot_num + 1; 
 
 %% create the signal
-bit_length = 1.0e-6;
+bit_length = 2.0e-6;
 samples_per_bit = floor(sample_rate*bit_length);
 
 [iq_bpsk] = generate_bpsk(data, 1, sample_rate, bit_length);
@@ -50,7 +50,7 @@ x_bpsk = linspace(-sample_rate/2, sample_rate/2, numel(fft_bpsk));
 %% create a low pass filter
 
 % window size
-n_taps = 301;
+n_taps = 101;
 
 % nutall window
 w = zeros(1, n_taps);
@@ -64,7 +64,7 @@ for idx = 0:n_taps-1
 end
 
 % filter cutoff frequency
-fc = 2.0e6/sample_rate;
+fc = 0.5e6/sample_rate;
 
 % create the full filter using the window
 lpf = create_fir_filter(fc, w);
@@ -84,7 +84,7 @@ plot_num = plot_num + 1;
 %% plot the results of the filter
 
 % apply the filter to the bpsk signal
-x1 = conv(iq_bpsk, lpf(end:-1:1), 'same');
+x1 = conv(iq_bpsk, complex(lpf(end:-1:1)), 'same');
 
 fft_lpf = fft(lpf)/numel(lpf);
 
