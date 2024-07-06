@@ -46,7 +46,6 @@ samples_per_pri = floor(pri * sample_rate);
 
 buffer_samples = max(0, samples_per_pri-samples_per_pulse);
 
-
 % add the buffer on to the end
 iq = cat(1,iq, complex(zeros(buffer_samples,1), zeros(buffer_samples,1)));
 
