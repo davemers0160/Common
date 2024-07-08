@@ -10,7 +10,7 @@ plot_num = 1;
 
 commandwindow;
 
-pause(0.5);
+% pause(0.5);
 
 %%
 prompt = {'Sample Rate:', 'Pulse Width:','PRI:', 'Amplitude:', 'Number of Pulses:'};
@@ -107,6 +107,18 @@ plot_num  = plot_num + 1;
 
 %% save data
 
+answer = questdlg('Pad Data',' ', 'Yes','No','No');
+
+switch answer
+    case 'Yes'
+        pad = ceil(numel(iq)/1024);
+        pad_n = (pad*1024) - numel(iq);
+        iq_pad = cat(1, iq, zeros(pad_n,1));
+    case 'No'
+        % do nothing
+        iq_pad = iq;
+end
+
 data_type = 'int16';
 
 byte_order = 'ieee-le';
@@ -121,6 +133,6 @@ if(filepath == 0)
     return;
 end
 
-data = complex(int16(real(iq)), int16(imag(iq)));
+data = complex(int16(real(iq_pad)), int16(imag(iq_pad)));
 
 write_binary_iq_data(fullfile(filepath,filename), data, data_type, byte_order);
