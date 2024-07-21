@@ -86,6 +86,23 @@ x = (0:numel(iq)-1) * (1/sample_rate);
 % plot_num  = plot_num + 1;
 
 %%
+
+% plot the base signal 
+figure(plot_num)
+set(gcf,'position',([50,50,1400,500]),'color','w')
+grid on
+box on 
+plot(x, real(iq), 'b');
+hold on
+plot(x, imag(iq), 'r');
+
+set(gca,'fontweight','bold','FontSize',11);
+
+xlabel('time (s)', 'fontweight','bold');
+ylabel('amplitude', 'fontweight','bold');
+
+plot_num  = plot_num + 1;
+
 figure(plot_num)
 set(gcf,'position',([50,50,1400,500]),'color','w')
 
@@ -109,10 +126,13 @@ plot_num  = plot_num + 1;
 
 answer = questdlg('Pad Data',' ', 'Yes','No','No');
 
+
+pad_multiple = 1024*4;
+
 switch answer
     case 'Yes'
-        pad = ceil(numel(iq)/1024);
-        pad_n = (pad*1024) - numel(iq);
+        pad = ceil(numel(iq)/pad_multiple);
+        pad_n = (pad*pad_multiple) - numel(iq);
         iq_pad = cat(1, iq, zeros(pad_n,1));
     case 'No'
         % do nothing
