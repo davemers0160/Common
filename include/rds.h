@@ -107,6 +107,54 @@ enum RDS_DI0 : uint16_t
 };
 
 //-----------------------------------------------------------------------------
+template <typename T>
+inline std::vector<T> differential_encode(std::vector<T> &data, T &previous_bit)
+{
+	uint64_t idx;
+	std::vector<T> enc_data(data.size(), 0);
+
+	for (idx = 0; idx < data.size(); ++idx)
+	{
+		enc_data[idx] = previous_bit ^ data[idx];
+		previous_bit = enc_data[idx];
+	}
+
+	return enc_data;
+
+}	// end of differential_encode
+
+//-----------------------------------------------------------------------------
+template <typename T>
+inline std::vector<float> biphase_encode(std::vector<T>& data)
+{
+	uint64_t idx;
+
+	float temp_data;
+	std::vector<float> enc_data;
+
+	// step 1: convert from 0/1 to polar (+/-1) and upsample by 2x
+	for (idx = 0; idx < data.size(); ++idx)
+	{
+		temp_data = (2.0f * data[idx]) - 1.0f;
+		enc_data.push_back(temp_data);
+		enc_data.push_back(temp_data);
+	}
+
+	// step 2: shift by one sample and subtract
+	for (idx = 1; idx < enc_data.size(); ++idx)
+	{
+		enc_data[idx] -= enc_data[idx-1];
+	}
+
+	// step 3: upsample and replace with pre computed bit waveform
+
+
+	return {NULL};
+
+}	// end of biphase_encode
+
+
+//-----------------------------------------------------------------------------
 class rds_block
 {
 public:
@@ -222,20 +270,22 @@ public:
 
 		std::vector<int16_t> bits(NUM_BLOCKS * 26, 0);
 
+		// go through the block and checkword and create the bits
 		for (idx = 0; idx < NUM_BLOCKS; ++idx)
 		{
 			for (jdx = 0; jdx < BLOCK_SIZE; ++jdx)
 			{
-				bits[index++] = (blocks[idx].data >> ((BLOCK_SIZE-1) - jdx)) & 0x01;
+				bits[index++] = ((blocks[idx].data >> ((BLOCK_SIZE-1) - jdx)) & 0x01);
 			}
 
 			for (jdx = 0; jdx < CHECK_SIZE; ++jdx)
 			{
-				bits[index++] = (blocks[idx].checkword >> ((CHECK_SIZE-1) - jdx)) & 0x01;
+				bits[index++] = ((blocks[idx].checkword >> ((CHECK_SIZE-1) - jdx)) & 0x01);
 			}
 		}
 
 		return bits;
+
 	}	// end of to_bits
 
 //-----------------------------------------------------------------------------
