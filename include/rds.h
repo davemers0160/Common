@@ -14,6 +14,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <ostream>
+#include <iostream>
 //#include <ctime>
 #include <vector>
 #include <array>
@@ -119,6 +121,20 @@ inline std::vector<T> differential_encode(std::vector<T> &data, T &previous_bit)
 		previous_bit = enc_data[idx];
 	}
 
+	std::cout << std::endl << "data" << std::endl;
+	for (idx = 0; idx < data.size(); ++idx)
+	{
+		std::cout << (data[idx]) << ", ";
+	}
+	std::cout << std::endl;
+
+	std::cout << std::endl << "diff encode" << std::endl;
+	for (idx = 0; idx < enc_data.size(); ++idx)
+	{
+		std::cout << (enc_data[idx]) << ", ";
+	}
+	std::cout << std::endl;
+
 	return enc_data;
 
 }	// end of differential_encode
@@ -130,26 +146,34 @@ inline std::vector<float> biphase_encode(std::vector<T>& data)
 	uint64_t idx;
 
 	float temp_data;
-	std::vector<float> enc_data;
+	std::vector<float> tmp_data_v;
+	std::vector<float> enc_data(2*data.size(), 0.0f);
 
-	// step 1: convert from 0/1 to polar (+/-1) and upsample by 2x
+	// step 1: convert from 0/1 to polar (+/-1) and upsample by 2x and turn into an impulse
 	for (idx = 0; idx < data.size(); ++idx)
 	{
 		temp_data = (2.0f * data[idx]) - 1.0f;
-		enc_data.push_back(temp_data);
-		enc_data.push_back(temp_data);
+		tmp_data_v.push_back(temp_data);
+		tmp_data_v.push_back(0);
 	}
+
+	std::cout << std::endl << "biphase 1" << std::endl;
+	for (idx = 0; idx < tmp_data_v.size(); ++idx)
+	{
+		std::cout << (tmp_data_v[idx]) << ", ";
+	}
+	std::cout << std::endl;
 
 	// step 2: shift by one sample and subtract
+	enc_data[0] = tmp_data_v[0];
 	for (idx = 1; idx < enc_data.size(); ++idx)
 	{
-		enc_data[idx] -= enc_data[idx-1];
+		enc_data[idx] = tmp_data_v[idx] - tmp_data_v[idx-1];
 	}
 
-	// step 3: upsample and replace with pre computed bit waveform
+	// step 3: TODO upsample and replace with pre computed bit waveform
 
-
-	return {NULL};
+	return enc_data;
 
 }	// end of biphase_encode
 
@@ -169,6 +193,26 @@ public:
 
 	rds_block(const rds_block& b_) : data(b_.data), checkword(b_.checkword) {}
 
+	friend std::ostream& operator<<(std::ostream& out, const rds_block& b)
+	{
+		int8_t idx;
+
+		out << "data:  ";
+		for (idx = 15; idx >= 0; --idx)
+		{
+			out << ((b.data >> idx) & 0x01) << " ";
+		}
+		out << std::endl;
+
+		out << "check: ";
+		for (idx = 9; idx >= 0; --idx)
+		{
+			out << ((b.data >> idx) & 0x01) << " ";
+		}
+		out << std::endl;
+
+		return out;
+	}
 private:
 
 };	// end of rds_block
@@ -366,6 +410,7 @@ private:
 	}	// end of calculate_crc
 
 };	// end of rds_group
+
 
 
 #endif	// RDS_HEADER_H_
