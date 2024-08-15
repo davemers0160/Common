@@ -14,7 +14,7 @@ commandwindow;
 
 %%
 samples_per_symbol = 24;
-groups_per_frame = 100;
+groups_per_frame = 19;
 program_identification_code = [0 1 1 1 0 0 1 0 1 1 0 0 0 0 0 0];
 
 %%
@@ -30,13 +30,13 @@ plot_num = plot_num + 1;
 
 %% upsample
 
-factor = 20;
+factor = 8;
 
 sample_rate = samples_per_symbol * factor * 1187.5;
 
 rbds_up = upsample(Y, factor);
 
-N = 8*factor + 1;
+N = 10*factor + 1;
 
 w = blackman_nuttall_window(N);
 
@@ -44,11 +44,11 @@ w = blackman_nuttall_window(N);
 lpf = N*create_fir_filter(2375/sample_rate, w);
 
 % rolloff = 1;
-% no_of_symbols = 1;
+% no_of_symbols = 10;
 % lpf = rcosdesign(rolloff, no_of_symbols, (samples_per_symbol * factor) );
 
 % apply the filter to the bpsk signal
-rbds_conv = 160*conv(rbds_up, lpf(end:-1:1), 'same');
+rbds_conv = 20*conv(rbds_up, lpf(end:-1:1), 'same');
 
 figure(plot_num);
 plot(160*rbds_up, '-b')
@@ -73,9 +73,9 @@ rbds_freq = 57000;
 
 % iq_data = int16(pilot_tone + iq_rbds);
 
-pilot_tone = 1200*cos(2*pi()*(pilot_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
+pilot_tone = 1200*sin(2*pi()*(pilot_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
 
-rbds_rot = 2*cos(2*pi()*(rbds_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
+rbds_rot = 2*sin(2*pi()*(rbds_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
 
 iq_rbds = (rbds_conv .* rbds_rot);
 iq_data = complex(int16(pilot_tone + iq_rbds));
@@ -119,5 +119,19 @@ filename = 'D:\Projects\data\RF\test_rds.sc16';
 write_binary_iq_data(filename, iq_data, data_type, byte_order);
 
 fprintf('complete\n');
+
+%%
+
+fname = 'D:\Projects\data\RF\test_rds2.bb';
+
+bbw = comm.BasebandFileWriter(fname, sample_rate, 101.7e6);
+
+tmp = single(pilot_tone + iq_rbds).';
+
+tmp = tmp/(max(abs(tmp)));
+
+bbw(tmp)
+
+release(bbw);
 
 
