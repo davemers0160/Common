@@ -13,12 +13,11 @@ line_width = 1;
 commandwindow;
 
 %%
-samples_per_symbol = 2;
+samples_per_symbol = 24;
 groups_per_frame = 19;
 program_identification_code = [0 1 1 1 0 0 1 0 1 1 0 0 0 0 0 0];
 
-waveform_biphase = [...
-        165, 167, 168, 168, 167, 166, 163, 160,157, 152, 147, 141, 134, 126, 118, 109,99, 88, 77, 66, 53, 41, 27, 14,...
+waveform_biphase = [165, 167, 168, 168, 167, 166, 163, 160,157, 152, 147, 141, 134, 126, 118, 109,99, 88, 77, 66, 53, 41, 27, 14,...
         0, -14, -29, -44, -59, -74, -89, -105,-120, -135, -150, -165, -179, -193, -206, -218,-231, -242, -252, -262, -271, -279, -286, -291,...
         -296, -299, -301, -302, -302, -300, -297, -292,-286, -278, -269, -259, -247, -233, -219, -202,-185, -166, -145, -124, -101, -77, -52, -26,0, 27, 56, 85, 114, 144, 175, 205,...
         236, 266, 296, 326, 356, 384, 412, 439,465, 490, 513, 535, 555, 574, 590, 604,616, 626, 633, 637, 639, 638, 633, 626,616, 602, 586, 565, 542, 515, 485, 451,...
@@ -44,14 +43,13 @@ rbdsgen = comm.RBDSWaveformGenerator(SamplesPerSymbol=samples_per_symbol, Groups
 
 Y = step(rbdsgen).';
 
-
 figure(plot_num);
 plot(Y, '.-b')
 plot_num = plot_num + 1;
 
 %% upsample
 
-factor = 8;
+factor = 40;
 
 sample_rate = samples_per_symbol * factor * 1187.5;
 
@@ -59,7 +57,7 @@ fprintf('sample rate: %d\n', sample_rate);
 
 rbds_up = upsample(Y, factor);
 
-N = 10*factor + 1;
+N = 4*factor + 1;
 
 w = blackman_nuttall_window(N);
 
@@ -71,10 +69,10 @@ lpf = N*create_fir_filter(2375/sample_rate, w);
 % lpf = rcosdesign(rolloff, no_of_symbols, (samples_per_symbol * factor) );
 
 % apply the filter to the bpsk signal
-rbds_conv = 20*conv(rbds_up, lpf(end:-1:1), 'same');
+rbds_conv = 2*conv(rbds_up, lpf(end:-1:1), 'same');
 
 figure(plot_num);
-plot(160*rbds_up, '-b')
+plot(rbds_up, '-b')
 hold on
 box on
 grid on
@@ -83,10 +81,15 @@ plot_num = plot_num + 1;
 
 
 %%
-
+pilot_amplitude = 0.01;
 pilot_freq = 19000;
 
+stereo_freq = pilot_freq*2;
+stereo_amplitude = 0.01;
+
 rbds_freq = 57000;
+rbds_amplitude = 0.3;
+
 
 % pilot_tone = (800*exp(1i*2*pi()*(pilot_freq/sample_rate)*(0:1:numel(rbds_conv)-1)));
 % rbds_rot = exp(1i*2*pi()*(rbds_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
@@ -96,12 +99,15 @@ rbds_freq = 57000;
 
 % iq_data = int16(pilot_tone + iq_rbds);
 
-pilot_tone = 1200*sin(2*pi()*(pilot_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
+pilot_tone = pilot_amplitude*cos(2*pi()*(pilot_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
+stereo_tone = stereo_amplitude*cos(2*pi()*(stereo_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
 
-rbds_rot = 2*sin(2*pi()*(rbds_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
+rbds_rot = cos(2*pi()*(rbds_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
+iq_rbds = rbds_amplitude*(rbds_conv .* rbds_rot);
 
-iq_rbds = (rbds_conv .* rbds_rot);
-iq_data = complex(int16(pilot_tone + iq_rbds));
+
+% iq_data = complex(int16(1000*(pilot_tone + stereo_tone + iq_rbds)));
+iq_data = complex(int16(1000*(pilot_tone + iq_rbds)));
 
 
 figure(plot_num);
@@ -137,15 +143,15 @@ plot_num = plot_num + 1;
 data_type = 'int16';
 byte_order = 'ieee-le';
 
-filename = 'C:\Projects\data\RF\test_rds.sc16';
+filename = 'D:\Projects\data\RF\test_rds.sc16';
 
 write_binary_iq_data(filename, iq_data, data_type, byte_order);
 
 fprintf('complete\n');
 
 %%
-
-fname = 'C:\Projects\data\RF\test_rds2.bb';
+return;
+fname = 'D:\Projects\data\RF\test_rds3.bb';
 
 bbw = comm.BasebandFileWriter(fname, sample_rate, 101.7e6);
 
