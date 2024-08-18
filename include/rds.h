@@ -85,7 +85,38 @@ enum RDS_TP : uint16_t
 //-----------------------------------------------------------------------------
 enum RDS_PTY : uint16_t
 {
-	ROCK = 5
+	NONE = 0,               /* No program type or undefined */
+	NEWS = 1,               /* News */
+	INFO = 2,               /* Information */
+	SPORTS = 3,             /* Sports */
+	TALK = 4,               /* Talk */
+	ROCK = 5,               /* Rock */
+	CLASSIC_ROCK = 6,       /* Classic Rock */
+	ADULT_HITS = 7,         /* Adult Hits */
+	SOFT_ROCK = 8,          /* Soft Rock */
+	TOP_40 = 9,             /* Top 40 */
+	COUNTRY = 10,           /* Country */
+	OLDIES = 11,            /* Oldies */
+	SOFT = 12,              /* Soft */
+	NOSTALGIA = 13,         /* Nostalgia */
+	JAZZ = 14,              /* Jazz */
+	CLASSICAL = 15,         /* Classical */
+	RNB = 16,               /* Rhythm and Blues */
+	SOFT_RNB = 17,          /* Soft Rhythm and Blues */
+	FOREIGN_LANGUAGE = 18,  /* Foreign Language */
+	RELIGIOUS_MUSIC = 19,   /* Religious Music */
+	RELIGIOUS_TALK = 20,    /* Religious Talk */
+	PERSONALITY = 21,       /* Personality */
+	PUBLIC = 22,            /* Public */
+	COLLEGE = 23,           /* College */
+	UNASSIGN_0 = 24,        /* Unassigned */
+	UNASSIGN_1 = 25,        /* Unassigned */
+	UNASSIGN_2 = 26,        /* Unassigned */
+	UNASSIGN_3 = 27,        /* Unassigned */
+	UNASSIGN_4 = 28,        /* Unassigned */
+	WEATHER = 29,           /* Weather */
+	EMERGENCY_TEST = 30,    /* Emergency Test */
+	EMERGENCY_ALERT = 31    /* Emergency ALERT */
 };
 
 //-----------------------------------------------------------------------------
@@ -129,6 +160,38 @@ enum RDS_DI0 : uint16_t
 	DI0_0 = 0x00,			// Mono
 	DI0_1 = (0x01 << 2)		// Stereo
 };
+
+//-----------------------------------------------------------------------------
+template <typename T, typename U>
+void apply_filter(std::vector<T>& data, std::vector<U>& filter, float amplitude, std::vector<float>& filtered_data)
+{
+	int32_t idx, jdx;
+	int32_t dx = filter.size() >> 1;
+	int32_t x;
+
+	float accum;
+
+	filtered_data.clear();
+	filtered_data.resize(data.size(), 0.0);
+
+	// loop throught the data and the filter and convolve (assumes a symmetric filter so no flip required)
+	for (idx = 0; idx < data.size(); ++idx)
+	{
+		accum = 0.0;
+
+		for (jdx = 0; jdx < filter.size(); ++jdx)
+		{
+			x = idx + jdx - dx;
+			//std::complex<double> t1 = std::complex<double>(lpf[jdx], 0);
+			//std::complex<double> t2 = iq_data[idx + jdx - offset];
+			if (x >= 0 && x < data.size())
+				accum += amplitude * data[x] * filter[jdx];
+		}
+
+		filtered_data[idx] = accum;
+	}
+
+}   // end of apply_filter
 
 //-----------------------------------------------------------------------------
 template <typename T>
@@ -223,12 +286,38 @@ inline std::vector<float> biphase_encode(std::vector<T>& data)
 		enc_data[idx] = tmp_data_v[idx] - tmp_data_v[idx-1];
 	}
 
-	// step 3: TODO upsample and replace with pre computed bit waveform
-
 	return enc_data;
 
 }	// end of biphase_encode
 
+//-----------------------------------------------------------------------------
+typedef struct rds_params
+{
+	uint16_t pi_code;
+	uint16_t version;
+	uint16_t tp;
+	uint16_t pty;
+	uint16_t ta;
+	uint16_t ms;
+
+	rds_params() = default;
+
+	//rds_params(uint16_t pi_, uint16_t v_, uint16_t tp_, uint16_t pty_, uint16_t ta_, uint16_t ms_) : pi_code(pi_)
+	//{
+	//	version = (v_ & 0x0001) << VER_SHIFT;
+	//	tp = (tp_ & 0x0001) << TP_SHIFT;
+	//	pty = (pty_ & 0x0007) << PTY_SHIFT;
+	//	ta = (ta_ & 0x0001) << TA_SHIFT;
+	//	ms = (ms_ & 0x0001) << MS_SHIFT;
+	//}
+
+	rds_params(uint16_t pi_, uint16_t v_, uint16_t tp_, uint16_t pty_, uint16_t ta_, uint16_t ms_) :
+		pi_code(pi_), version(v_), tp(tp_), pty(pty_), ta(ta_), ms(ms_) {}
+
+	rds_params(const rds_params& rp_) : pi_code(rp_.pi_code), version(rp_.version), tp(rp_.tp),
+		pty(rp_.pty), ta(rp_.ta), ms(rp_.ms) {}
+
+} rds_params;
 
 //-----------------------------------------------------------------------------
 class rds_block
@@ -243,9 +332,9 @@ public:
 
 	//rds_block(uint16_t d_, uint16_t c_) : data(d_), checkword(c_) {}
 
-	rds_block(uint8_t c0, uint8_t c1)
+	rds_block(uint16_t c0, uint16_t c1)
 	{
-		data = (c0 << 8) | c1;
+		data = ((c0 & 0x00FF) << 8) | (c1 & 0x00FF);
 	}
 
 	rds_block(const rds_block& b_) : data(b_.data), checkword(b_.checkword) {}
@@ -273,98 +362,6 @@ public:
 private:
 
 };	// end of rds_block
-
-
-
-//-----------------------------------------------------------------------------
-//class rds_block_1 : public rds_block
-//{
-//public:
-//	rds_block_1(uint16_t d_)
-//	{
-//		data = d_;
-//	}
-//
-//private:
-//
-//};
-
-//-----------------------------------------------------------------------------
-//class rds_block_2 : public rds_block
-//{
-//public:
-//
-//	rds_block_2(uint16_t type, uint16_t version, uint16_t tp, uint16_t pty, uint16_t d_)
-//	{
-//		data = type | version | tp | pty | d_;
-//	}
-//
-//private:
-//
-//};
-
-//-----------------------------------------------------------------------------
-//class rds_block_3 : public rds_block
-//{
-//public:
-//
-//	rds_block_3(uint16_t af1, uint16_t af2)
-//	{
-//		data = (af1 << 8) | af2;
-//	}
-//
-//private:
-//
-//};
-
-//-----------------------------------------------------------------------------
-//class rds_block_4 : public rds_block
-//{
-//public:
-//
-//	rds_block_4(uint16_t ps)
-//	{
-//		data = ps;
-//	}
-//
-//	rds_block_4(uint8_t c0, uint8_t c1)
-//	{
-//		data = ((uint16_t)c0 << 8) | ((uint16_t)c1 & 0x00FF);
-//	}
-//
-//private:
-//
-//};
-
-typedef struct rds_params
-{
-	uint16_t pi_code;
-	uint16_t version;
-	uint16_t tp;
-	uint16_t pty;
-	uint16_t ta;
-	uint16_t ms;
-
-	rds_params() = default;
-
-	//rds_params(uint16_t pi_, uint16_t v_, uint16_t tp_, uint16_t pty_, uint16_t ta_, uint16_t ms_) : pi_code(pi_)
-	//{
-	//	version = (v_ & 0x0001) << VER_SHIFT;
-	//	tp = (tp_ & 0x0001) << TP_SHIFT;
-	//	pty = (pty_ & 0x0007) << PTY_SHIFT;
-	//	ta = (ta_ & 0x0001) << TA_SHIFT;
-	//	ms = (ms_ & 0x0001) << MS_SHIFT;
-	//}
-
-	rds_params(uint16_t pi_, uint16_t v_, uint16_t tp_, uint16_t pty_, uint16_t ta_, uint16_t ms_) : 
-		pi_code(pi_), version(v_), tp(tp_), pty(pty_), ta(ta_), ms(ms_) {}
-
-	rds_params(const rds_params& rp_) : pi_code(rp_.pi_code), version(rp_.version), tp(rp_.tp),
-		pty(rp_.pty), ta(rp_.ta), ms(rp_.ms){}
-
-} rds_params;
-
-
 
 //-----------------------------------------------------------------------------
 class rds_group
@@ -512,13 +509,14 @@ public:
 		//rds_param = rds_params(rp);
 	}
 
-	//-----------------------------------------------------------------------------
-	void init_generator(std::string pn_, std::string rt_)
+	//----------------------------------------------------------------------------
+	void init_generator(std::string pn, std::string rt)
 	{
 		uint8_t idx;
 
-		program_name = pn_;
-		radio_text = rt_;
+		update_program_name(pn);
+
+		radio_text = rt;
 
 		previous_bit = 0;
 
@@ -527,6 +525,29 @@ public:
 
 		// 4 group_0 for each group_2
 		num_groups = 4 * group_2.size() + group_2.size();
+	}
+
+	//----------------------------------------------------------------------------
+	void update_program_name(std::string pn)
+	{
+		uint16_t pn_buffer;
+
+		std::string pgm_name_space = "        ";
+
+		program_name.clear();
+		program_name = pn;
+
+		if (program_name.length() < 8)
+		{
+			pn_buffer = 8 - program_name.length();
+			program_name.append(pgm_name_space, 0, pn_buffer);
+		}
+	}	// end of update_program_name
+
+	//----------------------------------------------------------------------------
+	void update_radio_text(std::string rt)
+	{
+
 	}
 
 	//----------------------------------------------------------------------------
@@ -644,7 +665,7 @@ private:
 		{
 			block_data = (RDS_GROUP_TYPE::GT_0 << GT_SHIFT) | (rds_param.version << VER_SHIFT) | (rds_param.tp << TP_SHIFT) | (rds_param.pty << PTY_SHIFT) | (rds_param.ta << TA_SHIFT) | (rds_param.ms << MS_SHIFT) | (di[idx] << DI_SHIFT) | idx;
 			b2 = rds_block(block_data);
-			b4 = rds_block((uint8_t)(program_name[0]), (uint8_t)(program_name[1]));
+			b4 = rds_block((uint8_t)(program_name[2*idx]), (uint8_t)(program_name[2*idx+1]));
 			group_0.push_back(rds_group(b1, b2, b3, b4));
 		}
 
@@ -660,12 +681,17 @@ private:
 
 		// determine how many characters there are
 		uint16_t num_rt_characters = radio_text.length();
-		num_rt_characters = min(num_rt_characters, 64);
+		num_rt_characters = min(num_rt_characters, 62);
 
-		if (num_rt_characters & 0x01)
-		{
-			radio_text.append(" ", 0, 1);
-		}
+		//TODO: append carriage  return
+		//if (num_rt_characters & 0x01)
+		//{
+		//	radio_text.append("\r", 0, 1);
+		//}
+		//else
+		//{
+		//	radio_text.append(" \r", 0, 2);
+		//}
 
 		uint8_t num_segments = radio_text.length() >> 2;
 
@@ -683,9 +709,11 @@ private:
 		{
 			block_data = (RDS_GROUP_TYPE::GT_2 << GT_SHIFT) | (rds_param.version << VER_SHIFT) | (rds_param.tp << TP_SHIFT) | (rds_param.pty << PTY_SHIFT) | (text_ab_flag << TEXT_AB_SHIFT) | idx;
 			b2 = rds_block(block_data);
-			b3 = rds_block((uint8_t)(radio_text[character_index++]), (uint8_t)(radio_text[character_index++]));
-			b4 = rds_block((uint8_t)(radio_text[character_index++]), (uint8_t)(radio_text[character_index++]));
+			b3 = rds_block((uint16_t)(radio_text[character_index]), (uint16_t)(radio_text[character_index+1]));
+			b4 = rds_block((uint16_t)(radio_text[character_index+2]), (uint16_t)(radio_text[character_index+3]));
 			group_2.push_back(rds_group(b1, b2, b3, b4));
+
+			character_index += 4;
 		}
 
 	}	// end of create_group_2

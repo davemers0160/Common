@@ -38,8 +38,8 @@ waveform_biphase = [165, 167, 168, 168, 167, 166, 163, 160,157, 152, 147, 141, 1
         -27, -41, -53, -66, -77, -88,-99, -109, -118, -126, -134, -141, -147, -152,-157, -160, -163, -166, -167, -168, -168, -167];
 
 %%
-rbdsgen = comm.RBDSWaveformGenerator(SamplesPerSymbol=samples_per_symbol, GroupsPerFrame=groups_per_frame, RadioText='Test Radio!', ...
-    ProgramServiceName='ABABABAB', ProgramIdentificationCode=program_identification_code, ProgramType="Rock")
+rbdsgen = comm.RBDSWaveformGenerator(SamplesPerSymbol=samples_per_symbol, GroupsPerFrame=groups_per_frame, RadioText='All Day, All Night!', ...
+    ProgramServiceName='TST_RDIO', ProgramIdentificationCode=program_identification_code, ProgramType="Rock")
 
 Y = step(rbdsgen).';
 
@@ -81,11 +81,11 @@ plot_num = plot_num + 1;
 
 
 %%
-pilot_amplitude = 0.01;
+pilot_amplitude = 0.05;
 pilot_freq = 19000;
 
 stereo_freq = pilot_freq*2;
-stereo_amplitude = 0.01;
+stereo_amplitude = 0.05;
 
 rbds_freq = 57000;
 rbds_amplitude = 0.3;
@@ -99,15 +99,20 @@ rbds_amplitude = 0.3;
 
 % iq_data = int16(pilot_tone + iq_rbds);
 
+% real value only
 pilot_tone = pilot_amplitude*cos(2*pi()*(pilot_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
 stereo_tone = stereo_amplitude*cos(2*pi()*(stereo_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
-
 rbds_rot = cos(2*pi()*(rbds_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
+
+% complex value
+% pilot_tone = pilot_amplitude*exp(2*1i*pi()*(pilot_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
+% stereo_tone = stereo_amplitude*exp(2*1i*pi()*(stereo_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
+% rbds_rot = exp(2*1i*pi()*(rbds_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
+
 iq_rbds = rbds_amplitude*(rbds_conv .* rbds_rot);
 
-
 % iq_data = complex(int16(1000*(pilot_tone + stereo_tone + iq_rbds)));
-iq_data = complex(int16(1000*(pilot_tone + iq_rbds)));
+iq_data = complex(int16(800*(pilot_tone + iq_rbds)));
 
 
 figure(plot_num);
@@ -143,7 +148,7 @@ plot_num = plot_num + 1;
 data_type = 'int16';
 byte_order = 'ieee-le';
 
-filename = 'D:\Projects\data\RF\test_rds.sc16';
+filename = 'D:\Projects\data\RF\test_rds_ml.sc16';
 
 write_binary_iq_data(filename, iq_data, data_type, byte_order);
 
