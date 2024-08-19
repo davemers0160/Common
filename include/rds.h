@@ -248,7 +248,7 @@ std::vector<float> upsample_data(std::vector<T>& d, uint32_t factor, uint64_t sa
 	std::vector<float> lpf = DSP::create_fir_filter<float>(num_taps, fc, &DSP::blackman_nuttall_window);
 	
 	std::vector<float> rds;
-	apply_filter(u, lpf, (num_taps>>2), rds);
+	apply_filter(u, lpf, factor, rds);
 
 	return rds;
 
@@ -301,15 +301,6 @@ typedef struct rds_params
 	uint16_t ms;
 
 	rds_params() = default;
-
-	//rds_params(uint16_t pi_, uint16_t v_, uint16_t tp_, uint16_t pty_, uint16_t ta_, uint16_t ms_) : pi_code(pi_)
-	//{
-	//	version = (v_ & 0x0001) << VER_SHIFT;
-	//	tp = (tp_ & 0x0001) << TP_SHIFT;
-	//	pty = (pty_ & 0x0007) << PTY_SHIFT;
-	//	ta = (ta_ & 0x0001) << TA_SHIFT;
-	//	ms = (ms_ & 0x0001) << MS_SHIFT;
-	//}
 
 	rds_params(uint16_t pi_, uint16_t v_, uint16_t tp_, uint16_t pty_, uint16_t ta_, uint16_t ms_) :
 		pi_code(pi_), version(v_), tp(tp_), pty(pty_), ta(ta_), ms(ms_) {}
@@ -459,22 +450,6 @@ private:
 
 			block = blocks[idx].data;
 
-			/* Classical CRC computation */
-			//block_crc = 0;
-			//for (jdx = 0; jdx < BLOCK_SIZE; ++jdx)
-			//{
-			//	bit = (block & (0x8000 >> jdx)) != 0;
-
-			//	msb = (block_crc >> (POLY_DEG - 1)) & 1;
-
-			//	block_crc <<= 1;
-
-			//	if (msb ^ bit)
-			//		block_crc ^= POLY;
-
-			//	//*bits++ = bit;
-			//}
-
 			block_crc = 0;
 			for (jdx = 0; jdx < BLOCK_SIZE; ++jdx)
 			{
@@ -488,10 +463,6 @@ private:
 
 			blocks[idx].checkword = check;
 
-			//for (jdx = 0; jdx < POLY_DEG; ++jdx) 
-			//{
-			//	*bits++ = (check & ((1 << (POLY_DEG - 1)) >> jdx)) != 0;
-			//}
 		}
 	}	// end of calculate_crc
 
@@ -514,11 +485,10 @@ public:
 	{
 		uint8_t idx;
 
-		update_program_name(pn);
-
-		radio_text = rt;
-
 		previous_bit = 0;
+
+		update_program_name(pn);
+		update_radio_text(rt);
 
 		create_group_0();
 		create_group_2();
@@ -547,8 +517,36 @@ public:
 	//----------------------------------------------------------------------------
 	void update_radio_text(std::string rt)
 	{
+		uint16_t num_chars_per_group = 4;
+		uint16_t max_num_characters = 64;
 
-	}
+		radio_text.clear();
+		radio_text = rt;
+
+		// determine how many characters there are and make that there are only 64 characters
+		// if there are less than 64 characters then we need to make the number of characters a multiple of 4 and append a carriage return
+		uint16_t num_rt_characters = radio_text.length();
+
+		if (num_rt_characters < max_num_characters)
+		{
+			uint16_t remainder = (num_rt_characters % num_chars_per_group);
+
+			//if (remainder == 0)
+			//{
+			//	radio_text.append("   \r", 0, 4);
+			//}
+			//else
+			//{
+				std::string rt_space = std::string(3 - remainder, ' ') + "\r";
+				radio_text.append(rt_space, 0, rt_space.length());
+			//}
+		}
+		else if (num_rt_characters > max_num_characters)
+		{
+			radio_text.erase(max_num_characters - 1, string::npos);
+		}
+
+	}	// end of update_radio_text
 
 	//----------------------------------------------------------------------------
 	std::vector<complex<int16_t>> generate_bit_stream()
@@ -592,17 +590,22 @@ public:
 		float pilot_tone = 19000.0 / (float)sample_rate;
 		float rds_tone = 57000.0 / (float)sample_rate;
 
-		std::complex<float> pilot;
-		std::complex<float> rds_rot;
+		//std::complex<float> pilot;
+		//std::complex<float> rds_rot;
+		float pilot;
+		float rds_rot;
 
 		std::vector<complex<int16_t>> iq_data(rds.size(), std::complex<int16_t>(0, 0));
 
 		for (idx = 0; idx < rds.size(); ++idx)
 		{
-			pilot = std::complex<float>(pilot_amplitude, 0.0f) * std::exp(j * math_2pi * (pilot_tone * idx));
-			rds_rot = rds[idx] * std::exp(j * math_2pi * (rds_tone * idx));
+			//pilot = std::complex<float>(pilot_amplitude, 0.0f) * std::exp(j * math_2pi * (pilot_tone * idx));
+			//rds_rot = rds[idx] * std::exp(j * math_2pi * (rds_tone * idx));
+			//iq_data[idx] = std::complex<int16_t>(amplitude * (pilot + rds_rot));
 
-			iq_data[idx] = std::complex<int16_t>(amplitude * (pilot + rds_rot));
+			pilot = pilot_amplitude * std::cos(math_2pi * (pilot_tone * idx));
+			rds_rot = rds[idx] * std::cos(math_2pi * (rds_tone * idx));
+			iq_data[idx] = std::complex<int16_t>((int16_t)(amplitude.real() * (pilot + rds_rot)), (int16_t)0);
 		}
 
 		return iq_data;
@@ -618,7 +621,7 @@ private:
 	std::vector<rds_group> group_0;
 	std::vector<rds_group> group_2;
 
-	std::string program_name;
+	std::string program_name = "";
 
 	uint16_t text_ab_flag = 0;
 	std::string radio_text = "";
@@ -629,9 +632,9 @@ private:
 	uint32_t factor = 240;
 
 	float pilot_amplitude = 0.08;
-	float rds_amplitude = 0.20;
+	float rds_amplitude = 0.18;
 
-	const uint8_t samples_per_symbol = 2;
+	const uint8_t samples_per_symbol = 1;
 
 	uint64_t sample_rate = (1187.5 * samples_per_symbol) * factor;
 
@@ -679,20 +682,6 @@ private:
 
 		uint8_t character_index = 0;
 
-		// determine how many characters there are
-		uint16_t num_rt_characters = radio_text.length();
-		num_rt_characters = min(num_rt_characters, 62);
-
-		//TODO: append carriage  return
-		//if (num_rt_characters & 0x01)
-		//{
-		//	radio_text.append("\r", 0, 1);
-		//}
-		//else
-		//{
-		//	radio_text.append(" \r", 0, 2);
-		//}
-
 		uint8_t num_segments = radio_text.length() >> 2;
 
 		group_2.clear();
@@ -719,7 +708,10 @@ private:
 	}	// end of create_group_2
 
 	//-----------------------------------------------------------------------------
+	void create_group_8()
+	{
 
+	}	// end of create_group_8
 
 };	// end or rds_generator
 
