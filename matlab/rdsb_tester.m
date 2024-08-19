@@ -38,8 +38,10 @@ waveform_biphase = [165, 167, 168, 168, 167, 166, 163, 160,157, 152, 147, 141, 1
         -27, -41, -53, -66, -77, -88,-99, -109, -118, -126, -134, -141, -147, -152,-157, -160, -163, -166, -167, -168, -168, -167];
 
 %%
-rbdsgen = comm.RBDSWaveformGenerator(SamplesPerSymbol=samples_per_symbol, GroupsPerFrame=groups_per_frame, RadioText='All Day, All Night!', ...
-    ProgramServiceName='TST_RDIO', ProgramIdentificationCode=program_identification_code, ProgramType="Rock")
+% rbdsgen = comm.RBDSWaveformGenerator(SamplesPerSymbol=samples_per_symbol, GroupsPerFrame=groups_per_frame, RadioText='All Day, All Night!', ...
+%     ProgramServiceName='TST_RDIO', ProgramIdentificationCode=program_identification_code, ProgramType="Rock")
+rbdsgen = comm.RBDSWaveformGenerator('SamplesPerSymbol',samples_per_symbol, 'GroupsPerFrame',groups_per_frame, 'RadioText','All Day, All Night!', ...
+    'ProgramServiceName','TST_RDIO', 'ProgramIdentificationCode',program_identification_code, 'ProgramType',"Rock")
 
 Y = step(rbdsgen).';
 
@@ -148,7 +150,8 @@ plot_num = plot_num + 1;
 data_type = 'int16';
 byte_order = 'ieee-le';
 
-filename = 'D:\Projects\data\RF\test_rds_ml.sc16';
+% filename = 'D:\Projects\data\RF\test_rds_ml.sc16';
+filename = 'D:\data\RF\test_rds_ml.sc16';
 
 write_binary_iq_data(filename, iq_data, data_type, byte_order);
 
