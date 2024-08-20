@@ -24,7 +24,7 @@ m2ft = 1/ft2m;
 
 %% load ITM library
 
-lib_path = '../ITM/x64/';
+lib_path = '../../ITM/x64/';
 lib_name = 'itm';
 hfile = 'itm.h';
 

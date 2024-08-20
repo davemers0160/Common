@@ -151,7 +151,8 @@ data_type = 'int16';
 byte_order = 'ieee-le';
 
 % filename = 'D:\Projects\data\RF\test_rds_ml.sc16';
-filename = 'D:\data\RF\test_rds_ml.sc16';
+filename = 'C:\Projects\data\RF\test_rds_ml.sc16';
+% filename = 'D:\data\RF\test_rds_ml.sc16';
 
 write_binary_iq_data(filename, iq_data, data_type, byte_order);
 
@@ -159,7 +160,8 @@ fprintf('complete\n');
 
 %%
 return;
-fname = 'D:\Projects\data\RF\test_rds3.bb';
+% fname = 'D:\Projects\data\RF\test_rds3.bb';
+fname = 'C:\Projects\data\RF\test_rds3.bb';
 
 bbw = comm.BasebandFileWriter(fname, sample_rate, 101.7e6);
 

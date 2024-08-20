@@ -256,20 +256,26 @@ std::vector<float> upsample_data(std::vector<T>& d, uint32_t factor, uint64_t sa
 
 //-----------------------------------------------------------------------------
 template <typename T>
-inline std::vector<float> biphase_encode(std::vector<T>& data)
+inline std::vector<float> biphase_encode(std::vector<T>& data, uint16_t samples_per_symbol)
 {
 	uint64_t idx;
 
 	float temp_data;
 	std::vector<float> tmp_data_v;
-	std::vector<float> enc_data(2*data.size(), 0.0f);
+	std::vector<float> enc_data(2*samples_per_symbol*data.size(), 0.0f);
+
+	uint16_t half_samples_per_symbol = samples_per_symbol >> 1;
 
 	// step 1: convert from 0/1 to polar (+/-1) and upsample by 2x and turn into an impulse
 	for (idx = 0; idx < data.size(); ++idx)
 	{
 		temp_data = (2.0f * data[idx]) - 1.0f;
-		tmp_data_v.push_back(temp_data);
-		tmp_data_v.push_back(0);
+
+		tmp_data_v.insert(tmp_data_v.end(), samples_per_symbol, temp_data);
+		tmp_data_v.insert(tmp_data_v.end(), samples_per_symbol, 0);
+
+		//tmp_data_v.push_back(temp_data);
+		//tmp_data_v.push_back(0);
 	}
 
 	//std::cout << std::endl << "biphase 1" << std::endl;
@@ -280,8 +286,10 @@ inline std::vector<float> biphase_encode(std::vector<T>& data)
 	//std::cout << std::endl;
 
 	// step 2: shift by one sample and subtract
-	enc_data[0] = tmp_data_v[0];
-	for (idx = 1; idx < enc_data.size(); ++idx)
+	//enc_data[0] = tmp_data_v[0];
+	std::copy(tmp_data_v.begin(), tmp_data_v.begin() + half_samples_per_symbol, enc_data.begin());
+
+	for (idx = half_samples_per_symbol; idx < enc_data.size(); ++idx)
 	{
 		enc_data[idx] = tmp_data_v[idx] - tmp_data_v[idx-1];
 	}
@@ -581,7 +589,7 @@ public:
 		data_bits = differential_encode(data_bits, previous_bit);
 
 		// step 3: apply biphase encoding
-		std::vector<float> data_bits_e = biphase_encode(data_bits);
+		std::vector<float> data_bits_e = biphase_encode(data_bits, samples_per_symbol);
 
 		// step 4: upsample and filter the data
 		std::vector<float> rds = upsample_data(data_bits_e, factor, sample_rate);
@@ -634,7 +642,7 @@ private:
 	float pilot_amplitude = 0.08;
 	float rds_amplitude = 0.18;
 
-	const uint8_t samples_per_symbol = 1;
+	const uint16_t samples_per_symbol = 4;
 
 	uint64_t sample_rate = (1187.5 * samples_per_symbol) * factor;
 
