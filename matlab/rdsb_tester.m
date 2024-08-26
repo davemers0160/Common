@@ -13,8 +13,8 @@ line_width = 1;
 commandwindow;
 
 %%
-samples_per_symbol = 24;
-groups_per_frame = 19;
+samples_per_symbol = 48;
+groups_per_frame = 30;
 program_identification_code = [0 1 1 1 0 0 1 0 1 1 0 0 0 0 0 0];
 
 waveform_biphase = [165, 167, 168, 168, 167, 166, 163, 160,157, 152, 147, 141, 134, 126, 118, 109,99, 88, 77, 66, 53, 41, 27, 14,...
@@ -38,10 +38,10 @@ waveform_biphase = [165, 167, 168, 168, 167, 166, 163, 160,157, 152, 147, 141, 1
         -27, -41, -53, -66, -77, -88,-99, -109, -118, -126, -134, -141, -147, -152,-157, -160, -163, -166, -167, -168, -168, -167];
 
 %%
-% rbdsgen = comm.RBDSWaveformGenerator(SamplesPerSymbol=samples_per_symbol, GroupsPerFrame=groups_per_frame, RadioText='All Day, All Night!', ...
-%     ProgramServiceName='TST_RDIO', ProgramIdentificationCode=program_identification_code, ProgramType="Rock")
-rbdsgen = comm.RBDSWaveformGenerator('SamplesPerSymbol',samples_per_symbol, 'GroupsPerFrame',groups_per_frame, 'RadioText','All Day, All Night!', ...
-    'ProgramServiceName','TST_RDIO', 'ProgramIdentificationCode',program_identification_code, 'ProgramType',"Rock")
+rbdsgen = comm.RBDSWaveformGenerator(SamplesPerSymbol=samples_per_symbol, GroupsPerFrame=groups_per_frame, RadioText='All Day, All Night!', ...
+    ProgramServiceName='TST_RDIO', ProgramIdentificationCode=program_identification_code, ProgramType="Rock")
+% rbdsgen = comm.RBDSWaveformGenerator('SamplesPerSymbol',samples_per_symbol, 'GroupsPerFrame',groups_per_frame, 'RadioText','All Day, All Night!', ...
+%     'ProgramServiceName','TST_RDIO', 'ProgramIdentificationCode',program_identification_code, 'ProgramType',"Rock")
 
 Y = step(rbdsgen).';
 
@@ -51,7 +51,7 @@ plot_num = plot_num + 1;
 
 %% upsample
 
-factor = 40;
+factor = 20;
 
 sample_rate = samples_per_symbol * factor * 1187.5;
 
@@ -66,9 +66,9 @@ w = blackman_nuttall_window(N);
 % create the full filter using the window
 lpf = N*create_fir_filter(2375/sample_rate, w);
 
-% rolloff = 1;
-% no_of_symbols = 10;
-% lpf = rcosdesign(rolloff, no_of_symbols, (samples_per_symbol * factor) );
+rolloff = 1;
+no_of_symbols = 10;
+lpf = 13*rcosdesign(rolloff, no_of_symbols, (6*samples_per_symbol) );
 
 % apply the filter to the bpsk signal
 rbds_conv = 2*conv(rbds_up, lpf(end:-1:1), 'same');
@@ -82,8 +82,10 @@ plot(rbds_conv, '-g')
 plot_num = plot_num + 1;
 
 
+
+
 %%
-pilot_amplitude = 0.05;
+pilot_amplitude = 0.1;
 pilot_freq = 19000;
 
 stereo_freq = pilot_freq*2;
@@ -91,6 +93,28 @@ stereo_amplitude = 0.05;
 
 rbds_freq = 57000;
 rbds_amplitude = 0.3;
+
+f1 = 853;
+f2 = 960;
+audio_amplitude = 0.4;
+
+audio_tones = 0.25*(cos(2*pi()*(f1/sample_rate)*(0:1:sample_rate-1)) + cos(2*pi()*(f2/sample_rate)*(0:1:sample_rate-1)));
+audio_tones = cat(2, audio_tones, 0.01*randn(1, numel(rbds_conv)-sample_rate));
+
+audio_iq = audio_amplitude*generate_fm(audio_tones, sample_rate, sample_rate, 0.01);
+
+w = blackman_nuttall_window(301);
+fc = 15000/sample_rate;
+
+% create the full filter using the window
+lpf = create_fir_filter(fc, w);
+
+% apply the filter to the bpsk signal
+audio_iq = conv(audio_iq, lpf(end:-1:1), 'same');
+
+figure(plot_num);
+spectrogram(audio_iq, 512,256,512,sample_rate, 'centered');
+plot_num = plot_num + 1;
 
 
 % pilot_tone = (800*exp(1i*2*pi()*(pilot_freq/sample_rate)*(0:1:numel(rbds_conv)-1)));
@@ -114,7 +138,7 @@ rbds_rot = cos(2*pi()*(rbds_freq/sample_rate)*(0:1:numel(rbds_conv)-1));
 iq_rbds = rbds_amplitude*(rbds_conv .* rbds_rot);
 
 % iq_data = complex(int16(1000*(pilot_tone + stereo_tone + iq_rbds)));
-iq_data = complex(int16(800*(pilot_tone + iq_rbds)));
+iq_data = complex(int16(600*(pilot_tone + iq_rbds + audio_iq)));
 
 
 figure(plot_num);
@@ -150,8 +174,8 @@ plot_num = plot_num + 1;
 data_type = 'int16';
 byte_order = 'ieee-le';
 
-% filename = 'D:\Projects\data\RF\test_rds_ml.sc16';
-filename = 'C:\Projects\data\RF\test_rds_ml.sc16';
+filename = 'D:\Projects\data\RF\test_rds_ml.sc16';
+% filename = 'C:\Projects\data\RF\test_rds_ml.sc16';
 % filename = 'D:\data\RF\test_rds_ml.sc16';
 
 write_binary_iq_data(filename, iq_data, data_type, byte_order);
@@ -160,8 +184,8 @@ fprintf('complete\n');
 
 %%
 return;
-% fname = 'D:\Projects\data\RF\test_rds3.bb';
-fname = 'C:\Projects\data\RF\test_rds3.bb';
+fname = 'D:\Projects\data\RF\test_rds3.bb';
+% fname = 'C:\Projects\data\RF\test_rds3.bb';
 
 bbw = comm.BasebandFileWriter(fname, sample_rate, 101.7e6);
 

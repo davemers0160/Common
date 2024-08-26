@@ -163,7 +163,7 @@ enum RDS_DI0 : uint16_t
 
 //-----------------------------------------------------------------------------
 template <typename T, typename U>
-void apply_filter(std::vector<T>& data, std::vector<U>& filter, float amplitude, std::vector<float>& filtered_data)
+void apply_filter(std::vector<T>& data, std::vector<U>& filter, std::vector<float>& filtered_data)
 {
 	int32_t idx, jdx;
 	int32_t dx = filter.size() >> 1;
@@ -185,7 +185,7 @@ void apply_filter(std::vector<T>& data, std::vector<U>& filter, float amplitude,
 			//std::complex<double> t1 = std::complex<double>(lpf[jdx], 0);
 			//std::complex<double> t2 = iq_data[idx + jdx - offset];
 			if (x >= 0 && x < data.size())
-				accum += amplitude * data[x] * filter[jdx];
+				accum += data[x] * filter[jdx];
 		}
 
 		filtered_data[idx] = accum;
@@ -241,14 +241,14 @@ std::vector<float> upsample_data(std::vector<T>& d, uint32_t factor, uint64_t sa
 		index += factor;
 	}
 
-	//// filter the data
-	int64_t num_taps = 3*factor + 1;
+	// filter the data
+	int64_t num_taps = 4*factor + 1;
 	float fc = 2400.0/(float)sample_rate;
 
-	std::vector<float> lpf = DSP::create_fir_filter<float>(num_taps, fc, &DSP::blackman_nuttall_window);
+	std::vector<float> lpf = DSP::create_fir_filter<float>(num_taps, fc, &DSP::blackman_nuttall_window, 8*factor);
 	
 	std::vector<float> rds;
-	apply_filter(u, lpf, factor, rds);
+	apply_filter(u, lpf, rds);
 
 	return rds;
 
@@ -261,40 +261,52 @@ inline std::vector<float> biphase_encode(std::vector<T>& data, uint16_t samples_
 	uint64_t idx;
 
 	float temp_data;
-	std::vector<float> tmp_data_v;
-	std::vector<float> enc_data(2*samples_per_symbol*data.size(), 0.0f);
-
 	uint16_t half_samples_per_symbol = samples_per_symbol >> 1;
+
+	std::vector<float> polar_data;
 
 	// step 1: convert from 0/1 to polar (+/-1) and upsample by 2x and turn into an impulse
 	for (idx = 0; idx < data.size(); ++idx)
 	{
 		temp_data = (2.0f * data[idx]) - 1.0f;
 
-		tmp_data_v.insert(tmp_data_v.end(), samples_per_symbol, temp_data);
-		tmp_data_v.insert(tmp_data_v.end(), samples_per_symbol, 0);
+		polar_data.insert(polar_data.end(), 1, temp_data);
+		polar_data.insert(polar_data.end(), samples_per_symbol-1, 0);
 
-		//tmp_data_v.push_back(temp_data);
-		//tmp_data_v.push_back(0);
+		//polar_data.push_back(temp_data);
+		//polar_data.push_back(0);
 	}
 
 	//std::cout << std::endl << "biphase 1" << std::endl;
 	//for (idx = 0; idx < tmp_data_v.size(); ++idx)
 	//{
-	//	std::cout << (tmp_data_v[idx]) << ", ";
+	//	std::cout << (polar_data[idx]) << ", ";
 	//}
 	//std::cout << std::endl;
 
-	// step 2: shift by one sample and subtract
-	//enc_data[0] = tmp_data_v[0];
-	std::copy(tmp_data_v.begin(), tmp_data_v.begin() + half_samples_per_symbol, enc_data.begin());
+	// step 2: shift by Td/2 samples and subtract
+	// create the encoded data vector that is polar_data size plus half_samples_per_symbol
+	std::vector<float> enc_data(polar_data.size() + half_samples_per_symbol, 0.0f);
 
+	// insert half_samples_per_symbol 0's into polar_data vector at the begining
+	polar_data.insert(polar_data.begin(), half_samples_per_symbol, 0.0f);
+
+	// loop through the data and subtract
 	for (idx = half_samples_per_symbol; idx < enc_data.size(); ++idx)
 	{
-		enc_data[idx] = tmp_data_v[idx] - tmp_data_v[idx-1];
+		enc_data[idx] = polar_data[idx] - polar_data[idx- half_samples_per_symbol];
 	}
 
-	return enc_data;
+	// step 3:filter the data
+	int64_t num_taps = floor(1.5 * samples_per_symbol) + 1;
+	float fc = 2400/(float)(samples_per_symbol*1187.5);
+
+	std::vector<float> lpf = DSP::create_fir_filter<float>(num_taps, fc, &DSP::blackman_nuttall_window, half_samples_per_symbol);
+
+	std::vector<float> enc_data_filt;
+	apply_filter(enc_data, lpf, enc_data_filt);
+
+	return enc_data_filt;
 
 }	// end of biphase_encode
 
@@ -485,7 +497,7 @@ public:
 
 	rds_generator(rds_params &rp) : rds_param(rp)
 	{
-		//rds_param = rds_params(rp);
+		std::cout << "sample_rate: " << sample_rate << std::endl;
 	}
 
 	//----------------------------------------------------------------------------
@@ -589,10 +601,10 @@ public:
 		data_bits = differential_encode(data_bits, previous_bit);
 
 		// step 3: apply biphase encoding
-		std::vector<float> data_bits_e = biphase_encode(data_bits, samples_per_symbol);
+		std::vector<float> biphase_data_bits = biphase_encode(data_bits, samples_per_symbol);
 
 		// step 4: upsample and filter the data
-		std::vector<float> rds = upsample_data(data_bits_e, factor, sample_rate);
+		std::vector<float> rds = upsample_data(biphase_data_bits, factor, sample_rate);
 
 		// step 5: add the pilot tone and rotate the rds data
 		float pilot_tone = 19000.0 / (float)sample_rate;
@@ -607,10 +619,12 @@ public:
 
 		for (idx = 0; idx < rds.size(); ++idx)
 		{
+			// complex
 			//pilot = std::complex<float>(pilot_amplitude, 0.0f) * std::exp(j * math_2pi * (pilot_tone * idx));
 			//rds_rot = rds[idx] * std::exp(j * math_2pi * (rds_tone * idx));
 			//iq_data[idx] = std::complex<int16_t>(amplitude * (pilot + rds_rot));
 
+			// real
 			pilot = pilot_amplitude * std::cos(math_2pi * (pilot_tone * idx));
 			rds_rot = rds[idx] * std::cos(math_2pi * (rds_tone * idx));
 			iq_data[idx] = std::complex<int16_t>((int16_t)(amplitude.real() * (pilot + rds_rot)), (int16_t)0);
@@ -637,16 +651,16 @@ private:
 	uint16_t num_groups = 80;
 
 	int16_t previous_bit = 0;
-	uint32_t factor = 240;
 
-	float pilot_amplitude = 0.08;
-	float rds_amplitude = 0.18;
+	float pilot_amplitude = 0.1;
+	float rds_amplitude = 0.3;
 
-	const uint16_t samples_per_symbol = 4;
+	const uint16_t samples_per_symbol = 24;
+	const uint32_t factor = 40;
 
 	uint64_t sample_rate = (1187.5 * samples_per_symbol) * factor;
 
-	std::complex<float> amplitude = std::complex<float>(1200.0f, 0.0f);
+	std::complex<float> amplitude = std::complex<float>(1000.0f, 0.0f);
 
 	//-----------------------------------------------------------------------------
 	void create_group_0()
