@@ -128,7 +128,7 @@ inline std::vector<float> blackman_nuttall_window(int64_t N)
 
 //-----------------------------------------------------------------------------
 template <typename T, typename funct>
-std::vector<T> create_fir_filter(int64_t N, float fc, funct window_function)
+std::vector<T> create_fir_filter(int64_t N, float fc, funct window_function, float scale = 1.0)
 {
     std::vector<T> g(N, 0);
 
@@ -137,9 +137,9 @@ std::vector<T> create_fir_filter(int64_t N, float fc, funct window_function)
     for (int64_t idx = 0; idx < N; ++idx)
     {
         if (abs((double)(idx -  ((N-1) >> 1))) < 1e-6)
-            g[idx] = w[idx] * fc;
+            g[idx] = scale * w[idx] * fc;
         else
-            g[idx] = w[idx] * (std::sin(M_PI * fc * (idx - ((N - 1) >> 1))) / (M_PI * (idx - ((N - 1) >> 1))));
+            g[idx] = scale * (w[idx] * (std::sin(M_PI * fc * (idx - ((N - 1) >> 1))) / (M_PI * (idx - ((N - 1) >> 1)))));
     }
 
     return g;
@@ -149,7 +149,7 @@ std::vector<T> create_fir_filter(int64_t N, float fc, funct window_function)
 
 //-----------------------------------------------------------------------------
 template <typename funct>
-std::vector<float> create_fir_filter(int64_t N, float fc, std::vector<float> w)
+std::vector<float> create_fir_filter(int64_t N, float fc, std::vector<float> w, float scale = 1.0)
 {
     if (w.size() != N )
     {
@@ -164,9 +164,9 @@ std::vector<float> create_fir_filter(int64_t N, float fc, std::vector<float> w)
     for (int64_t idx = 0; idx < N; ++idx)
     {
         if (abs((double)idx - (N / 2.0f)) < 1e-6)
-            g[idx] = w[idx] * fc;
+            g[idx] = scale * w[idx] * fc;
         else
-            g[idx] = w[idx] * (std::sin(M_PI * fc * (idx - (N >> 1))) / (M_PI * (idx - (N >> 1))));
+            g[idx] = scale * (w[idx] * (std::sin(M_PI * fc * (idx - (N >> 1))) / (M_PI * (idx - (N >> 1)))));
     }
 
     return g;
