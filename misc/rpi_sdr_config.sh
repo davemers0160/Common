@@ -5,8 +5,7 @@
 # From windows you can sftp into the pi and copy this repo into /home/{$USER}/Projects
 # sftp loki@xxx.xxx.xxx.xxx
 # 
-# make the project folder if it doesn't already exist
-# mkdir Projects
+# wget https://github.com/davemers0160/Common/raw/master/misc/rpi_sdr_config.sh
 #
 # put this file in the user home directory and then run the following:
 # chmod +x rpi_sdr_config.sh
