@@ -18,7 +18,7 @@
 # -----------------------------------------------------------------------------
 
 sudo apt-get update
-sudo apt-get install -y build-essential git cmake libusb-1* libsndfile1
+sudo apt-get install -y build-essential git cmake libusb-1* libsndfile1 libncurses5-dev
 
 # create the python virtual environment and install required packages
 python -m venv ~/venv --system-site-packages --symlinks
