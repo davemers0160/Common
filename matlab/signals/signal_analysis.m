@@ -42,11 +42,11 @@ iqc = iqc * scale;
 t = (0:1:(numel(iqc)-1))/fs;
 
 %%
-window_size = 64;
-overlap = 32;
-nfft = 64;
+window_size = 32;
+overlap = 16;
+nfft = 32;
 
-fbw = 10e6/fs;
+fbw = 20e6/fs;
 
 n_taps = 15;
 w = nuttall_window(n_taps);
