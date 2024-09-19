@@ -16,13 +16,15 @@ plot_num = 1;
 ssid = "TEST_BEACON";
 
 % number of 1.024ms time increments between messages
-beaconInterval = 100;
+beaconInterval = 10;
 
 %
-band = 5;
+band = 2.4;
 
 %
-chNum = 153;
+chNum = 1;
+
+mc_id = "083a8d40556c";
 
 % Create a MAC frame-body configuration object, setting the SSID and Beacon Interval field value
 frameBodyConfig = wlanMACManagementConfig(BeaconInterval=beaconInterval, SSID=ssid);
@@ -34,10 +36,13 @@ frameBodyConfig = frameBodyConfig.addIE(dsElementID, dsInformation);
 frameBodyConfig.displayIEs
 
 % Create beacon frame configuration object
-beaconFrameConfig = wlanMACFrameConfig(FrameType="Beacon", ManagementConfig=frameBodyConfig, FromDS=false, AckPolicy="Normal Ack/Implicit Block Ack Request");
+beaconFrameConfig = wlanMACFrameConfig(FrameType="Beacon", ManagementConfig=frameBodyConfig, FromDS=false, AckPolicy="Normal Ack/Implicit Block Ack Request", Address1=mc_id);
+% beaconFrameConfig = wlanMACFrameConfig(FrameType="ACK", ManagementConfig=frameBodyConfig, FromDS=false, AckPolicy="Normal Ack/Implicit Block Ack Request");
 
 % Generate beacon frame bits
 [mpduBits,mpduLength] = wlanMACFrame(beaconFrameConfig, OutputFormat="bits");
+payload = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57];
+% [mpduBits,mpduLength] = wlanMACFrame(payload, beaconFrameConfig, OutputFormat="bits");
 
 % Calculate center frequency for the specified operating band and channel number
 fc = wlanChannelFrequency(chNum, band)
@@ -47,7 +52,8 @@ fc = wlanChannelFrequency(chNum, band)
 % one transmit antenna, and BPSK modulation with a coding rate of 1/2 (corresponding to MCS index 0) by using 
 % the wlanNonHTConfig object.
 
-cfgNonHT = wlanNonHTConfig(PSDULength=mpduLength, MCS=4);
+cfgNonHT = wlanNonHTConfig(PSDULength=mpduLength, MCS=0);
+cfgHE = wlanHESUConfig('ChannelBandwidth','CBW20');
 
 % Generate an oversampled beacon packet by using the wlanWaveformGenerator function, specifying an idle time
 osf = 2;
