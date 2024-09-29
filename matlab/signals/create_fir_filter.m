@@ -6,15 +6,20 @@ function [g] = create_fir_filter(fc, w)
 
     for idx = 0:n_taps-1
 
-        if (abs(idx - (n_taps / 2.0)) < 1e-6)
+        % t = pi * fc * (idx - ((n_taps-1) / 2.0))
+        t = (idx - ((n_taps-1) / 2.0))
+
+        if (abs(t) < 1e-6)
+            % g(idx+1) = w(idx+1);
             g(idx+1) = w(idx+1) * fc;
         else
-            g(idx+1) = w(idx+1) * (sin(pi * fc * (idx - (n_taps/2))) / (pi * (idx - (n_taps/2))));
+            % g(idx+1) = w(idx+1) * (sin(t) / (t));
+            g(idx+1) = w(idx+1) * (sin(pi * fc * t) / (pi * t));
         end
     end
 
-    g_sum = sum(g);
-
-    g = g / g_sum;
+    % g_sum = sum(g);
+    % 
+    % g = g / g_sum;
 
 end
