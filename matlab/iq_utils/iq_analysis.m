@@ -63,6 +63,7 @@ f = linspace(-fs/2, fs/2, numel(Y));
 figure(plot_num)
 plot(f, 20*log10(abs(fftshift(Y))), 'b');
 plot_num = plot_num + 1;
+drawnow;
 
 %%
 figure(plot_num)
@@ -70,16 +71,27 @@ plot(real(iqc),'b')
 hold on
 plot(imag(iqc),'r')
 plot_num = plot_num + 1;
-
+drawnow;
 
 %%
-[s, f, ts] = spectrogram(iqc, 256, 200, 256, fs, 'centered');
-
+[s, f, ts] = spectrogram(iqc, 1024, 0, 1024, fs, 'centered');
 
 figure(plot_num)
+set(gcf,'position',([50,50,1000,800]),'color','w')
 surf(ts, f/10e6, 20*log10(abs(s)), 'EdgeColor', 'none')
 colormap(jet(100));
+
+grid on
+box on
+
+set(gca,'fontweight','bold','FontSize',12);
+
+xlabel('Time (s)', 'fontweight','bold','FontSize',12);
+ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
+
+view(90,-90);
 plot_num = plot_num + 1;
+drawnow;
 
 %%
 figure(plot_num)
@@ -100,35 +112,35 @@ ax.XAxisLocation = 'origin';
 ax.YAxisLocation = 'origin';
 plot_num = plot_num + 1;
 
-figure(plot_num)
-set(gcf,'position',([50,50,1400,500]),'color','w')
-plot(iq(:,1),'b');
-hold on; 
-plot(iq(:,2),'r');
-grid on
-box on
-set(gca,'fontweight','bold','FontSize',12);
-xlim([0, (numel(iqc))]);
-ylim([-1, 1]);
+% figure(plot_num)
+% set(gcf,'position',([50,50,1400,500]),'color','w')
+% plot(iq(:,1),'b');
+% hold on; 
+% plot(iq(:,2),'r');
+% grid on
+% box on
+% set(gca,'fontweight','bold','FontSize',12);
+% xlim([0, (numel(iqc))]);
+% ylim([-1, 1]);
+% 
+% xlabel('Samples', 'fontweight','bold','FontSize',12);
+% ylabel('Value', 'fontweight','bold','FontSize',12);
+% plot_num = plot_num + 1;
 
-xlabel('Samples', 'fontweight','bold','FontSize',12);
-ylabel('Value', 'fontweight','bold','FontSize',12);
-plot_num = plot_num + 1;
-
-figure(plot_num)
-set(gcf,'position',([50,50,1400,500]),'color','w')
-plot(ph,'g');
-grid on
-box on
-set(gca,'fontweight','bold','FontSize',12);
-xlim([0, (numel(iqc))]);
-ylim([-1, 1]);
-set(gca,'YTick',-1:1/2:1)
-yticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'});
-
-xlabel('Samples', 'fontweight','bold','FontSize',12);
-ylabel('Phase', 'fontweight','bold','FontSize',12);
-plot_num = plot_num + 1;
+% figure(plot_num)
+% set(gcf,'position',([50,50,1400,500]),'color','w')
+% plot(ph,'g');
+% grid on
+% box on
+% set(gca,'fontweight','bold','FontSize',12);
+% xlim([0, (numel(iqc))]);
+% ylim([-1, 1]);
+% set(gca,'YTick',-1:1/2:1)
+% yticklabels({'-\pi','-\pi/2','0','\pi/2','\pi'});
+% 
+% xlabel('Samples', 'fontweight','bold','FontSize',12);
+% ylabel('Phase', 'fontweight','bold','FontSize',12);
+% plot_num = plot_num + 1;
 
 % figure;
 % set(gcf,'position',([50,50,1400,500]),'color','w')
@@ -174,8 +186,7 @@ ylabel('I', 'fontweight','bold');
 zlabel('Q', 'fontweight','bold');
 
 plot_num = plot_num + 1;
-
-
+drawnow;
 
 %%
 return;
