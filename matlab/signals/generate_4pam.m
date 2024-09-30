@@ -5,7 +5,7 @@ function [iq_data] = generate_4pam(data, amplitude, symbol_length, sample_rate)
     span = 9;
     beta = 0.25;
 
-    rrc_filt = create_rrc_filter(span, beta, mp.symbol_length, mp.sample_rate);
+    % rrc_filt = create_rrc_filter(span, beta, symbol_length, sample_rate);
 
     % check for odd number and append a 0 at the end if it is odd
     data = data(:);
@@ -44,7 +44,7 @@ function [iq_data] = generate_4pam(data, amplitude, symbol_length, sample_rate)
         index = index + samples_per_symbol;
     end
 
-    iq_data = conv(iq_data, rrc_filt, 'same');
+    % iq_data = conv(iq_data, rrc_filt, 'same');
 
 
 end
