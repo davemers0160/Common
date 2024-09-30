@@ -21,7 +21,7 @@ function [g] = create_rrc_filter(span, beta, symbol_length, sample_rate, scale)
             g(1, idx+1) = scale * (beta/sqrt(2*samples_per_symbol)) * ( (1+(2/pi)) * sin(pi/(4*beta)) + (1-(2/pi))*cos(pi/(4*beta)) );
 
         else
-            g(1, idx+1) = scale * a0 * ( (sin(a3*t)) + (a1*t)*(cos(a2*t)) ) / ( (pi/samples_per_symbol) * t * (1 - a1 * a1 * t * t) );
+            g(1, idx+1) = scale * a0 * ( (sin(a3*t)) + (a1*t)*(cos(a2*t)) ) / ( (pi/samples_per_symbol) * t * (1 - (a1 * t) * (a1 * t)) );
         end
     end
 

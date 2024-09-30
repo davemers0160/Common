@@ -25,10 +25,13 @@ b = rcosdesign(beta, span, samples_per_symbol,'sqrt');
 
 [g] = create_rrc_filter(span, beta, symbol_length, sample_rate, scale);
 
+N = span*samples_per_symbol + 1;
+t=linspace((0 - ((N - 1)/2)),((N-1) - ((N - 1)/2)), N);
+
 figure(plot_num)
-plot(b, 'b')
+plot(t, b, 'b')
 hold on;
-plot(g, 'g')
+plot(t, g, 'g')
 plot_num = plot_num + 1;
 
 
@@ -51,6 +54,7 @@ plot_num = plot_num + 1;
 
 %%
 
+samples_per_symbol/(4*beta)
 
 N=span/2;
 
