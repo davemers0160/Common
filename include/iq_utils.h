@@ -7,8 +7,6 @@
 #include <sstream>
 #include <fstream>
 
-//#include <file_parser.h>
-
 //-----------------------------------------------------------------------------
 template <typename T>
 void write_iq_data(std::string filename, std::vector<T>& samples)
