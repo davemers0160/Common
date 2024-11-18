@@ -13,10 +13,10 @@ commandwindow;
 % pause(0.5);
 
 %%
-prompt = {'Sample Rate:', 'Pulse Width:','PRI:', 'Amplitude:', 'Number of Pulses:'};
+prompt = {'Sample Rate:', 'Pulse Width:','PRI:', 'Freq Offset:', 'Amplitude:', 'Number of Pulses:'};
 dlgtitle = 'Input';
-fieldsize = [1 30; 1 30; 1 30; 1 30; 1 30];
-definput = {'20e6','1e-6', '2e-6', '2024', '3'};
+fieldsize = [1 30; 1 30; 1 30; 1 30; 1 30; 1 30];
+definput = {'20e6','1e-6', '2e-6', '0', '2024', '3'};
 
 res = inputdlg(prompt, dlgtitle, fieldsize, definput);
 
@@ -30,14 +30,17 @@ pulse_width = str2double(res{2});
 
 pri = str2double(res{3});
 
-amplitude = str2double(res{4});
+fr = str2double(res{4});
 
-num_pulses = str2double(res{5});
+amplitude = str2double(res{5});
+
+num_pulses = str2double(res{6});
 
 %% 
 
 % number of samples for each pulse
 samples_per_pulse =  floor(pulse_width * sample_rate);
+fr = fr/sample_rate;
 
 iq = complex(amplitude*ones(samples_per_pulse,1), zeros(samples_per_pulse,1));
 
@@ -48,6 +51,9 @@ buffer_samples = max(0, samples_per_pri-samples_per_pulse);
 
 % add the buffer on to the end
 iq = cat(1,iq, complex(zeros(buffer_samples,1), zeros(buffer_samples,1)));
+
+f_rot = exp(2*pi*1j*fr*(0:1:numel(iq)-1)).';
+iq = iq .* f_rot;
 
 % concatentate pulses
 iq = repmat(iq, num_pulses, 1);
@@ -119,7 +125,7 @@ zlabel('Q', 'fontweight','bold');
 plot_num  = plot_num + 1;
 
 figure(plot_num)
-spectrogram(iq, 32, 16, 32, sample_rate, 'centered')
+spectrogram(iq, 128, 120, 128, sample_rate, 'centered')
 plot_num  = plot_num + 1;
 
 %% save data
