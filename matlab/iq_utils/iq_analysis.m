@@ -33,21 +33,33 @@ byte_order = 'ieee-le';
 
 %%
 
-[~, iqc] = read_binary_iq_data(fullfile(data_filepath, data_file), data_type, byte_order);
+[~, iqc_in] = read_binary_iq_data(fullfile(data_filepath, data_file), data_type, byte_order);
+
+%% get sample rate
+prompt = {'Sample Rate:'};
+dlgtitle = 'Input';
+fieldsize = [1 30];
+definput = {'20e6'};
+
+res = inputdlg(prompt, dlgtitle, fieldsize, definput);
+
+if(isempty(res))
+    return;
+end
+
+fs = str2double(res{1});
 
 %%
-fs = 50e6;
-
-t = 0:1/fs:(numel(iqc)-1)/fs;
+t = 0:1/fs:(numel(iqc_in)-1)/fs;
 
 % iqc = iqc()
-max(real(iqc))
-min(real(iqc))
+max(real(iqc_in))
+min(real(iqc_in))
 
-max(imag(iqc))
-min(imag(iqc))
+max(imag(iqc_in))
+min(imag(iqc_in))
 
-iqc = scale * iqc;
+iqc = scale * iqc_in;
 
 %%
 iq(:,1) = real(iqc);
@@ -67,9 +79,9 @@ drawnow;
 
 %%
 figure(plot_num)
-plot(real(iqc),'b')
+plot(t, real(iqc),'b')
 hold on
-plot(imag(iqc),'r')
+plot(t, imag(iqc),'r')
 plot_num = plot_num + 1;
 drawnow;
 
@@ -78,7 +90,7 @@ drawnow;
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
-surf(ts, f/10e6, 20*log10(abs(s)), 'EdgeColor', 'none')
+surf(ts, f/1e6, 20*log10(abs(s)), 'EdgeColor', 'none')
 colormap(jet(100));
 
 grid on
