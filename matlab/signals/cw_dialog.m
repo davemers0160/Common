@@ -42,7 +42,7 @@ num_pulses = str2double(res{6});
 samples_per_pulse =  floor(pulse_width * sample_rate);
 fr = fr/sample_rate;
 
-iq = complex(amplitude*ones(samples_per_pulse,1), zeros(samples_per_pulse,1));
+iq = complex(amplitude*ones(samples_per_pulse,1), amplitude*ones(samples_per_pulse,1));
 
 % get the number of samples in the pri
 samples_per_pri = floor(pri * sample_rate);
