@@ -54,7 +54,7 @@ g = create_fir_filter(fbw, w);
 
 iq_f = conv(iqc, g(end:-1:1), 'same');
 
-[s, f, ts] = spectrogram(iq_f, window_size, overlap, nfft, fs, 'centered');
+[s, f, ts] = spectrogram(iqc, window_size, overlap, nfft, fs, 'centered');
 
 %%
 ds = 20*log10(abs(s(floor(window_size/2),:)));
