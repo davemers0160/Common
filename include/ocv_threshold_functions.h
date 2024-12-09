@@ -154,13 +154,13 @@ inline void energy_threshold(cv::Mat &src, cv::Mat &dst, double energyVal, int &
 //-----------------------------------------------------------------------------
 inline void calculate_energy_threshold(cv::Mat& src, double& threshold, double energy_threshold = 0.87, int32_t hist_size = 256)
 {
-    uint32_t idx, jdx;
+    uint32_t idx;
 
     // this assumes we are given 8-bit image
     float hist_ranges[] = { 0, hist_size-1 };
     const float* ranges[] = { hist_ranges };
 
-    double ch;
+    //double ch;
     cv::Mat hist;
     std::vector<double> cdf(hist_size, 0);
 
