@@ -13,10 +13,10 @@ commandwindow;
 % pause(0.5);
 
 %%
-prompt = {'Sample Rate:', 'Pulse Width:','PRI:', 'Freq Offset:', 'Amplitude:', 'Number of Pulses:'};
+prompt = {'Sample Rate:', 'Pulse Width:','PRI:', 'Freq Offset:', 'Amplitude:', 'Number of Pulses:', 'Filter Cutoff Frequency:', 'Number of Taps:'};
 dlgtitle = 'Input';
-fieldsize = [1 30; 1 30; 1 30; 1 30; 1 30; 1 30];
-definput = {'20e6','1e-6', '2e-6', '0', '2024', '3'};
+fieldsize = [1 30; 1 30; 1 30; 1 30; 1 30; 1 30; 1 30; 1 30]; 
+definput = {'20e6','1e-6', '2e-6', '0', '2047', '2', '1e6', '3'};
 
 res = inputdlg(prompt, dlgtitle, fieldsize, definput);
 
@@ -35,6 +35,11 @@ fr = str2double(res{4});
 amplitude = str2double(res{5});
 
 num_pulses = str2double(res{6});
+
+fc = str2double(res{7});
+
+num_taps = str2double(res{8});
+
 
 %% 
 
@@ -58,7 +63,17 @@ iq = iq .* f_rot;
 % concatentate pulses
 iq = repmat(iq, num_pulses, 1);
 
-x = (0:numel(iq)-1) * (1/sample_rate);
+%% filter
+
+w = blackman_nuttall_window(num_taps);
+lpf = create_fir_filter(fc/sample_rate, w);
+
+iq_p = cat(1, zeros(ceil(num_taps/2)+1,1), iq);
+
+iq_filt = conv(iq_p, lpf(end:-1:1), 'same');
+
+x = (0:numel(iq_filt)-1) * (1/sample_rate);
+
 
 % plot the base signal 
 % figure(plot_num)
@@ -91,16 +106,17 @@ x = (0:numel(iq)-1) * (1/sample_rate);
 % 
 % plot_num  = plot_num + 1;
 
-%%
 
+
+%%
 % plot the base signal 
 figure(plot_num)
 set(gcf,'position',([50,50,1400,500]),'color','w')
 grid on
 box on 
-plot(x, real(iq), 'b');
+plot(x, real(iq_filt), 'b');
 hold on
-plot(x, imag(iq), 'r');
+plot(x, imag(iq_filt), 'r');
 
 set(gca,'fontweight','bold','FontSize',11);
 
@@ -112,9 +128,9 @@ plot_num  = plot_num + 1;
 figure(plot_num)
 set(gcf,'position',([50,50,1400,500]),'color','w')
 
-scatter3(x, real(iq), imag(iq), 20, 'o', 'b', 'filled');
+scatter3(x, real(iq_filt), imag(iq_filt), 20, 'o', 'b', 'filled');
 hold on
-plot3(x, real(iq), imag(iq), 'b');
+plot3(x, real(iq_filt), imag(iq_filt), 'b');
 
 set(gca,'fontweight','bold','FontSize',11);
 
@@ -137,12 +153,12 @@ pad_multiple = 1024*4;
 
 switch answer
     case 'Yes'
-        pad = ceil(numel(iq)/pad_multiple);
-        pad_n = (pad*pad_multiple) - numel(iq);
-        iq_pad = cat(1, iq, zeros(pad_n,1));
+        pad = ceil(numel(iq_filt)/pad_multiple);
+        pad_n = (pad*pad_multiple) - numel(iq_filt);
+        iq_pad = cat(1, iq_filt, zeros(pad_n,1));
     case 'No'
         % do nothing
-        iq_pad = iq;
+        iq_pad = iq_filt;
 end
 
 data_type = 'int16';

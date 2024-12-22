@@ -7,7 +7,7 @@ function [g] = create_fir_filter(fc, w)
     for idx = 0:n_taps-1
 
         % t = pi * fc * (idx - ((n_taps-1) / 2.0))
-        t = (idx - ((n_taps-1) / 2.0))
+        t = (idx - ((n_taps-1) / 2.0));
 
         if (abs(t) < 1e-6)
             % g(idx+1) = w(idx+1);
@@ -18,8 +18,7 @@ function [g] = create_fir_filter(fc, w)
         end
     end
 
-    % g_sum = sum(g);
-    % 
-    % g = g / g_sum;
+    g_sum = sum(g); 
+    g = g / g_sum;
 
 end

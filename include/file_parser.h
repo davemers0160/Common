@@ -121,7 +121,7 @@ inline void parse_line(std::string input, const char delimiter, std::vector<std:
 
 //-----------------------------------------------------------------------------
 template <typename T>
-inline void generate_range(T start, T stop, T step, std::vector<T>& range)
+inline void generate_range(T start, T stop, double step, std::vector<T>& range)
 {
     range.clear();
 
