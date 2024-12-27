@@ -4,15 +4,29 @@
 % row 2: 16 17 18 19 20 21 22 23
 % row 3: 31 30 29 28 27 26 25 24
 
+format long g
+format compact
+clc
+close all
+clearvars
+
+% get the location of the script file to save figures
+full_path = mfilename('fullpath');
+[scriptpath,  filename, ext] = fileparts(full_path);
+
+plot_num = 1;
+
 %%
 
-M=64;
+
+num_bits = 6;
+
+M = bitshift(1, num_bits);
+
+side_length = bitshift(M, -3);
+
 x = (0:M-1)';
-[y,mapy] = bin2gray(x,'qam',M);
-
-m = bitshift(M, -3);
-
-b = log(M)/log(2);
+[y,mapy] = bin2gray(x, 'qam', M);
 
 %%
 
@@ -33,23 +47,24 @@ map_iq = zeros(M,1);
 figure
 hold on
 
-for r = 0:m-1
-    for c = 0:m-1
+for r = 0:side_length-1
+    for c = 0:side_length-1
         
         if(mod(r,2) == 0)
-            index = c + (m*r);            
+            index = c + (side_length*r);            
         else            
-            index = (m*(r+1)-1) - c;
+            index = (side_length*(r+1)-1) - c;
         end
         
 %         fprintf('%s\n',dec2base(gc(index+1),2, b));
         
-        map_iq(gc(index+1)+1, 1) = complex(-(m-1) + 2*r, -(m-1) + 2*c);
+        map_iq(gc(index+1)+1, 1) = complex(-(side_length-1) + 2*r, -(side_length-1) + 2*c);
         
         x = real(map_iq(gc(index+1)+1,1));
         y = imag(map_iq(gc(index+1)+1,1));
-        text( x-0.25,y-0.3, dec2base(gc(index+1),2, b),'Color',[1 0 0]);
-        scatter(x, y, 30, '*', 'k');
+        text( y-0.3,x-0.3, strcat(dec2base(gc(index+1),2, num_bits), 32,'(', num2str(gc(index+1),"%02d"),')'),'Color',[1 0 0]);
+        text( y-0.3,x-0.6, strcat('(', num2str(-(side_length-1) + 2*c),',',num2str(-(side_length-1) + 2*r),')'),'Color',[0 0 0]);
+        scatter(y, x, 30, '*', 'k');
     end
 end
 
