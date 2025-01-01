@@ -47,7 +47,7 @@ subplot(3,1,2)
 hold on
 grid on
 box on
-plot(t, amplitude, '--k', 'LineWidth', line_width)
+plot(t, amplitude, 'k', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0, numel(t)]);
 legend('Analog Data')
@@ -59,7 +59,7 @@ subplot(3,1,3)
 hold on
 grid on
 box on
-plot(t, amplitude, '--k', 'LineWidth', line_width)
+plot(t, amplitude, 'k', 'LineWidth', line_width)
 plot(t, am_sig, 'b', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0, numel(t)]);
@@ -131,7 +131,7 @@ subplot(3,1,2)
 hold on
 grid on
 box on
-plot(t, amplitude, '--k', 'LineWidth', line_width)
+plot(t, amplitude, 'k', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0, numel(t)]);
 legend('Binary Data')
@@ -143,7 +143,7 @@ subplot(3,1,3)
 hold on
 grid on
 box on
-plot(t, amplitude, '--k', 'LineWidth', line_width)
+plot(t, amplitude, 'k', 'LineWidth', line_width)
 plot(t, ask_sig, 'b', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0, numel(t)]);
@@ -239,7 +239,7 @@ subplot(3,1,2)
 hold on
 grid on
 box on
-plot(t_plot, data, '--k', 'LineWidth', line_width)
+plot(t_plot, data, 'k', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0,t_plot(end)]);
 legend('Binary Data')
@@ -311,7 +311,7 @@ subplot(2,1,1)
 hold on
 grid on
 box on
-plot(x_data, data, '--k', 'LineWidth', line_width)
+plot(x_data, data, 'k', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0,x_data(end)]);
 legend('Binary Data')
@@ -324,8 +324,7 @@ subplot(2,1,2)
 hold on
 grid on
 box on
-plot(fm_plot, d2, '--k', 'LineWidth', line_width)
-% plot(real(iq_data), 'b', 'LineWidth', line_width)
+plot(fm_plot, d2, 'k', 'LineWidth', line_width)
 plot(fm_plot, fsk_sig, 'b', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0, fm_plot(end)]);
@@ -378,7 +377,7 @@ subplot(2,1,1)
 hold on
 grid on
 box on
-plot(x_data, data, '--k', 'LineWidth', line_width)
+plot(x_data, data, 'k', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0,x_data(end)]);
 legend('Binary Data')
@@ -444,7 +443,7 @@ sample_rate = 10e6;
 bit_length = 0.000001;
 
 % data
-data = randi([0,1], 200,1);
+data = randi([0,1], 2*200,1);
 x_data = 0:numel(data)-1;
 
 [iq] = generate_qpsk(data, sample_rate, bit_length);
@@ -457,7 +456,7 @@ subplot(2,1,1)
 hold on
 grid on
 box on
-plot(x_data, data, '--k', 'LineWidth', line_width)
+plot(x_data, data, 'k', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0,x_data(end)]);
 legend('Binary Data')
@@ -523,7 +522,7 @@ sample_rate = 10e6;
 bit_length = 0.000001;
 
 % data
-data = randi([0,1], 200, 1);
+data = randi([0,1], 2*200, 1);
 x_data = 0:numel(data)-1;
 
 [iq] = generate_oqpsk(data, sample_rate, bit_length/2);
@@ -537,7 +536,7 @@ subplot(2,1,1)
 hold on
 grid on
 box on
-plot(x_data, data, '--k', 'LineWidth', line_width)
+plot(x_data, data, 'k', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0,x_data(end)]);
 legend('Binary Data')
@@ -620,7 +619,7 @@ subplot(2,1,1)
 hold on
 grid on
 box on
-plot(x_data, data, '--k', 'LineWidth', line_width)
+plot(x_data, data, 'k', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0,x_data(end)]);
 legend('Binary Data')
@@ -655,6 +654,89 @@ set(gca,'fontweight','bold','FontSize',11);
 xlabel('time (s)', 'fontweight','bold');
 ylabel('I', 'fontweight','bold');
 zlabel('Q', 'fontweight','bold');
+
+plot_num = plot_num + 1;
+
+[s, f, ts] = spectrogram(iq, 256, 128, 256, sample_rate, 'centered'); 
+
+figure(plot_num)
+set(gcf,'position',([50,50,1000,800]),'color','w')
+surf(ts, f/1e6, 20*log10(abs(s)), 'EdgeColor', 'none')
+colormap(jet(100));
+
+grid on
+box on
+
+set(gca,'fontweight','bold','FontSize',12);
+
+xlabel('Time (s)', 'fontweight','bold','FontSize',12);
+ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
+zlabel('Amplitude (dBfs)', 'fontweight','bold','FontSize',12);
+
+view(90,-90);
+plot_num = plot_num + 1;
+
+%% 64 QAM
+
+amplitude = 1.0;
+sample_rate = 10e6;
+
+bit_length = 0.000001;
+num_bits = 6;
+
+% data
+data = randi([0,1], 2*num_bits*100, 1);
+x_data = 0:numel(data)-1;
+
+% create the mapping constellation
+iq_map = create_qam_constellation(num_bits);
+
+[iq] = generate_qam(data, amplitude, sample_rate, iq_map, bit_length);
+t_iq = (0:numel(iq)-1)/sample_rate;
+
+figure(plot_num)
+set(gcf,'position',([50,50,1400,500]),'color','w')
+
+subplot(2,1,1)
+hold on
+grid on
+box on
+plot(x_data, data, 'k', 'LineWidth', line_width)
+set(gca,'fontweight','bold','FontSize',11);
+xlim([0,x_data(end)]);
+legend('Binary Data')
+title('64QAM Modulation', 'fontweight','bold','FontSize',12);
+
+ax = gca;
+ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
+
+subplot(2,1,2)
+hold on
+grid on
+box on
+plot(t_iq, real(iq), 'b', 'LineWidth', line_width)
+plot(t_iq, imag(iq), 'r', 'LineWidth', line_width)
+set(gca,'fontweight','bold','FontSize',11);
+xlim([0, t_iq(end)]);
+legend({'I', 'Q'});
+
+ax = gca;
+ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
+
+plot_num = plot_num + 1;
+
+figure(plot_num)
+set(gcf,'position',([50,50,1000,800]),'color','w')
+hold on
+scatter3(t_iq, real(iq), imag(iq), 20, 'o', 'b', 'filled');
+% plot3(t_iq, real(iq), imag(iq), 'b');
+
+set(gca,'fontweight','bold','FontSize',11);
+
+xlabel('time (s)', 'fontweight','bold');
+ylabel('I', 'fontweight','bold');
+zlabel('Q', 'fontweight','bold');
+view(90,0);
 
 plot_num = plot_num + 1;
 
