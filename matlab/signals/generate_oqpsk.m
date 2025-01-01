@@ -1,6 +1,6 @@
 function [iq] = generate_oqpsk(data, sample_rate, half_symbol_length)
 
-    samples_per_symbol = floor(sample_rate * half_symbol_length);
+    samples_per_symbol = floor(sample_rate * half_symbol_length + 0.5);
     samples_per_symbol_x2 = floor(2 * sample_rate * half_symbol_length);
     
     % check for odd number and append a 0 at the end if it is odd
@@ -25,7 +25,7 @@ function [iq] = generate_oqpsk(data, sample_rate, half_symbol_length)
     
     for idx=1:2:numel(data)
     
-        num = data(idx)*2 + data(idx+1);
+        num = data(idx+1)*2 + data(idx);
         
         % map the bit pair value to IQ values
         switch(num)
