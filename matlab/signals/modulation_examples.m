@@ -11,6 +11,8 @@ full_path = mfilename('fullpath');
 line_width = 1.0;
 plot_num = 1;
 
+data_path = 'D:\data\modulation\';
+
 %% AM modulation
 
 sample_rate = 1e6;
@@ -67,12 +69,11 @@ legend({'Data', 'Modulated Data'});
 
 ax = gca;
 ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
+print(plot_num, '-dpng', fullfile(data_path,strcat('am_time_plot.png')));
 
 plot_num = plot_num + 1;
 
-
 [s, f, ts] = spectrogram(complex(am_sig, zeros(1, numel(am_sig))), 64, 32, 64, sample_rate, 'centered'); 
-
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
@@ -88,10 +89,14 @@ xlabel('Time (s)', 'fontweight','bold','FontSize',12);
 ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
 zlabel('Amplitude (dBfs)', 'fontweight','bold','FontSize',12);
 
-view(90,-90);
+view(0,0);
+print(plot_num, '-dpng', fullfile(data_path,strcat('am_spectrogram_0_0.png')));
+view(90,0)
+print(plot_num, '-dpng', fullfile(data_path,strcat('am_spectrogram_90_0.png')));
+view(90,-90)
+print(plot_num, '-dpng', fullfile(data_path,strcat('am_spectrogram_90_90.png')));
+
 plot_num = plot_num + 1;
-
-
 
 %% ASK
 
@@ -151,6 +156,7 @@ legend({'Data', 'Modulated Data'});
 
 ax = gca;
 ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
+print(plot_num, '-dpng', fullfile(data_path,strcat('ask_time_plot.png')));
 
 plot_num = plot_num + 1;
 
@@ -170,7 +176,13 @@ xlabel('Time (s)', 'fontweight','bold','FontSize',12);
 ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
 zlabel('Amplitude (dBfs)', 'fontweight','bold','FontSize',12);
 
-view(90,-90);
+view(0,0);
+print(plot_num, '-dpng', fullfile(data_path,strcat('ask_spectrogram_0_0.png')));
+view(90,0)
+print(plot_num, '-dpng', fullfile(data_path,strcat('ask_spectrogram_90_0.png')));
+view(90,-90)
+print(plot_num, '-dpng', fullfile(data_path,strcat('ask_spectrogram_90_90.png')));
+
 plot_num = plot_num + 1;
 
 %% FM
@@ -260,6 +272,7 @@ legend({'Modulated Data'});
 
 ax = gca;
 ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
+print(plot_num, '-dpng', fullfile(data_path,strcat('fm_time_plot.png')));
 
 plot_num = plot_num + 1;
 
@@ -279,7 +292,13 @@ xlabel('Time (s)', 'fontweight','bold','FontSize',12);
 ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
 zlabel('Amplitude (dBfs)', 'fontweight','bold','FontSize',12);
 
-view(90,-90);
+view(0,0);
+print(plot_num, '-dpng', fullfile(data_path,strcat('fm_spectrogram_0_0.png')));
+view(90,0)
+print(plot_num, '-dpng', fullfile(data_path,strcat('fm_spectrogram_90_0.png')));
+view(90,-90)
+print(plot_num, '-dpng', fullfile(data_path,strcat('fm_spectrogram_90_90.png')));
+
 plot_num = plot_num + 1;
 
 %% FSK
@@ -291,7 +310,7 @@ fo = 20000;
 symbol_length = 0.001;
 
 % data
-data = randi([0,1], 10,1);
+data = randi([0,1], 15,1);
 
 d2 = [];
 for idx=1:numel(data)
@@ -332,16 +351,16 @@ legend({'Data', 'Modulated Data'});
 
 ax = gca;
 ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
+print(plot_num, '-dpng', fullfile(data_path,strcat('fsk_time_plot.png')));
 
 plot_num = plot_num + 1;
 
-[s, f, ts] = spectrogram(iq, 512, 256, 512, sample_rate, 'centered'); 
+[s, f, ts] = spectrogram(iq, 512, 480, 512, sample_rate, 'centered'); 
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
 surf(ts, f/1e6, 20*log10(abs(s)), 'EdgeColor', 'none')
 colormap(jet(100));
-
 grid on
 box on
 
@@ -351,7 +370,13 @@ xlabel('Time (s)', 'fontweight','bold','FontSize',12);
 ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
 zlabel('Amplitude (dBfs)', 'fontweight','bold','FontSize',12);
 
-view(90,-90);
+view(0,0);
+print(plot_num, '-dpng', fullfile(data_path,strcat('fsk_spectrogram_0_0.png')));
+view(90,0)
+print(plot_num, '-dpng', fullfile(data_path,strcat('fsk_spectrogram_90_0.png')));
+view(90,-90)
+print(plot_num, '-dpng', fullfile(data_path,strcat('fsk_spectrogram_90_90.png')));
+
 plot_num = plot_num + 1;
 
 
@@ -365,6 +390,8 @@ bit_length = 0.000001;
 % data
 data = randi([0,1], 200,1);
 x_data = 0:numel(data)-1;
+
+iq_map = [-1+-0i, 1+0i];
 
 [iq] = generate_bpsk(data, amplitude, sample_rate, bit_length);
 t_iq = (0:numel(iq)-1)/sample_rate;
@@ -395,28 +422,40 @@ plot(t_iq, imag(iq), 'r', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0, t_iq(end)]);
 legend({'I', 'Q'});
-
 ax = gca;
 ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
-
+print(plot_num, '-dpng', fullfile(data_path,strcat('bpsk_time_plot.png')));
 plot_num = plot_num + 1;
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
+hold on
+grid on
+box on
+scatter(real(iq_map), imag(iq_map), 20, 'o', 'b', 'filled');
+set(gca,'fontweight','bold','FontSize',11);
+xlabel('I', 'fontweight','bold');
+ylabel('Q', 'fontweight','bold');
+ax = gca;
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+print(plot_num, '-dpng', fullfile(data_path,strcat('bpsk_iqmap_plot.png')));
+plot_num = plot_num + 1;
 
+figure(plot_num)
+set(gcf,'position',([50,50,1000,800]),'color','w')
 scatter3(t_iq, real(iq), imag(iq), 20, 'o', 'b', 'filled');
 hold on
 plot3(t_iq, real(iq), imag(iq), 'b');
-
 set(gca,'fontweight','bold','FontSize',11);
-
 xlabel('time (s)', 'fontweight','bold');
 ylabel('I', 'fontweight','bold');
 zlabel('Q', 'fontweight','bold');
-
+view(-70,10);
+print(plot_num, '-dpng', fullfile(data_path,strcat('bpsk_iq_plot.png')));
 plot_num = plot_num + 1;
 
-[s, f, ts] = spectrogram(iq, 256, 128, 256, sample_rate, 'centered'); 
+[s, f, ts] = spectrogram(iq, 128, 64, 128, sample_rate, 'centered'); 
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
@@ -432,7 +471,12 @@ xlabel('Time (s)', 'fontweight','bold','FontSize',12);
 ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
 zlabel('Amplitude (dBfs)', 'fontweight','bold','FontSize',12);
 
-view(90,-90);
+view(0,0);
+print(plot_num, '-dpng', fullfile(data_path,strcat('bpsk_spectrogram_0_0.png')));
+view(90,0)
+print(plot_num, '-dpng', fullfile(data_path,strcat('bpsk_spectrogram_90_0.png')));
+view(90,-90)
+print(plot_num, '-dpng', fullfile(data_path,strcat('bpsk_spectrogram_90_90.png')));
 plot_num = plot_num + 1;
 
 %% QPSK
@@ -445,6 +489,8 @@ bit_length = 0.000001;
 % data
 data = randi([0,1], 2*200,1);
 x_data = 0:numel(data)-1;
+
+iq_map = [-1+-1i, 1+-1i, -1+1i, 1+1i];
 
 [iq] = generate_qpsk(data, sample_rate, bit_length);
 t_iq = (0:numel(iq)-1)/sample_rate;
@@ -474,28 +520,40 @@ plot(t_iq, imag(iq), 'r', 'LineWidth', line_width)
 set(gca,'fontweight','bold','FontSize',11);
 xlim([0, t_iq(end)]);
 legend({'I', 'Q'});
-
 ax = gca;
 ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
-
+print(plot_num, '-dpng', fullfile(data_path,strcat('qpsk_time_plot.png')));
 plot_num = plot_num + 1;
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
+hold on
+grid on
+box on
+scatter(real(iq_map), imag(iq_map), 20, 'o', 'b', 'filled');
+set(gca,'fontweight','bold','FontSize',11);
+xlabel('I', 'fontweight','bold');
+ylabel('Q', 'fontweight','bold');
+ax = gca;
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+print(plot_num, '-dpng', fullfile(data_path,strcat('qpsk_iqmap_plot.png')));
+plot_num = plot_num + 1;
 
+figure(plot_num)
+set(gcf,'position',([50,50,1000,800]),'color','w')
 scatter3(t_iq, real(iq), imag(iq), 20, 'o', 'b', 'filled');
 hold on
 plot3(t_iq, real(iq), imag(iq), 'b');
-
 set(gca,'fontweight','bold','FontSize',11);
-
 xlabel('time (s)', 'fontweight','bold');
 ylabel('I', 'fontweight','bold');
 zlabel('Q', 'fontweight','bold');
-
+view(-70,10);
+print(plot_num, '-dpng', fullfile(data_path,strcat('qpsk_iq_plot.png')));
 plot_num = plot_num + 1;
 
-[s, f, ts] = spectrogram(iq, 256, 128, 256, sample_rate, 'centered'); 
+[s, f, ts] = spectrogram(iq, 128, 64, 128, sample_rate, 'centered'); 
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
@@ -511,7 +569,12 @@ xlabel('Time (s)', 'fontweight','bold','FontSize',12);
 ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
 zlabel('Amplitude (dBfs)', 'fontweight','bold','FontSize',12);
 
-view(90,-90);
+view(0,0);
+print(plot_num, '-dpng', fullfile(data_path,strcat('qpsk_spectrogram_0_0.png')));
+view(90,0)
+print(plot_num, '-dpng', fullfile(data_path,strcat('qpsk_spectrogram_90_0.png')));
+view(90,-90)
+print(plot_num, '-dpng', fullfile(data_path,strcat('qpsk_spectrogram_90_90.png')));
 plot_num = plot_num + 1;
 
 %% O-QPSK
@@ -524,6 +587,8 @@ bit_length = 0.000001;
 % data
 data = randi([0,1], 2*200, 1);
 x_data = 0:numel(data)-1;
+
+iq_map = [-1+-1i, 1+-1i, -1+1i, 1+1i];
 
 [iq] = generate_oqpsk(data, sample_rate, bit_length/2);
 t_iq = (0:numel(iq)-1)/sample_rate;
@@ -557,25 +622,38 @@ legend({'I', 'Q'});
 
 ax = gca;
 ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
-
+print(plot_num, '-dpng', fullfile(data_path,strcat('oqpsk_time_plot.png')));
 plot_num = plot_num + 1;
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
+hold on
+grid on
+box on
+scatter(real(iq_map), imag(iq_map), 20, 'o', 'b', 'filled');
+set(gca,'fontweight','bold','FontSize',11);
+xlabel('I', 'fontweight','bold');
+ylabel('Q', 'fontweight','bold');
+ax = gca;
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+print(plot_num, '-dpng', fullfile(data_path,strcat('oqpsk_iqmap_plot.png')));
+plot_num = plot_num + 1;
 
+figure(plot_num)
+set(gcf,'position',([50,50,1000,800]),'color','w')
 scatter3(t_iq, real(iq), imag(iq), 20, 'o', 'b', 'filled');
 hold on
 plot3(t_iq, real(iq), imag(iq), 'b');
-
 set(gca,'fontweight','bold','FontSize',11);
-
 xlabel('time (s)', 'fontweight','bold');
 ylabel('I', 'fontweight','bold');
 zlabel('Q', 'fontweight','bold');
-
+view(-70,10);
+print(plot_num, '-dpng', fullfile(data_path,strcat('oqpsk_iq_plot.png')));
 plot_num = plot_num + 1;
 
-[s, f, ts] = spectrogram(iq, 256, 128, 256, sample_rate, 'centered'); 
+[s, f, ts] = spectrogram(iq, 128, 64, 128, sample_rate, 'centered'); 
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
@@ -591,7 +669,13 @@ xlabel('Time (s)', 'fontweight','bold','FontSize',12);
 ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
 zlabel('Amplitude (dBfs)', 'fontweight','bold','FontSize',12);
 
-view(90,-90);
+view(0,0);
+print(plot_num, '-dpng', fullfile(data_path,strcat('oqpsk_spectrogram_0_0.png')));
+view(90,0)
+print(plot_num, '-dpng', fullfile(data_path,strcat('oqpsk_spectrogram_90_0.png')));
+view(90,-90)
+print(plot_num, '-dpng', fullfile(data_path,strcat('oqpsk_spectrogram_90_90.png')));
+
 plot_num = plot_num + 1;
 
 %% 16 QAM
@@ -640,7 +724,24 @@ legend({'I', 'Q'});
 
 ax = gca;
 ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
+print(plot_num, '-dpng', fullfile(data_path,strcat('16qam_time_plot.png')));
+plot_num = plot_num + 1;
 
+figure(plot_num)
+set(gcf,'position',([50,50,1000,800]),'color','w')
+hold on
+grid on
+box on
+scatter(real(iq_map), imag(iq_map), 20, 'o', 'b', 'filled');
+
+set(gca,'fontweight','bold','FontSize',11);
+
+xlabel('I', 'fontweight','bold');
+ylabel('Q', 'fontweight','bold');
+ax = gca;
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+print(plot_num, '-dpng', fullfile(data_path,strcat('16qam_iqmap_plot.png')));
 plot_num = plot_num + 1;
 
 figure(plot_num)
@@ -654,10 +755,11 @@ set(gca,'fontweight','bold','FontSize',11);
 xlabel('time (s)', 'fontweight','bold');
 ylabel('I', 'fontweight','bold');
 zlabel('Q', 'fontweight','bold');
-
+view(-70,10);
+print(plot_num, '-dpng', fullfile(data_path,strcat('16qam_iq_plot.png')));
 plot_num = plot_num + 1;
 
-[s, f, ts] = spectrogram(iq, 256, 128, 256, sample_rate, 'centered'); 
+[s, f, ts] = spectrogram(iq, 128, 64, 128, sample_rate, 'centered'); 
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
@@ -673,7 +775,13 @@ xlabel('Time (s)', 'fontweight','bold','FontSize',12);
 ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
 zlabel('Amplitude (dBfs)', 'fontweight','bold','FontSize',12);
 
-view(90,-90);
+view(0,0);
+print(plot_num, '-dpng', fullfile(data_path,strcat('16qam_spectrogram_0_0.png')));
+view(90,0)
+print(plot_num, '-dpng', fullfile(data_path,strcat('16qam_spectrogram_90_0.png')));
+view(90,-90)
+print(plot_num, '-dpng', fullfile(data_path,strcat('16qam_spectrogram_90_90.png')));
+
 plot_num = plot_num + 1;
 
 %% 64 QAM
@@ -693,6 +801,9 @@ iq_map = create_qam_constellation(num_bits);
 
 [iq] = generate_qam(data, amplitude, sample_rate, iq_map, bit_length);
 t_iq = (0:numel(iq)-1)/sample_rate;
+
+
+
 
 figure(plot_num)
 set(gcf,'position',([50,50,1400,500]),'color','w')
@@ -722,22 +833,40 @@ legend({'I', 'Q'});
 
 ax = gca;
 ax.Position = [0.04 ax.Position(2) 0.92 ax.Position(4)];
+print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_time_plot.png')));
 
 plot_num = plot_num + 1;
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
 hold on
+grid on
+box on
+scatter(real(iq_map), imag(iq_map), 20, 'o', 'b', 'filled');
+
+set(gca,'fontweight','bold','FontSize',11);
+
+xlabel('I', 'fontweight','bold');
+ylabel('Q', 'fontweight','bold');
+ax = gca;
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_iqmap_plot.png')));
+plot_num = plot_num + 1;
+
+figure(plot_num)
+set(gcf,'position',([50,50,1000,800]),'color','w')
+hold on
 scatter3(t_iq, real(iq), imag(iq), 20, 'o', 'b', 'filled');
-% plot3(t_iq, real(iq), imag(iq), 'b');
+plot3(t_iq, real(iq), imag(iq), 'b');
 
 set(gca,'fontweight','bold','FontSize',11);
 
 xlabel('time (s)', 'fontweight','bold');
 ylabel('I', 'fontweight','bold');
 zlabel('Q', 'fontweight','bold');
-view(90,0);
-
+view(-70,10);
+print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_iq_plot.png')));
 plot_num = plot_num + 1;
 
 [s, f, ts] = spectrogram(iq, 128, 64, 128, sample_rate, 'centered'); 
@@ -756,5 +885,11 @@ xlabel('Time (s)', 'fontweight','bold','FontSize',12);
 ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
 zlabel('Amplitude (dBfs)', 'fontweight','bold','FontSize',12);
 
-view(90,-90);
+view(0,0);
+print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_spectrogram_0_0.png')));
+view(90,0)
+print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_spectrogram_90_0.png')));
+view(90,-90)
+print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_spectrogram_90_90.png')));
+
 plot_num = plot_num + 1;
