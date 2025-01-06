@@ -1,4 +1,4 @@
-function iq_map = create_qam_constellation(num_bits)
+function [iq_map, gray_code] = create_qam_constellation(num_bits)
 
     if(mod(num_bits,2) ~= 0)
         fprintf('number of bit must be even.\n');
