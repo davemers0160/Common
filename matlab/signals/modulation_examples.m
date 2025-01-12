@@ -187,6 +187,108 @@ print(plot_num, '-dpng', fullfile(data_path,strcat('ask_spectrogram_90_90.png'))
 
 plot_num = plot_num + 1;
 
+%% PAM modulation
+
+amplitude = 1.0;
+sample_rate = 1e6;
+
+% time
+t = 0:9999;
+
+symbol_length = 0.0001;
+samples_per_symbol = floor(sample_rate * symbol_length + 0.5);
+
+data = randi([0,1], 200,1);
+
+[iq, pulse_data] = generate_4pam(data, amplitude, symbol_length, sample_rate);
+t_iq = (0:numel(iq)-1)/sample_rate;
+
+x_data = 0:numel(data)-1;
+
+% data plot
+figure(plot_num)
+set(gcf,'position',([50,50,1600,500]),'color','w')
+
+subplot(3,1,1)
+hold on
+grid on
+box on
+plot(x_data, data, 'k', 'LineWidth', 1)
+set(gca,'fontweight','bold','FontSize',11);
+xlim([0,x_data(end)]);
+legend('Binary Data')
+title('4-PAM Modulation', 'fontweight','bold','FontSize',12);
+ax = gca;
+ax.Position = [0.025 ax.Position(2) 0.96 ax.Position(4)];
+
+subplot(3,1,2)
+hold on
+grid on
+box on
+plot(t_iq, pulse_data, 'b', 'LineWidth', line_width)
+set(gca,'fontweight','bold','FontSize',11);
+xlim([0, t_iq(end)]);
+legend({'Data'});
+ax = gca;
+ax.Position = [0.025 ax.Position(2) 0.96 ax.Position(4)];
+
+subplot(3,1,3)
+hold on
+grid on
+box on
+plot(t_iq, pulse_data, 'k', 'LineWidth', line_width)
+plot(t_iq, real(iq), 'b', 'LineWidth', line_width)
+set(gca,'fontweight','bold','FontSize',11);
+xlim([0, t_iq(end)]);
+legend({'Data', 'Modulated Data'});
+ax = gca;
+ax.Position = [0.025 0.125 0.96 ax.Position(4)];
+print(plot_num, '-dpng', fullfile(data_path,strcat('pam_time_plot.png')));
+plot_num = plot_num + 1;
+
+% iq data plot
+figure(plot_num)
+set(gcf,'position',([50,50,1000,800]),'color','w')
+scatter3(t_iq, real(iq), imag(iq), 20, 'o', 'b', 'filled');
+hold on
+box on
+grid on
+plot3(t_iq, real(iq), imag(iq), 'b');
+set(gca,'fontweight','bold','FontSize',11);
+xlabel('Time (s)', 'fontweight','bold');
+ylabel('I', 'fontweight','bold');
+zlabel('Q', 'fontweight','bold');
+view(-70,10);
+ax = gca;
+ax.Position = [0.08 0.08 0.865 0.88];
+print(plot_num, '-dpng', fullfile(data_path,strcat('pam_iq_plot.png')));
+plot_num = plot_num + 1;
+
+[s, f, ts] = spectrogram(iq, 64, 32, 64, sample_rate, 'centered'); 
+
+% spectrogram
+figure(plot_num)
+set(gcf,'position',([50,50,1000,800]),'color','w')
+surf(ts, f/1e6, 20*log10(abs(s)), 'EdgeColor', 'none')
+colormap(jet(100));
+grid on
+box on
+set(gca,'fontweight','bold','FontSize',12);
+xlabel('Time (s)', 'fontweight','bold','FontSize',12);
+ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
+zlabel('Amplitude (dBfs)', 'fontweight','bold','FontSize',12);
+ax = gca;
+ax.Position = [0.08 0.08 0.875 0.88];
+
+view(0,0);
+print(plot_num, '-dpng', fullfile(data_path,strcat('pam_spectrogram_0_0.png')));
+view(90,0)
+print(plot_num, '-dpng', fullfile(data_path,strcat('pam_spectrogram_90_0.png')));
+view(90,-90)
+print(plot_num, '-dpng', fullfile(data_path,strcat('pam_spectrogram_90_90.png')));
+
+plot_num = plot_num + 1;
+
 %% FM
 amplitude = 1.0;
 

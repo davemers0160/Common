@@ -1,4 +1,4 @@
-iq_reshape = reshape(iq(1:2000), 20, []).';
+iq_reshape = reshape(iq(1:2000), 200, []).';
 
 figure;
 set(gcf,'position',([50,50,1600,500]),'color','w')
