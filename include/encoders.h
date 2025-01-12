@@ -20,7 +20,7 @@
 #include <iostream>
 #include <ostream>
 #include <iomanip>
-#include <pair>
+#include <utility>
 
 // ----------------------------------------------------------------------------
 //https://web.archive.org/web/20110806114215/http://homepage.mac.com/afj/taplist.html
@@ -96,12 +96,12 @@ inline std::pair<int64_t, int64_t> closest_integer_divisors(int64_t n)
 
     for (idx = 2; idx <= sqrtN; ++idx) 
     {
-        if (n % i == 0) 
+        if (n % idx == 0) 
         {
-            if (abs(i - n / i) < abs(a - b)) 
+            if (abs(idx - n / idx) < abs(a - b)) 
             {
-                a = i;
-                b = n / i;
+                a = idx;
+                b = n / idx;
             }
         }
     }
@@ -127,14 +127,14 @@ inline std::vector<uint32_t> gray_code(uint16_t num_bits)
 }   // end of gray_code
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::complex<float>> generate_qam_constellation(uint16_t num_bits)
+inline std::vector<std::complex<float>> generate_square_qam_constellation(uint16_t num_bits)
 {
     uint32_t idx, jdx;
 
     uint32_t side_length = 1 << (num_bits >> 1);
     double step = 2.0;
     int16_t start = -side_length + 1;
-    float scale = 1.0 / abs(start);
+    float scale = 1.0 / (double)abs(start);
     uint32_t index = 0;
 
     std::vector<uint32_t> gc = gray_code(num_bits);
