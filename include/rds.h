@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <ostream>
 #include <iostream>
 //#include <ctime>
@@ -22,6 +23,8 @@
 //#include <complex>
 #include <algorithm>
 //#include <random>
+
+#include "get_current_time.h"
 
 #include <dsp/dsp_windows.h>
 
@@ -41,7 +44,11 @@ const uint8_t TEXT_AB_SHIFT = 4;
 const uint8_t MS_SHIFT = 3;
 const uint8_t DI_SHIFT = 2;
 
+const uint8_t PIN_DAY_SHIFT = 11;
+const uint8_t PIN_HOUR_SHIFT = 6;
+
 const uint8_t group_0_num = 4;
+const uint8_t group_1_num = 1;
 const uint8_t group_2_num = 16;
 
 
@@ -511,10 +518,11 @@ public:
 		update_radio_text(rt);
 
 		create_group_0();
+		create_group_1();
 		create_group_2();
 
 		// 4 group_0 for each group_2
-		num_groups = 4 * group_2.size() + group_2.size();
+		num_groups = 4 * group_2.size() + group_1.size() + group_2.size();
 	}
 
 	//----------------------------------------------------------------------------
@@ -579,11 +587,13 @@ public:
 		const float math_2pi = 6.283185307179586476925286766559f;
 
 		group_0_index = 0;
+		group_1_index = 0;
 		group_2_index = 0;
 
 		// step 1: generate the binary bit stream
 		while(index < num_groups)
 		{
+			// add group 0 bits to the data stream
 			for (idx = 0; idx < group_0_num; ++idx)
 			{
 				std::vector<int16_t> g0_bits = group_0[idx].to_bits();
@@ -591,6 +601,15 @@ public:
 				++index;
 			}
 
+			// add group 1 bits to the data stream
+			for (idx = 0; idx < group_1_num; ++idx)
+			{
+				std::vector<int16_t> g1_bits = group_1[idx].to_bits();
+				data_bits.insert(data_bits.end(), g1_bits.begin(), g1_bits.end());
+				++index;
+			}
+
+			// add group 2 bits to the data stream
 			std::vector<int16_t> g2_bits = group_2[group_2_index++].to_bits();
 			data_bits.insert(data_bits.end(), g2_bits.begin(), g2_bits.end());
 			++index;
@@ -637,16 +656,20 @@ public:
 //-----------------------------------------------------------------------------
 private:
 	uint16_t group_0_index = 0;
+	uint16_t group_1_index = 0;
 	uint16_t group_2_index = 0;
 	std::vector<uint16_t> di = { 0, 0, 0, 1 };			// reverse order => {d3, d2, d1, d0}
 
 	std::vector<rds_group> group_0;
+	std::vector<rds_group> group_1;
 	std::vector<rds_group> group_2;
 
 	std::string program_name = "";
 
 	uint16_t text_ab_flag = 0;
 	std::string radio_text = "";
+
+	uint16_t block_1a_variant = 0x7000 + 126;			// Variant 7 - EWS Channel
 
 	uint16_t num_groups = 80;
 
@@ -695,6 +718,39 @@ private:
 		}
 
 	}	// end of create_group_0
+
+	//-----------------------------------------------------------------------------
+	void create_group_1()
+	{
+		uint32_t idx = 0;
+		uint16_t block_data = 0;
+
+		uint16_t paging_code = 0;
+
+		uint8_t num_segments = 1;
+		group_1.clear();
+
+		time_t now = time(NULL);
+		// Convert to local time structure
+		tm* local_time = localtime(&now);
+
+		rds_block b1(rds_param.pi_code);
+		rds_block b2;
+		rds_block b3;
+		rds_block b4;
+
+		// idx is the segment address
+		for (idx = 0; idx < num_segments; ++idx)
+		{
+			block_data = (RDS_GROUP_TYPE::GT_1 << GT_SHIFT) | (rds_param.version << VER_SHIFT) | (rds_param.tp << TP_SHIFT) | (rds_param.pty << PTY_SHIFT) | paging_code;
+			b2 = rds_block(block_data);
+			b3 = rds_block(block_1a_variant);
+			b4 = rds_block(local_time->tm_mday << PIN_DAY_SHIFT);
+			group_1.push_back(rds_group(b1, b2, b3, b4));
+
+		}
+
+	}	// end of create_group_1
 
 	//-----------------------------------------------------------------------------
 	void create_group_2()
