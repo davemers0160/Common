@@ -127,42 +127,62 @@ inline std::vector<uint32_t> gray_code(uint16_t num_bits)
 }   // end of gray_code
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::complex<float>> generate_square_qam_constellation(uint16_t num_bits)
+inline std::vector<std::complex<float>> generate_qam_constellation(uint16_t num_bits)
 {
     uint32_t idx, jdx;
-
-    uint32_t side_length = 1 << (num_bits >> 1);
-    double step = 2.0;
-    int16_t start = -side_length + 1;
-    float scale = 1.0 / (double)abs(start);
     uint32_t index = 0;
+    int16_t rows, cols;
 
+    //uint32_t side_length = 1 << (num_bits >> 1);
+    //double step = 2.0;
+    //int16_t start = -side_length + 1;
+    //float scale = 1.0 / (double)abs(start);
+
+    uint32_t num = 1 << num_bits;
+    std::vector<std::complex<float>> bit_mapper(num);
+
+    std::pair<int64_t, int64_t> int_div = closest_integer_divisors(num);
+    int16_t div_diff = (int_div.second - int_div.first) >> 2;
+    rows = int_div.first;
+    cols = int_div.second;
+
+    // calculate the gray codes
     std::vector<uint32_t> gc = gray_code(num_bits);
-    std::vector<std::complex<float>> bit_mapper(1 << num_bits);
 
     // create the base locations for the constellation
-    std::vector<float> c_p(side_length, 0);
+    std::vector<float> c_y(rows, 0);
+    std::vector<float> c_x(cols, 0);
+
+    float row_start = (-rows + 1);
+    float row_scale = 1.0 / (float)abs(row_start);
+
+    float col_start = (-cols + 1);
+    float col_scale = 1.0 / (float)abs(col_start);
 
     // create the primary normalized points for the constellation
-    for (idx = 0; idx < side_length; ++idx)
+    for (idx = 0; idx < rows; ++idx)
     {
-        c_p[idx] = (start * scale);
-        start += step;
+        c_y[idx] = (row_start * row_scale);
+        row_start += 2;
     }
 
-    // cycle through the side_length x side_length matrix ans assign the constellation position based on the gray code
-    // everything is placed in a zig zag pattern
+    for (idx = 0; idx < cols; ++idx)
+    {
+        c_x[idx] = (col_start * col_scale);
+        col_start += 2;
+    }
+
+    // cycle through the rows x cols matrix and assign the constellation position based on the gray code. everything is placed in a zig zag pattern
     // Y
-    for (idx = 0; idx < side_length; ++idx)
+    for (idx = 0; idx < rows; ++idx)
     {
         // X
-        for (jdx = 0; jdx < side_length; ++jdx)
+        for (jdx = 0; jdx < cols; ++jdx)
         {
             // check row and perform zig-zag assignment
-            index = ((idx & 0x01) == 1) ? (side_length * (idx + 1) - 1) - jdx : jdx + (side_length * idx);
-
+            index = ((idx & 0x01) == 1) ? (idx + 1) * cols - (jdx + 1) : idx * cols + jdx;
             // assign to bit_mapper
-            bit_mapper[gc[index]] = std::complex<float>(c_p[jdx], c_p[idx]);
+            bit_mapper[gc[index]] = std::complex<float>(c_x[jdx], c_y[idx]);
         }
     }
 
