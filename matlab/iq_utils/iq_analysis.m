@@ -86,7 +86,7 @@ plot_num = plot_num + 1;
 drawnow;
 
 %%
-[s, f, ts] = spectrogram(iqc, 1024, 0, 1024, fs, 'centered');
+[s, f, ts] = spectrogram(iqc, 512, 480, 512, fs, 'centered');
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
@@ -124,6 +124,35 @@ ax.XAxisLocation = 'origin';
 ax.YAxisLocation = 'origin';
 plot_num = plot_num + 1;
 
+%% filtered
+
+num_taps = 31;
+w = hamming(num_taps);
+fc = 2.5e6/fs;
+lpf = create_fir_filter(fc, w);
+
+iqc_f = conv(iqc, lpf(end:-1:1),'same');
+
+[s, f, ts] = spectrogram(iqc_f, 512, 480, 512, fs, 'centered');
+
+figure(plot_num)
+set(gcf,'position',([50,50,1000,800]),'color','w')
+surf(ts, f/1e6, 20*log10(abs(s)), 'EdgeColor', 'none')
+colormap(jet(100));
+
+grid on
+box on
+
+set(gca,'fontweight','bold','FontSize',12);
+
+xlabel('Time (s)', 'fontweight','bold','FontSize',12);
+ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
+
+view(90,-90);
+plot_num = plot_num + 1;
+drawnow;
+
+%%
 % figure(plot_num)
 % set(gcf,'position',([50,50,1400,500]),'color','w')
 % plot(iq(:,1),'b');
