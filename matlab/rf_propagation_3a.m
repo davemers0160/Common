@@ -24,7 +24,7 @@ m2nmi = 0.000539957;
 m2yd = 1/yd2m;
 m2ft = 1/ft2m;
 
-drive_letter = 'C';
+drive_letter = 'D';
 tmp_path = strcat(drive_letter, ':/Projects/data/temp/');
 save_path = strcat(drive_letter, ':/Projects/data/prop_analysis/');
 
@@ -73,12 +73,12 @@ pfl_t = libpointer('doublePtr', [10, 100, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1
 %% Loss - 20*LOG(R)+20*LOG(F)-27.55	
 %frequency = 167.5;
 
-x_range_min = -200;
-x_range_max = 200;
-x_range_step = 5;
+x_range_min = -4000;
+x_range_max = 100;
+x_range_step = 50;
 
-y_range_min = -200;
-y_range_max = 200;
+y_range_min = -100;
+y_range_max = 100;
 y_range_step = 5;
 
 z_max = 30;
@@ -102,12 +102,13 @@ r1_ellipse = (r1 * eye(2)) * [cos(theta(:)).'; sin(theta(:)).'];
 %% setup points
 
 % points are X, Y, Z
-tx_height = 30;         % meter
-rx_height = 30;         % meters
+tx_height = 1.5;         % meter
+rx_height = 20;         % meters
 
 TX = [
-      100, 0, tx_height;
-      50, 0, tx_height;
+        -3500,  0, tx_height;
+      % 100, 0, tx_height;
+      % 50, 0, tx_height;
      ];
 
 num_TX = size(TX, 1);
@@ -164,7 +165,7 @@ ax = gca;
 ax.Position = [0.11, 0.09, 0.87, 0.89];
 
 set(gcf, 'InvertHardCopy', 'off');
-print(plot_num, '-dpng', fullfile(save_path, strcat('slc_laydown_',scenario,'.png')));
+print(plot_num, '-dpng', fullfile(save_path, strcat('laydown_',scenario,'.png')));
 
 plot_num = plot_num + 1;
 
@@ -246,6 +247,8 @@ for jdx=1:numel(loss_tx_rx)
     plot_num = plot_num + 1;
 
 end
+
+bp = 1;
 
 %% 
 % figure(plot_num)
