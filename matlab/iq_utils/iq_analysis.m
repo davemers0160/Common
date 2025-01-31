@@ -11,7 +11,7 @@ plot_num = 1;
 commandwindow;
 
 %% load in data
-file_filter = {'*.sc16','SC16 Files';'*.fc32','FC32 Files';'*.*','All Files' };
+file_filter = {'*.sc16;*.fc32','IQ Files';'*.*','All Files' };
 
 [data_file, data_filepath] = uigetfile(file_filter, 'Select File', startpath, 'MultiSelect', 'on');
 if(data_filepath == 0)
@@ -39,7 +39,7 @@ byte_order = 'ieee-le';
 prompt = {'Sample Rate:'};
 dlgtitle = 'Input';
 fieldsize = [1 30];
-definput = {'20e6'};
+definput = {'50e6'};
 
 res = inputdlg(prompt, dlgtitle, fieldsize, definput);
 
@@ -58,7 +58,10 @@ min(real(iqc_in))
 max(imag(iqc_in))
 min(imag(iqc_in))
 
-iqc = scale * iqc_in;
+
+max_v = max([max(real(iqc_in)), max(imag(iqc_in)), abs(min(real(iqc_in))), abs(min(imag(iqc_in)))])
+
+iqc = (1/max_v) * iqc_in;
 tmt = timetable(seconds(t.'), iqc);
 
 %%
@@ -68,14 +71,15 @@ iq(:,2) = imag(iqc);
 ph = atan2(imag(iqc),real(iqc))/pi;
 ph = angle(iqc);
 
-%%
+%% FFT
 Y = fft(iqc)/numel(iqc);
 f = linspace(-fs/2, fs/2, numel(Y));
 
 figure(plot_num)
 plot(f, 20*log10(abs(fftshift(Y))), 'b');
+box on
+grid on
 plot_num = plot_num + 1;
-drawnow;
 
 %%
 figure(plot_num)
@@ -127,9 +131,9 @@ plot_num = plot_num + 1;
 %% filtered
 
 step = 1;
-num_taps = 15;
+num_taps = 5;
 w = hamming(num_taps);
-fc = 0.4e6/fs;
+fc = 0.2e6/fs;
 lpf = create_fir_filter(fc, w);
 
 iqc_f = conv(iqc, lpf(end:-1:1),'same');
@@ -164,7 +168,7 @@ drawnow;
 %%
 const_diag = comm.ConstellationDiagram;
 
-step = 50;
+step = 40;
 const_diag(iqc(1:step:end));
 
 
@@ -183,8 +187,8 @@ end
 
 samples_per_symbol = str2double(res{1});
 
-step = 25;
-eyediagram(iqc(1:step:5000), samples_per_symbol)
+step = 1;
+eyediagram(iqc_f(1000:step:10000), samples_per_symbol)
 
 plot_num = plot_num + 1;
 
@@ -249,7 +253,7 @@ plot_num = plot_num + 1;
 
 iq_start = ceil(fs*1.969e-5);
 iq_stop = floor(fs*0.0028); %numel(iqc);
-step = 50;
+step = 1;
 
 figure(plot_num)
 set(gcf,'position',([50,50,1400,500]),'color','w')
@@ -281,7 +285,7 @@ xlabel('time (s)', 'fontweight','bold');
 ylabel('I', 'fontweight','bold');
 zlabel('Q', 'fontweight','bold');
 
-view(-30,45);
+view(-70,15);
 
 for idx=1:numel(iqc)
     scatter3(t(idx), real(iqc(idx)), imag(iqc(idx)), 20, 'o', 'b', 'filled');
@@ -295,7 +299,7 @@ plot_num = plot_num + 1;
 drawnow;
 
 %% comet3
-
+step = 40;
 figure;
 set(gcf,'position',([50,50,1400,500]),'color','w')
 
@@ -307,12 +311,13 @@ xlabel('time (s)', 'fontweight','bold');
 ylabel('I', 'fontweight','bold');
 zlabel('Q', 'fontweight','bold');
 
-view(-30,45);
+view(-70,15);
 
 f1 = gcf;
-tailFormat = struct('LineWidth',1,'Color','b','LineStyle','-');
-headFormat = struct('LineStyle','none','Marker','o','MarkerSize',6,'Color','r', 'MarkerFaceColor', 'b');
-PlotComet_3D(t, real(iqc), imag(iqc), 'cFigure', f1, 'Frequency', 1000000, 'blockSize', 1000, 'tailFormat',tailFormat, 'headFormat',headFormat);
+tailFormat = struct('LineWidth',1,'Color','b','LineStyle','none', 'Marker','o','MarkerSize',6,'MarkerFaceColor', 'b');
+headFormat = struct('LineStyle','none','Marker','o','MarkerSize',6,'Color','r', 'MarkerFaceColor', 'r');
+PlotComet_3D(t(1:step:end), real(iqc(1:step:end)), imag(iqc(1:step:end)), 'cFigure', f1, 'Frequency', 1000000, 'blockSize', 2000, 'tailFormat',tailFormat, 'headFormat',headFormat);
+% PlotComet_3D(t(1:step:end), real(iqc_r(1:step:end)), imag(iqc_r(1:step:end)), 'cFigure', f1, 'Frequency', 1000000, 'blockSize', 500, 'tailFormat',tailFormat, 'headFormat',headFormat);
 % PlotComet_3D(real(iqc), imag(iqc), t, 'Frequency', 100000, 'blockSize', 1000, 'tailFormat',tailFormat, 'headFormat',headFormat);
 
 plot_num = plot_num + 1;
@@ -325,6 +330,16 @@ z = fmdemod(iqc);
 mz = max(abs(z));
 ap=audioplayer(z/mz, 44100);
 play(ap);
+
+%% rotation
+fr = 10/fs;
+
+f_rot = exp(2*pi*1j*fr*(0:numel(iqc)-1)).';
+
+iqc_r = f_rot.*iqc;
+
+
+
 
 %%
 % figure;
