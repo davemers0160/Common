@@ -90,7 +90,7 @@ plot_num = plot_num + 1;
 drawnow;
 
 %%
-[s, f, ts] = spectrogram(iqc, 512, 480, 512, fs, 'centered');
+[s, f, ts] = spectrogram(iqc, 512, 256, 512, fs, 'centered');
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
@@ -251,8 +251,8 @@ plot_num = plot_num + 1;
 
 %%
 
-iq_start = ceil(fs*1.969e-5);
-iq_stop = floor(fs*0.0028); %numel(iqc);
+iq_start = 1;%ceil(fs*1.969e-5);
+iq_stop = numel(iqc);
 step = 1;
 
 figure(plot_num)
