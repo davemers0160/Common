@@ -36,10 +36,10 @@ byte_order = 'ieee-le';
 [~, iqc_in] = read_binary_iq_data(fullfile(data_filepath, data_file), data_type, byte_order);
 
 %% get sample rate
-prompt = {'Sample Rate:'};
 dlgtitle = 'Input';
-fieldsize = [1 30];
-definput = {'50e6'};
+prompt = {'Sample Rate:', 'Down Samples Rate:', 'num taps:'};
+fieldsize = [1 30; 1 30; 1 30];
+definput = {'50e6', '10', '7'};
 
 res = inputdlg(prompt, dlgtitle, fieldsize, definput);
 
@@ -47,8 +47,12 @@ if(isempty(res))
     return;
 end
 
-fs = str2double(res{1});
-t = 0:1/fs:(numel(iqc_in)-1)/fs;
+fs_o = str2double(res{1});
+ds_rate = str2double(res{2});
+num_taps = str2double(res{3});
+
+
+% t = 0:1/fs_o:(numel(iqc_in)-1)/fs_o;
 
 %%
 % iqc = iqc()
@@ -58,11 +62,23 @@ min(real(iqc_in))
 max(imag(iqc_in))
 min(imag(iqc_in))
 
-
 max_v = max([max(real(iqc_in)), max(imag(iqc_in)), abs(min(real(iqc_in))), abs(min(imag(iqc_in)))])
 
-iqc = (1/max_v) * iqc_in;
-tmt = timetable(seconds(t.'), iqc);
+iqc_o = (1/max_v) * iqc_in;
+% tmt = timetable(seconds(t.'), iqc_o);
+
+%% filter and downsample
+
+w = hamming(num_taps);
+fc = 0.2e6/fs_o;
+lpf = create_fir_filter(fc, w);
+
+iqc_f = conv(iqc_o, lpf(end:-1:1),'same');
+
+iqc = iqc_f(1:ds_rate:end);
+fs = fs_o/ds_rate;
+
+t = 0:1/fs:(numel(iqc)-1)/fs;
 
 %%
 iq(:,1) = real(iqc);
@@ -130,40 +146,40 @@ plot_num = plot_num + 1;
 
 %% filtered
 
-step = 1;
-num_taps = 5;
-w = hamming(num_taps);
-fc = 0.2e6/fs;
-lpf = create_fir_filter(fc, w);
-
-iqc_f = conv(iqc, lpf(end:-1:1),'same');
-
-[s, f, ts] = spectrogram(iqc_f(1:step:end), 512, 480, 512, fs/step, 'centered');
-
-figure(plot_num)
-set(gcf,'position',([50,50,1000,800]),'color','w')
-surf(ts, f/1e6, 20*log10(abs(s)), 'EdgeColor', 'none')
-colormap(jet(100));
-
-grid on
-box on
-
-set(gca,'fontweight','bold','FontSize',12);
-
-xlabel('Time (s)', 'fontweight','bold','FontSize',12);
-ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
-
-view(90,-90);
-plot_num = plot_num + 1;
-drawnow;
-
-
-figure(plot_num)
-plot(t(1:step:end), real(iqc_f(1:step:end)),'b')
-hold on
-plot(t(1:step:end), imag(iqc_f(1:step:end)),'r')
-plot_num = plot_num + 1;
-drawnow;
+% step = 1;
+% num_taps = 5;
+% w = hamming(num_taps);
+% fc = 0.2e6/fs;
+% lpf = create_fir_filter(fc, w);
+% 
+% iqc_f = conv(iqc, lpf(end:-1:1),'same');
+% 
+% [s, f, ts] = spectrogram(iqc_f(1:step:end), 512, 480, 512, fs/step, 'centered');
+% 
+% figure(plot_num)
+% set(gcf,'position',([50,50,1000,800]),'color','w')
+% surf(ts, f/1e6, 20*log10(abs(s)), 'EdgeColor', 'none')
+% colormap(jet(100));
+% 
+% grid on
+% box on
+% 
+% set(gca,'fontweight','bold','FontSize',12);
+% 
+% xlabel('Time (s)', 'fontweight','bold','FontSize',12);
+% ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
+% 
+% view(90,-90);
+% plot_num = plot_num + 1;
+% drawnow;
+% 
+% 
+% figure(plot_num)
+% plot(t(1:step:end), real(iqc_f(1:step:end)),'b')
+% hold on
+% plot(t(1:step:end), imag(iqc_f(1:step:end)),'r')
+% plot_num = plot_num + 1;
+% drawnow;
 
 %%
 const_diag = comm.ConstellationDiagram;
@@ -188,7 +204,7 @@ end
 samples_per_symbol = str2double(res{1});
 
 step = 1;
-eyediagram(iqc_f(1000:step:10000), samples_per_symbol)
+eyediagram(iqc_f(1:step:end), samples_per_symbol)
 
 plot_num = plot_num + 1;
 
@@ -260,9 +276,9 @@ set(gcf,'position',([50,50,1400,500]),'color','w')
 
 scatter3(t(iq_start:step:iq_stop), real(iqc(iq_start:step:iq_stop)), imag(iqc(iq_start:step:iq_stop)), 20, 'o', 'b', 'filled');
 hold on
-% plot3(t(iq_start:step:iq_stop), real(iqc(iq_start:step:iq_stop)), imag(iqc(iq_start:step:iq_stop)), 'b');
+plot3(t(iq_start:step:iq_stop), real(iqc(iq_start:step:iq_stop)), imag(iqc(iq_start:step:iq_stop)), 'b');
 
-set(gca,'fontweight','bold','FontSize',11);
+set(gca,'fontweight','bold','FontSize',11,'Ydir','reverse');
 
 xlabel('time (s)', 'fontweight','bold');
 ylabel('I', 'fontweight','bold');
@@ -299,7 +315,7 @@ plot_num = plot_num + 1;
 drawnow;
 
 %% comet3
-step = 40;
+step = 1;
 figure;
 set(gcf,'position',([50,50,1400,500]),'color','w')
 
