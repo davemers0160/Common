@@ -1,4 +1,4 @@
-function [iq] = generate_oqpsk(data, sample_rate, half_symbol_length)
+function [iq] = generate_oqpsk(data, amplitude, sample_rate, half_symbol_length)
 
     samples_per_symbol = floor(sample_rate * half_symbol_length + 0.5);
     samples_per_symbol_x2 = floor(2 * sample_rate * half_symbol_length);
@@ -17,7 +17,7 @@ function [iq] = generate_oqpsk(data, sample_rate, half_symbol_length)
     s = ones(floor(samples_per_symbol_x2), 1);
     
     % pre calculate the base 45 degree value
-    v = sqrt(2)/2;
+    v = amplitude/sqrt(2);
           
     % start with I and Q offset by half a bit length
     I = [];
