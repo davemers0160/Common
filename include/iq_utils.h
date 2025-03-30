@@ -108,7 +108,7 @@ void read_iq_data(std::string filename, std::vector<std::complex<T>> &samples)
 
         if (!data_file.is_open())
         {
-            std::cout << "Could not open file to read data" << std::endl;
+            std::cout << "Could not open file to read data: " << filename << std::endl;
             return;
         }
         
