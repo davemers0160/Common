@@ -39,7 +39,7 @@ byte_order = 'ieee-le';
 dlgtitle = 'Input';
 prompt = {'Sample Rate:', 'Down Samples Rate:', 'num taps:'};
 fieldsize = [1 30; 1 30; 1 30];
-definput = {'50e6', '10', '7'};
+definput = {'50e6', '1', '1'};
 
 res = inputdlg(prompt, dlgtitle, fieldsize, definput);
 
