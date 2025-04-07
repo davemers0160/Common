@@ -204,7 +204,7 @@ end
 samples_per_symbol = str2double(res{1});
 
 step = 1;
-eyediagram(iqc_f(1:step:10000), samples_per_symbol)
+eyediagram(iqc_f(1:step:min(10000,numel(iqc_f))), samples_per_symbol)
 
 plot_num = plot_num + 1;
 
