@@ -13,7 +13,7 @@ commandwindow;
 % pause(0.5);
 
 %%
-prompt = {'Sample Rate:', 'Pulse Width:','PRI:', 'Freq Offset:', 'Amplitude:', 'Number of Pulses:', 'Filter Cutoff Frequency:', 'Number of Taps:'};
+prompt = {'Sample Rate:', 'Pulse Width:', 'PRI:', 'Freq Offset:', 'Amplitude:', 'Number of Pulses:', 'Filter Cutoff Frequency:', 'Number of Taps:'};
 dlgtitle = 'Input';
 fieldsize = [1 30; 1 30; 1 30; 1 30; 1 30; 1 30; 1 30; 1 30]; 
 definput = {'20e6','1e-6', '2e-6', '0', '2047', '2', '1e6', '3'};
@@ -40,6 +40,17 @@ fc = str2double(res{7});
 
 num_taps = str2double(res{8});
 
+fprintf("----------------------------------------------------------\n");
+fprintf("sample_rate: %d\n", sample_rate)
+fprintf("pulse_width: %11.9f\n", pulse_width)
+fprintf("pri: %11.9f\n", pri)
+fprintf("fr: %d\n", fr)
+fprintf("amplitude: %d\n", amplitude)
+fprintf("num_pulses: %d\n", num_pulses)
+fprintf("fc: %d\n", fc)
+fprintf("num_taps: %d\n", num_taps)
+fprintf("----------------------------------------------------------\n\n");
+
 
 %% 
 
@@ -47,7 +58,8 @@ num_taps = str2double(res{8});
 samples_per_pulse =  floor(pulse_width * sample_rate);
 fr = fr/sample_rate;
 
-iq = complex(amplitude*ones(samples_per_pulse,1), amplitude*ones(samples_per_pulse,1));
+iq = complex(amplitude*ones(samples_per_pulse,1), ones(samples_per_pulse,1));
+% iq = complex(amplitude*ones(samples_per_pulse,1), amplitude*ones(samples_per_pulse,1));
 
 % get the number of samples in the pri
 samples_per_pri = floor(pri * sample_rate);
@@ -176,5 +188,7 @@ if(filepath == 0)
 end
 
 data = complex(int16(real(iq_pad)), int16(imag(iq_pad)));
+
+fprintf("filename: %s\n", fullfile(filepath,filename))
 
 write_binary_iq_data(fullfile(filepath,filename), data, data_type, byte_order);
