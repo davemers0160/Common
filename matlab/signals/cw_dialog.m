@@ -16,7 +16,7 @@ commandwindow;
 prompt = {'Sample Rate:', 'Pulse Width:', 'PRI:', 'Freq Offset:', 'Amplitude:', 'Number of Pulses:', 'Filter Cutoff Frequency:', 'Number of Taps:'};
 dlgtitle = 'Input';
 fieldsize = [1 30; 1 30; 1 30; 1 30; 1 30; 1 30; 1 30; 1 30]; 
-definput = {'20e6','1e-6', '2e-6', '0', '2047', '2', '1e6', '3'};
+definput = {'40e6','1e-6', '2e-6', '0', '2047', '2', '1e6', '3'};
 
 res = inputdlg(prompt, dlgtitle, fieldsize, definput);
 
@@ -58,7 +58,7 @@ fprintf("----------------------------------------------------------\n\n");
 samples_per_pulse =  floor(pulse_width * sample_rate);
 fr = fr/sample_rate;
 
-iq = complex(amplitude*ones(samples_per_pulse,1), ones(samples_per_pulse,1));
+iq = complex(ones(samples_per_pulse,1), 1e-6*ones(samples_per_pulse,1));
 % iq = complex(amplitude*ones(samples_per_pulse,1), amplitude*ones(samples_per_pulse,1));
 
 % get the number of samples in the pri
@@ -86,24 +86,26 @@ iq_filt = conv(iq_p, lpf(end:-1:1), 'same');
 
 x = (0:numel(iq_filt)-1) * (1/sample_rate);
 
+iq_scale = max(abs(real(iq_filt)));
 
-% plot the base signal 
-% figure(plot_num)
-% set(gcf,'position',([50,50,1400,500]),'color','w')
-% grid on
-% box on 
-% plot(x, real(iq), 'b');
-% hold on
-% plot(x, imag(iq), 'r');
-% 
-% set(gca,'fontweight','bold','FontSize',11);
-% 
-% xlabel('time (s)', 'fontweight','bold');
-% ylabel('amplitude', 'fontweight','bold');
-% 
-% plot_num  = plot_num + 1;
-% 
-% 
+iq_filt = (amplitude/iq_scale)*iq_filt;
+% iq_filt = amplitude*iq_filt;
+
+%%
+filt_fft = fft(lpf)/num_taps;
+
+f = linspace(-sample_rate/2, sample_rate/2, num_taps);
+figure(plot_num)
+set(gcf,'position',([50,50,1400,500]),'color','w')
+grid on
+box on
+plot(f/1e6, 20*log10(abs(fftshift(filt_fft))), 'b')
+
+xlabel('Frequency (MHz)', 'fontweight','bold');
+ylabel('amplitude', 'fontweight','bold');
+plot_num  = plot_num + 1;
+
+
 % figure(plot_num)
 % set(gcf,'position',([50,50,1400,500]),'color','w')
 % grid on
@@ -129,6 +131,8 @@ box on
 plot(x, real(iq_filt), 'b');
 hold on
 plot(x, imag(iq_filt), 'r');
+% plot(x, real(iq_filt2), 'g');
+% plot(x, imag(iq_filt2), 'c');
 
 set(gca,'fontweight','bold','FontSize',11);
 
@@ -153,7 +157,7 @@ zlabel('Q', 'fontweight','bold');
 plot_num  = plot_num + 1;
 
 figure(plot_num)
-spectrogram(iq, 128, 120, 128, sample_rate, 'centered')
+spectrogram(iq, 512, floor(0.75*512), 512, sample_rate, 'centered')
 plot_num  = plot_num + 1;
 
 %% save data
