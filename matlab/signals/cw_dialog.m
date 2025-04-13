@@ -105,6 +105,21 @@ xlabel('Frequency (MHz)', 'fontweight','bold');
 ylabel('amplitude', 'fontweight','bold');
 plot_num  = plot_num + 1;
 
+%% FFT
+Y = fft(iq_filt)/numel(iq_filt);
+Y2 = fft(iq_p)/numel(iq_p);
+
+f = linspace(-sample_rate/2, sample_rate/2, numel(Y));
+
+figure(plot_num)
+plot(f, 20*log10(abs(fftshift(Y))), 'b');
+box on
+grid on
+hold on
+plot(f, 20*log10(abs(fftshift(Y2))), 'g');
+
+plot_num = plot_num + 1;
+
 
 % figure(plot_num)
 % set(gcf,'position',([50,50,1400,500]),'color','w')
@@ -176,6 +191,8 @@ switch answer
         % do nothing
         iq_pad = iq_filt;
 end
+
+%% save data
 
 data_type = 'int16';
 
