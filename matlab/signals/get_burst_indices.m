@@ -1,4 +1,4 @@
-function [burst_lengths, off_times, indexes] = get_burst_indices(iq_snippet, t_snippet, sample_rate)
+function [burst_lengths, off_times, indices] = get_burst_indices(iq_snippet, t_snippet, sample_rate)
 
     iq_mag = abs(iq_snippet);
     sample_index = 0:numel(iq_mag)-1;
@@ -79,7 +79,7 @@ function [burst_lengths, off_times, indexes] = get_burst_indices(iq_snippet, t_s
     burst_lengths = (stop_index(1:min_index)-start_index(1:min_index))';
     off_times = (start_index(2:min_index) - stop_index(1:min_index-1))';
 
-    indexes = cat(2, start_index(1:min_index), stop_index(1:min_index));
+    indices = cat(2, start_index(1:min_index), stop_index(1:min_index));
 
     figure;
     hold on;
@@ -87,7 +87,7 @@ function [burst_lengths, off_times, indexes] = get_burst_indices(iq_snippet, t_s
     plot([t_snippet(1), t_snippet(end)], [iq_mag_filt_mean, iq_mag_filt_mean], '--k');
     plot(t_snippet, iq_mag_bin, 'b');
 
-    scatter(t_snippet(indexes(:,1)), ones(numel(indexes(:,1)),1), 30, 'o','r', 'filled');
-    scatter(t_snippet(indexes(:,2)), ones(numel(indexes(:,2)),1), 30, 'o','k', 'filled');
+    scatter(t_snippet(indices(:,1)), ones(numel(indices(:,1)),1), 30, 'o','r', 'filled');
+    scatter(t_snippet(indices(:,2)), ones(numel(indices(:,2)),1), 30, 'o','k', 'filled');
     drawnow;
 end
