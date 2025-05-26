@@ -17,6 +17,11 @@
 namespace DSP
 {
 
+const double M_1PI = 3.14159265358979323846;            // pi
+const double M_2PI = 2.0 * 3.14159265358979323846;      // 2pi
+const double M_4PI = 4.0 * 3.14159265358979323846;      // 4pi
+const double M_6PI = 6.0 * 3.14159265358979323846;      // 6pi
+
 //-----------------------------------------------------------------------------
 inline uint64_t factorial(int64_t n){
 
@@ -51,7 +56,7 @@ inline std::vector<float> hann_window(int64_t N)
 
     for (int64_t idx = 0; idx < N; ++idx)
     {
-        w[idx] = 0.5f*(1.0f - std::cos(2.0f * M_PI * idx/(double)(N-1)));
+        w[idx] = 0.5f*(1.0f - std::cos(M_2PI * idx/(double)(N-1)));
     }
     
     return w;
@@ -67,7 +72,7 @@ inline std::vector<float> hamming_window(int64_t N)
 
     for (int64_t idx = 0; idx < N; ++idx)
     {
-        w[idx] = a0 - a1 * std::cos(2.0f * M_PI * idx/(double)(N-1));
+        w[idx] = a0 - a1 * std::cos(M_2PI * idx/(double)(N-1));
     }
     
     return w;
@@ -84,7 +89,7 @@ inline std::vector<float> blackman_window(int64_t N)
 
     for (int64_t idx = 0; idx < N; ++idx)
     {
-        w[idx] = a0 - a1 * std::cos(2.0f * M_PI * idx / (double)(N-1)) + a2 * std::cos(4.0f * M_PI * idx / (double)(N-1));
+        w[idx] = a0 - a1 * std::cos(M_2PI * idx / (double)(N-1)) + a2 * std::cos(M_4PI * idx / (double)(N-1));
     }
 
     return w;
@@ -101,7 +106,7 @@ inline std::vector<float> nuttall_window(int64_t N)
 
     for (int64_t idx = 0; idx < N; ++idx)
     {
-        w[idx] = a0 - a1 * std::cos(2.0f * M_PI * idx / (double)(N-1)) + a2 * std::cos(4.0f * M_PI * idx / (double)(N-1)) - a3 * std::cos(6.0f * M_PI * idx / (double)(N-1));
+        w[idx] = a0 - a1 * std::cos(M_2PI * idx / (double)(N-1)) + a2 * std::cos(M_4PI * idx / (double)(N-1)) - a3 * std::cos(M_6PI * idx / (double)(N-1));
     }
     
     return w;
@@ -119,28 +124,56 @@ inline std::vector<float> blackman_nuttall_window(int64_t N)
 
     for (int64_t idx = 0; idx < N; ++idx)
     {
-        w[idx] = a0 - a1 * std::cos(2.0f * M_PI * idx / (double)(N-1)) + a2 * std::cos(4.0f * M_PI * idx / (double)(N-1)) - a3 * std::cos(6.0f * M_PI * idx / (double)(N-1));
+        w[idx] = a0 - a1 * std::cos(M_2PI * idx / (double)(N-1)) + a2 * std::cos(M_4PI * idx / (double)(N-1)) - a3 * std::cos(M_6PI * idx / (double)(N-1));
     }
 
     return w;
 }   // end of blackman_nuttall_window
 
+//-----------------------------------------------------------------------------
+inline std::vector<float> blackman_harris_window(int64_t N)
+{
+    std::vector<float> w(N, 0.0f);
+    float a0 = 0.35875;
+    float a1 = 0.48829;
+    float a2 = 0.14128;
+    float a3 = 0.01168;
+
+    for (int64_t idx = 0; idx < N; ++idx)
+    {
+        w[idx] = a0 - a1 * std::cos(M_2PI * idx / (double)(N - 1)) + a2 * std::cos(M_4PI * idx / (double)(N - 1)) - a3 * std::cos(M_6PI * idx / (double)(N - 1));
+    }
+
+    return w;
+}   // end of blackman_nuttall_window
 
 //-----------------------------------------------------------------------------
 template <typename T, typename funct>
 std::vector<T> create_fir_filter(int64_t N, float fc, funct window_function, float scale = 1.0)
 {
+    int32_t idx;
     std::vector<T> g(N, 0);
 
     std::vector<float> w = window_function(N);
 
-    for (int64_t idx = 0; idx < N; ++idx)
+    double t = 0.0;
+    double g_sum = 0.0;
+
+    for (idx = 0; idx < N; ++idx)
     {
-        if (abs((double)(idx -  ((N-1) >> 1))) < 1e-6)
-            g[idx] = scale * w[idx] * fc;
+        t = M_1PI * fc * (double)(idx - ((N - 1) >> 1));
+        if (abs(t) < 1e-6)
+            g[idx] = scale * w[idx];
         else
-            g[idx] = scale * (w[idx] * (std::sin(M_PI * fc * (idx - ((N - 1) >> 1))) / (M_PI * (idx - ((N - 1) >> 1)))));
+            g[idx] = scale * w[idx] * (std::sin(t) / t);
+
+        g_sum += g[idx];
     }
+
+    g_sum = 1.0 / g_sum;
+
+    // scale the filter to result in 0 gain
+    std::transform(g.begin(), g.end(), g.begin(), [&](T element) { return element * g_sum; });
 
     return g;
 
@@ -151,23 +184,34 @@ std::vector<T> create_fir_filter(int64_t N, float fc, funct window_function, flo
 template <typename funct>
 std::vector<float> create_fir_filter(int64_t N, float fc, std::vector<float> w, float scale = 1.0)
 {
-    if (w.size() != N )
+    int32_t idx;
+    std::vector<T> g(N, 0);
+
+    double t = 0.0;
+    double g_sum = 0.0;
+
+    if (w.size() != N)
     {
         std::cout << "Window size is not correct!" << std::endl;
-        return;
+        return g;
     }
 
-    std::vector<float> g(N , 0);
-
-    //std::vector<float> w = window_function(N - 1);
-
-    for (int64_t idx = 0; idx < N; ++idx)
+    for (idx = 0; idx < N; ++idx)
     {
-        if (abs((double)idx - (N / 2.0f)) < 1e-6)
-            g[idx] = scale * w[idx] * fc;
+        t = M_1PI * fc * (double)(idx - ((N - 1) >> 1));
+
+        if (abs(t) < 1e-6)
+            g[idx] = scale * w[idx];
         else
-            g[idx] = scale * (w[idx] * (std::sin(M_PI * fc * (idx - (N >> 1))) / (M_PI * (idx - (N >> 1)))));
+            g[idx] = scale * w[idx] * (std::sin(t) / t);
+
+        g_sum += g[idx];
     }
+
+    g_sum = 1.0 / g_sum;
+
+    // scale the filter to result in 0 gain
+    std::transform(g.begin(), g.end(), g.begin(), [&](T element) { return element * g_sum; });
 
     return g;
 

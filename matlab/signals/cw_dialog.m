@@ -77,12 +77,30 @@ iq = repmat(iq, num_pulses, 1);
 
 %% filter
 
-w = blackman_nuttall_window(num_taps);
-lpf = create_fir_filter(fc/sample_rate, w);
+if(num_taps > 0)
+    w = blackman_nuttall_window(num_taps);
+    lpf = create_fir_filter(fc/sample_rate, w);
+    
+    iq_p = cat(1, zeros(ceil(num_taps/2)+1,1), iq);
+    
+    iq_filt = conv(iq_p, lpf(end:-1:1), 'same');
 
-iq_p = cat(1, zeros(ceil(num_taps/2)+1,1), iq);
+    filt_fft = fft(lpf)/num_taps;
+    
+    f = linspace(-sample_rate/2, sample_rate/2, num_taps);
+    figure(plot_num)
+    set(gcf,'position',([50,50,1400,500]),'color','w')
+    grid on
+    box on
+    plot(f/1e6, 20*log10(abs(fftshift(filt_fft))), 'b')
+    
+    xlabel('Frequency (MHz)', 'fontweight','bold');
+    ylabel('amplitude', 'fontweight','bold');
+    plot_num  = plot_num + 1;
 
-iq_filt = conv(iq_p, lpf(end:-1:1), 'same');
+else
+    iq_filt = iq;
+end
 
 x = (0:numel(iq_filt)-1) * (1/sample_rate);
 
@@ -91,23 +109,9 @@ iq_scale = max(abs(real(iq_filt)));
 iq_filt = (amplitude/iq_scale)*iq_filt;
 % iq_filt = amplitude*iq_filt;
 
-%%
-filt_fft = fft(lpf)/num_taps;
-
-f = linspace(-sample_rate/2, sample_rate/2, num_taps);
-figure(plot_num)
-set(gcf,'position',([50,50,1400,500]),'color','w')
-grid on
-box on
-plot(f/1e6, 20*log10(abs(fftshift(filt_fft))), 'b')
-
-xlabel('Frequency (MHz)', 'fontweight','bold');
-ylabel('amplitude', 'fontweight','bold');
-plot_num  = plot_num + 1;
-
 %% FFT
 Y = fft(iq_filt)/numel(iq_filt);
-Y2 = fft(iq_p)/numel(iq_p);
+% Y2 = fft(iq_p)/numel(iq_p);
 
 f = linspace(-sample_rate/2, sample_rate/2, numel(Y));
 
@@ -116,7 +120,7 @@ plot(f, 20*log10(abs(fftshift(Y))), 'b');
 box on
 grid on
 hold on
-plot(f, 20*log10(abs(fftshift(Y2))), 'g');
+% plot(f, 20*log10(abs(fftshift(Y2))), 'g');
 
 plot_num = plot_num + 1;
 
