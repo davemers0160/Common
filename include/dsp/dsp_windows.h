@@ -179,10 +179,9 @@ std::vector<T> create_fir_filter(int64_t N, float fc, funct window_function, flo
 
 }   // end of create_fir_filter
 
-
 //-----------------------------------------------------------------------------
-template <typename funct>
-std::vector<float> create_fir_filter(int64_t N, float fc, std::vector<float> w, float scale = 1.0)
+template <typename T>
+std::vector<T> create_fir_filter(int64_t N, float fc, std::vector<float> w, float scale = 1.0)
 {
     int32_t idx;
     std::vector<T> g(N, 0);
@@ -216,6 +215,89 @@ std::vector<float> create_fir_filter(int64_t N, float fc, std::vector<float> w, 
     return g;
 
 }   // end of create_fir_filter
+
+//-----------------------------------------------------------------------------
+template <typename OUTPUT, typename INPUT>
+std::vector<std::complex<OUTPUT>> apply_filter(std::vector<std::complex<INPUT>>& src, std::vector<float> &filter)
+{
+    int32_t idx, jdx;
+    int32_t dx = filter.size() >> 1;
+    int32_t x;
+
+    std::complex<float> accum;
+
+    std::vector<std::complex<OUTPUT>> iq_data(src.size(), std::complex<OUTPUT>(0, 0));
+
+    for (idx = 0; idx < src.size(); ++idx)
+    {
+        accum = 0.0;
+
+        for (jdx = 0; jdx < filter.size(); ++jdx)
+        {
+            x = idx + jdx - dx;
+
+            if (x >= 0 && x < src.size())
+                accum += std::complex<float>(src[x].real(), src[x].imag()) * filter[jdx];
+        }
+
+        iq_data[idx] = std::complex<OUTPUT>(accum);
+    }
+
+    return iq_data;
+
+}   // end of apply_filter
+
+//-----------------------------------------------------------------------------
+template <typename OUTPUT>
+inline std::vector<std::complex<OUTPUT>> create_freq_rotation(uint64_t N, double fr)
+{
+    uint64_t idx;
+    std::vector<std::complex<OUTPUT>> res(N, 0.0);
+    const std::complex<double> j(0,1);
+
+    for (idx = 0; idx < N; ++idx)
+    {
+        res[idx] = std::exp(j * M_2PI * fr * (double)idx);
+    }
+
+    return res;
+
+}   // end of create_freq_rotation
+
+//-----------------------------------------------------------------------------
+inline std::vector<float> create_rrc_filter(uint32_t span, double beta, double symbol_length, uint32_t sample_rate, float scale = 1.0)
+{
+    int32_t idx;
+
+    double samples_per_symbol = floor(sample_rate * symbol_length + 0.5);
+    uint64_t N = span * samples_per_symbol + 1;
+
+    double a0 = 1.0 / sqrt(samples_per_symbol);
+    double a1 = (4.0 * beta) / samples_per_symbol;
+    double a2 = M_1PI * (1.0 + beta) / samples_per_symbol;
+    double a3 = M_1PI * (1.0 - beta) / samples_per_symbol;
+
+    double t = 0.0;
+    std::vector<float> g(N, 0);
+
+    for (idx = 0; idx < N; ++idx)
+    {
+        t = (double)(idx - ((N - 1) >> 1));
+
+        if (abs(t) < 1e-6)
+            g[idx] = scale * a0 * ((1 - beta) + (4 * beta / M_1PI));
+
+        else if(abs(t * 4 * beta) == samples_per_symbol)
+            g[idx] = scale * (beta / sqrt(2 * samples_per_symbol)) * ((1 + (2 / M_1PI)) * std::sin(M_1PI / (4 * beta)) + (1 - (2 / M_1PI)) * std::cos(M_1PI / (4 * beta)));
+
+        else
+            g[idx] = scale * a0 * ((std::sin(a3 * t)) + (a1 * t) * (std::cos(a2 * t))) / ((M_1PI / samples_per_symbol) * t * (1 - a1 * a1 * t * t));
+        
+    }
+
+    return g;
+
+}   // end of create_rrc_filter
 
 }  // end of namespace DSP
 
