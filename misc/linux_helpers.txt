@@ -1,0 +1,47 @@
+#useful linux commands
+#
+
+
+###############################################################################
+# services
+###############################################################################
+
+# systemctl status bsm.service -n100
+# journalctl -u bsm -b
+# sudo systemctl start bsm.service
+# sudo systemctl stop bsm.service
+
+# To add and enable the service after it has been copied to: /lib/systemd/system/
+# reload the systemd daemon
+# sudo systemctl daemon-reload
+
+# enable the black siren server service and autostart
+# sudo systemctl enable bsm.service
+
+###############################################################################
+# NMCLI
+###############################################################################
+
+# show detailed status
+nmcli con show "Wired connection 1"
+
+# set the static IP adderess
+sudo nmcli con mod "Wired connection 1" ipv4.address 172.26.1.200/16 ipv4.method manual
+
+# set the static gateway
+sudo nmcli con mod "Wired connection 1" ipv4.gateway 172.26.63.254
+
+# enable changes
+sudo nmcli device reapply eth0
+
+# enable link local connection
+sudo nmcli con mod "Wired connection 1" ipv4.link-local enabled
+
+# remove connection
+nmcli con con "Wired connection 1" -ipv4.addresses "172.26.63.254"
+
+
+###############################################################################
+
+
+
