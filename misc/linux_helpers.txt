@@ -22,6 +22,9 @@
 # NMCLI
 ###############################################################################
 
+# show devices
+nmcli device show
+
 # show detailed status
 nmcli con show "Wired connection 1"
 
@@ -40,8 +43,19 @@ sudo nmcli con mod "Wired connection 1" ipv4.link-local enabled
 # remove connection
 nmcli con con "Wired connection 1" -ipv4.addresses "172.26.63.254"
 
+#
+sudo nmcli con mod <connection name> autoconnect no
+
 
 ###############################################################################
+
+# disable wifi and bluetooth
+# 1. edit config.txt
+sudo nano /boot/firmware/config.txt
+
+# 2. add dtoverlay=disable-wifi within the [all] section
+dtoverlay=disable-wifi
+dtoverlay=disable-bt
 
 
 
