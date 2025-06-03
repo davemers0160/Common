@@ -52,7 +52,8 @@ frame_length = ceil(sample_rate * frame_lengths);
 %% go through a frame ID and get the on/off times
 
 frame_index = unique(frame_id);
-frame_index = 7;
+frame_index = 0;
+fprintf("frame index: %d\n", frame_index);
 
 burst_lengths = {};
 off_times = {};
@@ -82,11 +83,11 @@ off_t = zeros(numel(burst_lengths), 2);
 
 for idx=1:numel(burst_lengths)
     for jdx=1:numel(burst_lengths{idx})
-        burst(idx,jdx) = burst_lengths{idx}(jdx);
+        burst(idx,jdx) = (floor((burst_lengths{idx}(jdx)/sample_rate)*1e8))/1e8;
     end
 
     for jdx=1:numel(off_times{idx})
-        off_t(idx, jdx) = off_times{idx}(jdx);
+        off_t(idx, jdx) = (floor((off_times{idx}(jdx)/sample_rate)*1e8))/1e8;
     end
 end
 
@@ -95,7 +96,12 @@ burst_mean = zeros(1, size(burst, 2));
 
 for idx=1:size(burst, 2)
     
-    [N, edges] = histcounts(burst(:,idx));
+    min_edge = floor(min(burst(:,idx))*1e6)/1e6;
+    max_edge = floor(max(burst(:,idx))*1e6)/1e6;
+    bin_num = floor(round(max_edge-min_edge, 6)/1e-6);
+    edges = min_edge:1e-6:max_edge;
+
+    [N, ~] = histcounts(burst(:,idx), edges);
     [~, index] = max(N);
 
     burst_mean(idx) = mean(edges(index:index+1));
@@ -106,12 +112,24 @@ off_mean = zeros(1, size(off_t, 2));
 
 for idx=1:size(off_t, 2)
     
-    [N, edges] = histcounts(off_t(:,idx));
+    min_edge = floor(min(off_t(:,idx))*1e6)/1e6;
+    max_edge = floor(max(off_t(:,idx))*1e6)/1e6;
+    bin_num = floor(round(max_edge-min_edge, 6)/1e-6);
+    edges = min_edge:1e-6:max_edge;
+
+    [N, ~] = histcounts(off_t(:,idx), edges);
     [~, index] = max(N);
 
     off_mean(idx) = mean(edges(index:index+1));
 end
 
+off_mean(end+1) = frame_length(1)/sample_rate - sum(off_mean(:)) - sum(burst_mean(:));
+
+for idx=1:numel(burst_mean)
+    fprintf("burst[%d]: %f, %f\n", idx, burst_mean(idx), off_mean(idx));
+end
+
+bp = 1;
 %% look at the modulation type to determine what it might be
 
 for idx=1:size(sample_indices,1)
@@ -125,7 +143,7 @@ for idx=1:size(sample_indices,1)
         plot(t_snippet, imag(iq_snippet),'r')
         plot_num = plot_num + 1;
         drawnow;
-        % hold off;
+        hold off;
 
 
         % figure(plot_num)
@@ -161,9 +179,9 @@ for idx=1:size(sample_indices,1)
         
         plot_num = plot_num + 1;
         drawnow;
-        % hold off;
+        hold off;
 
-
+        bp = 1;
     end
 end
 

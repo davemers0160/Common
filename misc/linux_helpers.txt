@@ -29,10 +29,10 @@ nmcli device show
 nmcli con show "Wired connection 1"
 
 # set the static IP adderess
-sudo nmcli con mod "Wired connection 1" ipv4.address 172.26.1.200/16 ipv4.method manual
+sudo nmcli con mod "Wired connection 1" ipv4.address 192.168.1.120/24 ipv4.method manual
 
 # set the static gateway
-sudo nmcli con mod "Wired connection 1" ipv4.gateway 172.26.63.254
+sudo nmcli con mod "Wired connection 1" ipv4.gateway 192.168.1.1
 
 # enable changes
 sudo nmcli device reapply eth0

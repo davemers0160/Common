@@ -15,8 +15,8 @@ function [iq] = generate_3pi8_8psk(data, amplitude, sample_rate, symbol_length)
 
     v0 = amplitude/sqrt(2);
     v1 = amplitude;
-    v2 = cos(3*pi/8);
-    v3 = sin(3*pi/8);
+    v2 = amplitude*cos(3*pi/8);
+    v3 = amplitude*sin(3*pi/8);
 
     % vr = exp(1j * 3*pi/8);
 

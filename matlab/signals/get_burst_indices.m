@@ -81,13 +81,14 @@ function [burst_lengths, off_times, indices] = get_burst_indices(iq_snippet, t_s
 
     indices = cat(2, start_index(1:min_index), stop_index(1:min_index));
 
-    figure;
-    hold on;
+    figure(1001);
     plot(t_snippet, iq_mag_filt, 'g');
+    hold on;
     plot([t_snippet(1), t_snippet(end)], [iq_mag_filt_mean, iq_mag_filt_mean], '--k');
     plot(t_snippet, iq_mag_bin, 'b');
 
     scatter(t_snippet(indices(:,1)), ones(numel(indices(:,1)),1), 30, 'o','r', 'filled');
     scatter(t_snippet(indices(:,2)), ones(numel(indices(:,2)),1), 30, 'o','k', 'filled');
+    hold off;
     drawnow;
 end

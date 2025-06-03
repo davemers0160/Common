@@ -20,7 +20,7 @@ function [iq] = generate_pi4qpsk(data, amplitude, sample_rate, symbol_length)
     
         num = data(idx+1)*2 + data(idx);
 
-        offset = 4 * bitand(index, 1, 'uint8');
+        offset = 4 * bitand(index, 1, 'uint32');
 
         iq = cat(1, iq, bit_mapper(num + offset + 1)*ones(samples_per_symbol,1));
 

@@ -49,7 +49,7 @@ public:
     //-----------------------------------------------------------------------------
     void log_info(std::string msg)
     {
-        data_log << error_code[0] << " ";
+        data_log << error_code[0] << "  ";
         data_log << get_time() << ": ";
         data_log << msg << std::endl;
     }   
@@ -57,15 +57,16 @@ public:
     //-----------------------------------------------------------------------------
     void log_warning(std::string msg)
     {
-        data_log << error_code[1] << " ";
+        data_log << error_code[1] << "  ";
         data_log << get_time() << ": ";
         data_log << msg << std::endl;
     }   
     
     //-----------------------------------------------------------------------------
-    void log_error(std::string msg)
+    void log_error(std::string filename, int32_t line_num, std::string msg)
     {
         data_log << error_code[2] << " ";
+        data_log << filename << " (" << std::to_string(line_num) << "): ";
         data_log << get_time() << ": ";
         data_log << msg << std::endl;
     }
@@ -83,7 +84,7 @@ public:
 //-----------------------------------------------------------------------------
 private:
     std::ofstream data_log;
-    std::vector<std::string> error_code = {"[INFO]", "[WARNING]", "[ERROR]"};
+    std::vector<std::string> error_code = {"[INFO]", "[WARN]", "[ERROR]"};
     std::string log_version = "1.0";
     
     //-----------------------------------------------------------------------------
