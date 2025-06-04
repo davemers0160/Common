@@ -52,7 +52,7 @@ frame_length = ceil(sample_rate * frame_lengths);
 %% go through a frame ID and get the on/off times
 
 frame_index = unique(frame_id);
-frame_index = 0;
+frame_index = 1;
 fprintf("frame index: %d\n", frame_index);
 
 burst_lengths = {};
@@ -132,59 +132,89 @@ end
 bp = 1;
 %% look at the modulation type to determine what it might be
 
-for idx=1:size(sample_indices,1)
-    for jdx=1:size(sample_indices{idx},1)
-        iq_snippet = iqc(start_samples(idx)+sample_indices{idx}(jdx, 1):start_samples(idx)+sample_indices{idx}(jdx, 2)+floor(sample_rate*110e-6));
-        t_snippet = t(start_samples(idx)+sample_indices{idx}(jdx, 1):start_samples(idx)+sample_indices{idx}(jdx, 2)+floor(sample_rate*110e-6));
+for kdx=1:numel(frame_id)
+    if(frame_id(kdx) == frame_index)
 
-        figure(101)
-        plot(t_snippet, real(iq_snippet),'b')
+        start_time = start_samples(kdx);
+        stop_time = start_samples(kdx) + frame_length(kdx) + floor(sample_rate*110e-6);
+        iq_snippet = iqc(start_time:1:stop_time);
+        t_snippet = t(start_time:1:stop_time);
+
+        figure(100)
+        hold off;
+        plot(t_snippet, abs(iq_snippet),'g')
         hold on;
-        plot(t_snippet, imag(iq_snippet),'r')
+        % plot(t_snippet, imag(iq_snippet),'r')
         plot_num = plot_num + 1;
         drawnow;
-        hold off;
-
-
-        % figure(plot_num)
-        % set(gcf,'position',([50,50,800,500]),'color','w')
-        % scatter(real(iq_snippet),imag(iq_snippet),'o','filled', 'b')
-        % grid on
-        % box on
-        % 
-        % set(gca,'fontweight','bold','FontSize',12);
-        % xlim([-1, 1]);
-        % ylim([-1, 1]);
-        % 
-        % xlabel('I', 'fontweight','bold','FontSize',12);
-        % ylabel('Q', 'fontweight','bold','FontSize',12);
-        % 
-        % ax = gca;
-        % ax.XAxisLocation = 'origin';
-        % ax.YAxisLocation = 'origin';
-        % plot_num = plot_num + 1;
-
-        figure(102)
-        set(gcf,'position',([50,50,1400,500]),'color','w')
-        
-        scatter3(t_snippet, real(iq_snippet), imag(iq_snippet), 20, 'o', 'b', 'filled');
-        hold on
-        plot3(t_snippet, real(iq_snippet), imag(iq_snippet), 'b');
-        
-        set(gca,'fontweight','bold','FontSize',11,'Ydir','reverse');
-        
-        xlabel('time (s)', 'fontweight','bold');
-        ylabel('I', 'fontweight','bold');
-        zlabel('Q', 'fontweight','bold');
-        
-        plot_num = plot_num + 1;
-        drawnow;
-        hold off;
-
         bp = 1;
+
+        for idx=1:size(sample_indices,1)-1
+            for jdx=1:size(sample_indices{idx},1)
+
+                start_time = start_samples(kdx) + sample_indices{idx}(jdx, 1);
+                stop_time = start_samples(kdx) + sample_indices{idx}(jdx, 2) + floor(sample_rate*110e-6);
+                % start_time = start_samples(kdx);
+                % stop_time = start_samples(kdx) + frame_length(kdx) + floor(sample_rate*110e-6);
+                figure(100)
+                stem(t(start_time), 1, 'r', 'filled');
+                stem(t(stop_time), 1, 'k', 'filled');
+
+                % iq_snippet = iqc(start_samples(idx)+sample_indices{idx}(jdx, 1):start_samples(idx)+sample_indices{idx}(jdx, 2)+floor(sample_rate*110e-6));
+                % t_snippet = t(start_samples(idx)+sample_indices{idx}(jdx, 1):start_samples(idx)+sample_indices{idx}(jdx, 2)+floor(sample_rate*110e-6));
+                iq_snippet = iqc(start_time:1:stop_time);
+                t_snippet = t(start_time:1:stop_time);
+        
+                figure(101)
+                plot(t_snippet, real(iq_snippet),'b')
+                hold on;
+                plot(t_snippet, imag(iq_snippet),'r')
+                plot_num = plot_num + 1;
+                drawnow;
+                hold off;
+                bp = 1;
+        
+                % figure(plot_num)
+                % set(gcf,'position',([50,50,800,500]),'color','w')
+                % scatter(real(iq_snippet),imag(iq_snippet),'o','filled', 'b')
+                % grid on
+                % box on
+                % 
+                % set(gca,'fontweight','bold','FontSize',12);
+                % xlim([-1, 1]);
+                % ylim([-1, 1]);
+                % 
+                % xlabel('I', 'fontweight','bold','FontSize',12);
+                % ylabel('Q', 'fontweight','bold','FontSize',12);
+                % 
+                % ax = gca;
+                % ax.XAxisLocation = 'origin';
+                % ax.YAxisLocation = 'origin';
+                % plot_num = plot_num + 1;
+        
+                
+                figure(102)
+                set(gcf,'position',([50,50,1400,500]),'color','w')
+                
+                scatter3(t_snippet, real(iq_snippet), imag(iq_snippet), 20, 'o', 'b', 'filled');
+                hold on
+                plot3(t_snippet, real(iq_snippet), imag(iq_snippet), 'b');
+                
+                set(gca,'fontweight','bold','FontSize',11,'Ydir','reverse');
+                
+                xlabel('time (s)', 'fontweight','bold');
+                ylabel('I', 'fontweight','bold');
+                zlabel('Q', 'fontweight','bold');
+                
+                plot_num = plot_num + 1;
+                drawnow;
+                hold off;
+        
+                bp = 1;
+            end
+        end
     end
 end
-
 
 
 

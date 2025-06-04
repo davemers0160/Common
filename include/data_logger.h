@@ -66,8 +66,8 @@ public:
     void log_error(std::string filename, int32_t line_num, std::string msg)
     {
         data_log << error_code[2] << " ";
-        data_log << filename << " (" << std::to_string(line_num) << "): ";
         data_log << get_time() << ": ";
+        data_log << get_file_name(filename) << " (" << std::to_string(line_num) << "): ";
         data_log << msg << std::endl;
     }
        
@@ -80,11 +80,29 @@ public:
     {
         data_log.close();
     }
+
+    //-----------------------------------------------------------------------------
+    template <typename T>
+    std::ostream& operator<<(T v)
+    {
+        data_log << v;
+        return data_log;
+    }
     
+    std::string info() 
+    {
+        return error_code[0] + "  " + get_time() + ": ";
+    }
+
+    std::string warn()
+    {
+        return error_code[1] + "  " + get_time() + ": ";
+    }
+
 //-----------------------------------------------------------------------------
 private:
     std::ofstream data_log;
-    std::vector<std::string> error_code = {"[INFO]", "[WARN]", "[ERROR]"};
+    std::vector<std::string> error_code = {"[INFO]", "[WARN]", "[ERROR]", "[TEST]"};
     std::string log_version = "1.0";
     
     //-----------------------------------------------------------------------------

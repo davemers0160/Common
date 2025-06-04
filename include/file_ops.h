@@ -53,7 +53,7 @@ static inline void trim(std::string &s) {
 */
 
 // ----------------------------------------------------------------------------
-std::string get_path(std::string filename, std::string sep)
+inline std::string get_path(std::string filename, std::string sep)
 {
     int prog_loc = (int)(filename.rfind(sep));
     return filename.substr(0, prog_loc);    // does not return the last separator
@@ -63,7 +63,7 @@ std::string get_path(std::string filename, std::string sep)
 
 #if defined(__linux__)
 // this may or may not work.  There is some dicussion about elevated privileges required for readlink
-std::string get_ubuntu_path()
+inline std::string get_ubuntu_path()
 {
     std::string path = "/";
     char result[PATH_MAX+1];
@@ -82,7 +82,7 @@ std::string get_ubuntu_path()
 #endif
 
 // ----------------------------------------------------------------------------
-std::string path_check(std::string path)
+inline std::string path_check(std::string path)
 {
     if (path.empty())
         return path;
@@ -97,15 +97,15 @@ std::string path_check(std::string path)
 
 }   // end of path_check
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 inline bool existence_check(const std::string &path)
 {
     struct stat buffer;
     return (stat(path.c_str(), &buffer) == 0);
 }   // end of existence_check
 
-// ----------------------------------------------------------------------------
-void get_file_parts(std::string fullfilename, std::string &file_path, std::string &file_name, std::string &file_ext)
+//-----------------------------------------------------------------------------
+inline void get_file_parts(std::string fullfilename, std::string &file_path, std::string &file_name, std::string &file_ext)
 {
     // get the extension location
     std::size_t file_ext_loc = fullfilename.rfind('.');
@@ -128,8 +128,18 @@ void get_file_parts(std::string fullfilename, std::string &file_path, std::strin
     
 }	// end of get_file_parts
 
+//-----------------------------------------------------------------------------
+std::string get_file_name(std::string full_path)
+{
+    std::size_t last_file_sep;
+    last_file_sep = full_path.find_last_of("/\\");
+
+    std::string file_name = full_path.substr(last_file_sep + 1, full_path.length());
+    return file_name;
+}   // end of get_file_name
+
 // ----------------------------------------------------------------------------------------
-void separate_paths(std::string full_path, std::vector<std::string>& path_list)
+inline void separate_paths(std::string full_path, std::vector<std::string>& path_list)
 {
     const char* sep = "/\\";
     std::size_t file_sep = full_path.find_first_of(sep);
@@ -152,7 +162,7 @@ void separate_paths(std::string full_path, std::vector<std::string>& path_list)
 }
 
 // ----------------------------------------------------------------------------
-int32_t make_dir(std::string directory_path, std::string new_folder)
+inline int32_t make_dir(std::string directory_path, std::string new_folder)
 {
 
     int32_t status = 0;
@@ -187,7 +197,7 @@ int32_t make_dir(std::string directory_path, std::string new_folder)
 
 
 // ----------------------------------------------------------------------------
-int32_t mkdir(std::string full_path)
+inline int32_t mkdir(std::string full_path)
 {
     int32_t status = 0;
     bool check;
