@@ -52,7 +52,7 @@ frame_length = ceil(sample_rate * frame_lengths);
 %% go through a frame ID and get the on/off times
 
 frame_index = unique(frame_id);
-frame_index = 1;
+frame_index = 2;
 fprintf("frame index: %d\n", frame_index);
 
 burst_lengths = {};
@@ -94,33 +94,41 @@ end
 % get the burst means
 burst_mean = zeros(1, size(burst, 2));
 
-for idx=1:size(burst, 2)
+if(size(burst, 1) > 1)
+    for idx=1:size(burst, 2)
+        
+        min_edge = floor(min(burst(:,idx))*1e6)/1e6;
+        max_edge = floor(max(burst(:,idx))*1e6)/1e6;
+        bin_num = floor(round(max_edge-min_edge, 6)/1e-6);
+        edges = min_edge:1e-6:max_edge;
     
-    min_edge = floor(min(burst(:,idx))*1e6)/1e6;
-    max_edge = floor(max(burst(:,idx))*1e6)/1e6;
-    bin_num = floor(round(max_edge-min_edge, 6)/1e-6);
-    edges = min_edge:1e-6:max_edge;
-
-    [N, ~] = histcounts(burst(:,idx), edges);
-    [~, index] = max(N);
-
-    burst_mean(idx) = mean(edges(index:index+1));
+        [N, ~] = histcounts(burst(:,idx), edges);
+        [~, index] = max(N);
+    
+        burst_mean(idx) = mean(edges(index:index+1));
+    end
+else
+    burst_mean = burst;
 end
 
 % get the off time means
 off_mean = zeros(1, size(off_t, 2));
 
-for idx=1:size(off_t, 2)
+if(size(off_t, 1) > 1)
+    for idx=1:size(off_t, 2)
+        
+        min_edge = floor(min(off_t(:,idx))*1e7)/1e7;
+        max_edge = floor(max(off_t(:,idx))*1e7)/1e7;
+        bin_num = floor(round(max_edge-min_edge, 7)/1e-7);
+        edges = min_edge:1e-7:max_edge;
     
-    min_edge = floor(min(off_t(:,idx))*1e6)/1e6;
-    max_edge = floor(max(off_t(:,idx))*1e6)/1e6;
-    bin_num = floor(round(max_edge-min_edge, 6)/1e-6);
-    edges = min_edge:1e-6:max_edge;
-
-    [N, ~] = histcounts(off_t(:,idx), edges);
-    [~, index] = max(N);
-
-    off_mean(idx) = mean(edges(index:index+1));
+        [N, ~] = histcounts(off_t(:,idx), edges);
+        [~, index] = max(N);
+    
+        off_mean(idx) = mean(edges(index:index+1));
+    end
+else
+    off_mean = off_t;
 end
 
 off_mean(end+1) = frame_length(1)/sample_rate - sum(off_mean(:)) - sum(burst_mean(:));
@@ -149,8 +157,18 @@ for kdx=1:numel(frame_id)
         drawnow;
         bp = 1;
 
-        for idx=1:size(sample_indices,1)-1
+        figure(101)
+        spectrogram(iq_snippet, 1024,1000,1024,sample_rate,"centered");
+
+        samp_sz = size(sample_indices,1);
+        if(samp_sz > 1)
+            samp_sz = samp_sz - 1;
+        end
+
+        for idx=1:samp_sz
             for jdx=1:size(sample_indices{idx},1)
+                
+                fprintf("burst num: %d\n", jdx);
 
                 start_time = start_samples(kdx) + sample_indices{idx}(jdx, 1);
                 stop_time = start_samples(kdx) + sample_indices{idx}(jdx, 2) + floor(sample_rate*110e-6);
@@ -165,7 +183,7 @@ for kdx=1:numel(frame_id)
                 iq_snippet = iqc(start_time:1:stop_time);
                 t_snippet = t(start_time:1:stop_time);
         
-                figure(101)
+                figure(102)
                 plot(t_snippet, real(iq_snippet),'b')
                 hold on;
                 plot(t_snippet, imag(iq_snippet),'r')
@@ -173,7 +191,9 @@ for kdx=1:numel(frame_id)
                 drawnow;
                 hold off;
                 bp = 1;
-        
+
+
+
                 % figure(plot_num)
                 % set(gcf,'position',([50,50,800,500]),'color','w')
                 % scatter(real(iq_snippet),imag(iq_snippet),'o','filled', 'b')
@@ -192,13 +212,16 @@ for kdx=1:numel(frame_id)
                 % ax.YAxisLocation = 'origin';
                 % plot_num = plot_num + 1;
         
-                
-                figure(102)
+                num_samples = numel(iq_snippet);
+                lower_num = floor(0.48*num_samples);
+                upper_num = min(lower_num+5000,num_samples);
+
+                figure(103)
                 set(gcf,'position',([50,50,1400,500]),'color','w')
                 
-                scatter3(t_snippet, real(iq_snippet), imag(iq_snippet), 20, 'o', 'b', 'filled');
+                scatter3(t_snippet(lower_num:upper_num), real(iq_snippet(lower_num:upper_num)), imag(iq_snippet(lower_num:upper_num)), 20, 'o', 'b', 'filled');
                 hold on
-                plot3(t_snippet, real(iq_snippet), imag(iq_snippet), 'b');
+                plot3(t_snippet(lower_num:upper_num), real(iq_snippet(lower_num:upper_num)), imag(iq_snippet(lower_num:upper_num)), '--b');
                 
                 set(gca,'fontweight','bold','FontSize',11,'Ydir','reverse');
                 
@@ -210,6 +233,17 @@ for kdx=1:numel(frame_id)
                 drawnow;
                 hold off;
         
+                input("press enter")
+                
+                dcm = datacursormode(gcf);
+                data_points = getCursorInfo(dcm);
+                if(~isempty(data_points))
+                    data_points = [data_points.Position];
+                    data_points = sort(data_points(1:2:end));
+                    bit_time = mean(data_points(2:2:end)-data_points(1:2:end));
+                    fprintf("bit length: %10.7f\n", bit_time);
+                end
+
                 bp = 1;
             end
         end
