@@ -116,12 +116,14 @@ Y = fft(iq_filt)/numel(iq_filt);
 f = linspace(-sample_rate/2, sample_rate/2, numel(Y));
 
 figure(plot_num)
-plot(f, 20*log10(abs(fftshift(Y))), 'b');
+set(gcf,'position',([50,50,1400,500]),'color','w')
+plot(f*1e-6, 20*log10(abs(fftshift(Y))), 'b');
 box on
 grid on
 hold on
 % plot(f, 20*log10(abs(fftshift(Y2))), 'g');
-
+xlabel('Frequency (MHz)', 'fontweight','bold');
+ylabel('amplitude', 'fontweight','bold');
 plot_num = plot_num + 1;
 
 
@@ -176,7 +178,7 @@ zlabel('Q', 'fontweight','bold');
 plot_num  = plot_num + 1;
 
 figure(plot_num)
-spectrogram(iq, 512, floor(0.75*512), 512, sample_rate, 'centered')
+spectrogram(iq_filt, 512, floor(0.75*512), 512, sample_rate, 'centered')
 plot_num  = plot_num + 1;
 
 %% save data
