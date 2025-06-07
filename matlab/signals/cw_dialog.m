@@ -16,7 +16,7 @@ commandwindow;
 prompt = {'Sample Rate:', 'Pulse Width:', 'PRI:', 'Freq Offset:', 'Amplitude:', 'Number of Pulses:', 'Filter Cutoff Frequency:', 'Number of Taps:'};
 dlgtitle = 'Input';
 fieldsize = [1 30; 1 30; 1 30; 1 30; 1 30; 1 30; 1 30; 1 30]; 
-definput = {'40e6','1e-6', '2e-6', '0', '2047', '2', '1e6', '3'};
+definput = {'20e6','1e-6', '2e-6', '0', '2047', '2', '10e6', '5'};
 
 res = inputdlg(prompt, dlgtitle, fieldsize, definput);
 

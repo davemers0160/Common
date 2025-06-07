@@ -92,16 +92,22 @@ Y = fft(iqc)/numel(iqc);
 f = linspace(-fs/2, fs/2, numel(Y));
 
 figure(plot_num)
-plot(f, 20*log10(abs(fftshift(Y))), 'b');
+set(gcf,'position',([50,50,1400,500]),'color','w')
+plot(f*1e-6, 20*log10(abs(fftshift(Y))), 'b');
 box on
 grid on
+xlabel('Frequency (MHz)', 'fontweight','bold');
+ylabel('amplitude', 'fontweight','bold');
 plot_num = plot_num + 1;
 
 %%
 figure(plot_num)
+set(gcf,'position',([50,50,1400,500]),'color','w')
 plot(t, real(iqc),'b')
 hold on
 plot(t, imag(iqc),'r')
+xlabel('Frequency (MHz)', 'fontweight','bold');
+ylabel('amplitude', 'fontweight','bold');
 plot_num = plot_num + 1;
 drawnow;
 

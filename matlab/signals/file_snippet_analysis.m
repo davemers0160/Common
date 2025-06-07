@@ -183,7 +183,8 @@ for kdx=1:numel(frame_id)
                 iq_snippet = iqc(start_time:1:stop_time);
                 t_snippet = t(start_time:1:stop_time);
         
-                figure(102)
+                figure(102)                
+                set(gcf,'position',([50,50,1400,500]),'color','w')
                 plot(t_snippet, real(iq_snippet),'b')
                 hold on;
                 plot(t_snippet, imag(iq_snippet),'r')

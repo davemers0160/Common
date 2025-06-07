@@ -40,6 +40,7 @@ end
 
 %% Plot the data
 figure(plot_num)
+set(gcf,'position',([50,50,1400,500]),'color','w')
 plot(real(iq_data),'b')
 hold on
 plot(imag(iq_data),'r')
