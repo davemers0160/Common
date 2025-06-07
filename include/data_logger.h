@@ -11,32 +11,24 @@
 #include <string>
 #include <chrono>
 
-#include "file_ops.h"
-
 //-----------------------------------------------------------------------------
 inline std::string get_time()
 {
-    std::string format = "%H%M%S";
-    char c_time[32];
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 
-    time_t now_t = time(NULL);
-    struct tm* timeinfo = localtime(&now_t);
+    // Convert the time point to a time_t object
+    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
 
-    strftime(c_time, 11, format.c_str(), timeinfo);
+    // Convert the time_t object to a local time
+    std::tm now_tm  = *localtime(&now_c);
 
-    auto now = std::chrono::system_clock::now();
-    auto now_seconds = std::chrono::time_point_cast<std::chrono::seconds>(now);
-    //auto fraction = now - now_seconds;
-    //auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(fraction);
-
-    // Calculate fractional seconds
-    auto duration = now.time_since_epoch();
-    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+    // get the millisecond time
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 
     std::stringstream ss;
-    ss << std::setfill('0') << std::setw(3) << milliseconds.count() % 1000;
-
-    return std::string(c_time) + "." + ss.str();
+    ss << std::put_time(&now_tm, "%H%M%S") << "." << std::setfill('0') << std::setw(3) << ms.count() % 1000;
+    
+    return  ss.str();
 
 }   // end of get_time
 
@@ -55,6 +47,16 @@ inline std::string get_date()
     return std::string(c_date);
 
 }   // end of get_date
+
+//-----------------------------------------------------------------------------
+std::string get_file_name(std::string full_path)
+{
+    std::size_t last_file_sep;
+    last_file_sep = full_path.find_last_of("/\\");
+
+    std::string file_name = full_path.substr(last_file_sep + 1, full_path.length());
+    return file_name;
+}   // end of get_file_name
 
 //-----------------------------------------------------------------------------
 std::ostream& info(std::ostream& os) 
