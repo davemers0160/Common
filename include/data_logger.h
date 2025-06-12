@@ -11,6 +11,8 @@
 #include <string>
 #include <chrono>
 
+#include "file_ops.h"
+
 //-----------------------------------------------------------------------------
 inline std::string get_time()
 {
@@ -49,26 +51,26 @@ inline std::string get_date()
 }   // end of get_date
 
 //-----------------------------------------------------------------------------
-std::string get_file_name(std::string full_path)
-{
-    std::size_t last_file_sep;
-    last_file_sep = full_path.find_last_of("/\\");
-
-    std::string file_name = full_path.substr(last_file_sep + 1, full_path.length());
-    return file_name;
-}   // end of get_file_name
+//std::string get_file_name(std::string full_path)
+//{
+//    std::size_t last_file_sep;
+//    last_file_sep = full_path.find_last_of("/\\");
+//
+//    std::string file_name = full_path.substr(last_file_sep + 1, full_path.length());
+//    return file_name;
+//}   // end of get_file_name
 
 //-----------------------------------------------------------------------------
 std::ostream& info(std::ostream& os) 
 {
-    os << "[INFO]  " << get_time() << ": ";
+    os << "[INFO -  " << get_time() << "]: ";
     return os;
 }
 
 //-----------------------------------------------------------------------------
 std::ostream& warning(std::ostream& os)
 {
-    os << "[WARN]  " << get_time() << ": ";
+    os << "[WARN -  " << get_time() << "]: ";
     return os;
 }
 
@@ -80,7 +82,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const error& er)
     {
-        os << "[ERROR] " << get_time() << ": ";
+        os << "[ERROR - " << get_time() << "]: ";
         os << get_file_name(er.filename) << " (Line: " << std::to_string(er.line_num) << "): ";
         return os;
     }
