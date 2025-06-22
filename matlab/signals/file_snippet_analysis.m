@@ -15,11 +15,16 @@ commandwindow;
 % TODO: make this part of the file import
 % iq_filename = 'blade_F1G669_SR50M000_20240720_133942.sc16';
 iq_filepath = 'D:\Projects\data\RF\20240720\RB\5M\';
-data_filename = "D:\Projects\data\RF\20240720\rb_times_v1.csv";
 
-% sample_rate = 50e6;
+%% load in data
+file_filter = {'*.csv','CSV Files';'*.*','All Files' };
 
-% frame_data = importfile1(data_filename, [5, Inf]);
+[data_filename, data_filepath] = uigetfile(file_filter, 'Select File', 'D:\Projects\data\RF\20240720\', 'MultiSelect', 'off');
+if(data_filepath == 0)
+    return;
+end
+
+data_filename = fullfile(data_filepath, data_filename);
 
 [iq_filename, sample_rate, frame_number, frame_id, start_times, frame_lengths] = import_analysis_file(data_filename, [5, Inf]);
 
@@ -50,9 +55,22 @@ frame_length = ceil(sample_rate * frame_lengths);
 
 
 %% go through a frame ID and get the on/off times
+commandwindow;
+% frame_index = unique(frame_id);
 
-frame_index = unique(frame_id);
-frame_index = 2;
+prompt = {'Frame Index:'};
+dlgtitle = 'Input';
+fieldsize = [1 30]; 
+definput = {'0'};
+
+res = inputdlg(prompt, dlgtitle, fieldsize, definput);
+
+if(isempty(res))
+    return;
+end
+
+frame_index = str2double(res{1});
+
 fprintf("frame index: %d\n", frame_index);
 
 burst_lengths = {};
@@ -65,10 +83,15 @@ sample_indices = {};
 
 for idx=1:numel(frame_id)
     if(frame_id(idx) == frame_index)
+        fprintf('index: %d\n', idx);
+
         iq_snippet = iqc(start_samples(idx):start_samples(idx)+frame_length(idx));
         t_snippet = t(start_samples(idx):start_samples(idx)+frame_length(idx));
         
-        [bl, ot, indices] = get_burst_indices(iq_snippet, t_snippet, sample_rate);
+        [bl, ot, indices] = get_burst_indices(iq_snippet, t_snippet, 1.28, sample_rate); %1.18
+
+        title(strcat('index:',32',num2str(idx)));
+        drawnow;
 
         burst_lengths{end+1, 1} = bl;
         off_times{end+1, 1} = ot;
@@ -76,8 +99,10 @@ for idx=1:numel(frame_id)
     end
 end
 
-%% find the most common on/off times for a burst
+fprintf('frame ID complete\n');
 
+%% find the most common on/off times for a burst
+commandwindow;
 burst = zeros(numel(burst_lengths), 2);
 off_t = zeros(numel(burst_lengths), 2);
 
@@ -97,15 +122,19 @@ burst_mean = zeros(1, size(burst, 2));
 if(size(burst, 1) > 1)
     for idx=1:size(burst, 2)
         
-        min_edge = floor(min(burst(:,idx))*1e6)/1e6;
-        max_edge = floor(max(burst(:,idx))*1e6)/1e6;
-        bin_num = floor(round(max_edge-min_edge, 6)/1e-6);
-        edges = min_edge:1e-6:max_edge;
+        min_edge = floor(min(burst(:,idx))*1e7)/1e7;
+        max_edge = floor(max(burst(:,idx))*1e7)/1e7;
+        bin_num = floor(round(max_edge-min_edge, 7)/1e-7);
+        edges = min_edge:1e-7:max_edge;
     
-        [N, ~] = histcounts(burst(:,idx), edges);
-        [~, index] = max(N);
-    
-        burst_mean(idx) = mean(edges(index:index+1));
+        if(bin_num == 0)
+            burst_mean(idx) = edges;
+        else
+            [N, ~] = histcounts(burst(:,idx), edges);
+            [~, index] = max(N);
+        
+            burst_mean(idx) = mean(edges(index:index+1));
+        end
     end
 else
     burst_mean = burst;
@@ -122,10 +151,14 @@ if(size(off_t, 1) > 1)
         bin_num = floor(round(max_edge-min_edge, 7)/1e-7);
         edges = min_edge:1e-7:max_edge;
     
-        [N, ~] = histcounts(off_t(:,idx), edges);
-        [~, index] = max(N);
-    
-        off_mean(idx) = mean(edges(index:index+1));
+        if(bin_num == 0)
+            off_mean(idx) = edges;
+        else
+            [N, ~] = histcounts(off_t(:,idx), edges);
+            [~, index] = max(N);
+        
+            off_mean(idx) = mean(edges(index:index+1));
+        end
     end
 else
     off_mean = off_t;
@@ -134,10 +167,13 @@ end
 off_mean(end+1) = frame_length(1)/sample_rate - sum(off_mean(:)) - sum(burst_mean(:));
 
 for idx=1:numel(burst_mean)
-    fprintf("burst[%d]: %f, %f\n", idx, burst_mean(idx), off_mean(idx));
+    fprintf("burst[%d]: %f(%5.4f), %f(%5.4f),\n", idx, burst_mean(idx), round(burst_mean(idx), 4), off_mean(idx), round(off_mean(idx), 4));
 end
 
 bp = 1;
+
+fprintf('\nBurst Analysis complete\n');
+
 %% look at the modulation type to determine what it might be
 
 for kdx=1:numel(frame_id)
@@ -234,7 +270,7 @@ for kdx=1:numel(frame_id)
                 drawnow;
                 hold off;
         
-                input("press enter")
+                input("Select data point pairs and press enter")
                 
                 dcm = datacursormode(gcf);
                 data_points = getCursorInfo(dcm);
@@ -242,7 +278,7 @@ for kdx=1:numel(frame_id)
                     data_points = [data_points.Position];
                     data_points = sort(data_points(1:2:end));
                     bit_time = mean(data_points(2:2:end)-data_points(1:2:end));
-                    fprintf("bit length: %10.7f\n", bit_time);
+                    fprintf("\nbit length: %10.7f\n", bit_time);
                 end
 
                 bp = 1;
@@ -251,9 +287,5 @@ for kdx=1:numel(frame_id)
     end
 end
 
-
-
-
-
-
+fprintf('Modulation complete\n');
 

@@ -1,4 +1,4 @@
-function [burst_lengths, off_times, indices] = get_burst_indices(iq_snippet, t_snippet, sample_rate)
+function [burst_lengths, off_times, indices] = get_burst_indices(iq_snippet, t_snippet, threshold, sample_rate)
 
     iq_mag = abs(iq_snippet);
     sample_index = 0:numel(iq_mag)-1;
@@ -8,7 +8,7 @@ function [burst_lengths, off_times, indices] = get_burst_indices(iq_snippet, t_s
     iq_mag_filt = conv(iq_mag, 1/filter_size*ones(filter_size,1), 'same');
     
     % calculate the threshold
-    iq_mag_filt_mean = 1.18*mean(iq_mag_filt);
+    iq_mag_filt_mean = threshold*mean(iq_mag_filt);
     
     % create a binary amplitude map
     iq_mag_bin = iq_mag_filt > iq_mag_filt_mean;
