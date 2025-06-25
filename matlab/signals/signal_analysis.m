@@ -82,6 +82,8 @@ hold on
 grid on
 box on
 
+fprintf('Select a threshold level on the  graph to do the timing analysis\n');
+
 [~, y_coord]=ginput(plot_num);
 
 threshold = floor(y_coord);
