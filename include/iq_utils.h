@@ -6,6 +6,7 @@
 #include <complex>
 #include <sstream>
 #include <fstream>
+#include <vector>
 
 //-----------------------------------------------------------------------------
 template <typename T>
