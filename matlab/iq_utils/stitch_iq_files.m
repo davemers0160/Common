@@ -38,6 +38,23 @@ for idx=1:numel(listing)
     iq_data = cat(1, iq_data, iqc_in);
 end
 
+%% get the number of repeat bursts
+dlgtitle = 'Input';
+prompt = {'Number of Bursts:'};
+fieldsize = [1 30];
+definput = {'1'};
+
+res = inputdlg(prompt, dlgtitle, fieldsize, definput);
+
+if(isempty(res))
+    return;
+end
+
+num_busrts = str2double(res{1});
+
+iq_data_n = repmat(iq_data, num_busrts, 1);
+
+
 %% Plot the data
 figure(plot_num)
 set(gcf,'position',([50,50,1400,500]),'color','w')
@@ -56,6 +73,6 @@ if(save_path == 0)
     return;
 end
 
-write_binary_iq_data(fullfile(save_path, save_file), iq_data, data_type, byte_order)
+write_binary_iq_data(fullfile(save_path, save_file), iq_data_n, data_type, byte_order)
 
 fprintf('Complete!\n');
