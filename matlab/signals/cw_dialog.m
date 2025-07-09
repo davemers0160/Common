@@ -58,11 +58,14 @@ fprintf("----------------------------------------------------------\n\n");
 samples_per_pulse =  floor(pulse_width * sample_rate);
 fr = fr/sample_rate;
 
+fprintf("samples_per_pulse: %d\n", samples_per_pulse)
+
 iq = complex(ones(samples_per_pulse,1), 1e-6*ones(samples_per_pulse,1));
 % iq = complex(amplitude*ones(samples_per_pulse,1), amplitude*ones(samples_per_pulse,1));
 
 % get the number of samples in the pri
 samples_per_pri = floor(pri * sample_rate);
+fprintf("samples_per_pri: %d\n", samples_per_pri)
 
 buffer_samples = max(0, samples_per_pri-samples_per_pulse);
 
