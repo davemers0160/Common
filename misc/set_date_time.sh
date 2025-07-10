@@ -6,13 +6,13 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-echo "Enter the desired date and time (e.g., 'YYYY-MM-DD HH:MM:SS'):"
+echo "Enter the desired date and time (e.g., YYYY-MM-DD HH:MM:SS):"
 read user_datetime
 
 # Validate input (optional but recommended)
 # You can add more robust validation here to ensure the input format is correct.
 if ! date -d "$user_datetime" &>/dev/null; then
-    echo "Invalid date/time format. Please use 'YYYY-MM-DD HH:MM:SS'."
+    echo "Invalid date/time format. Please use YYYY-MM-DD HH:MM:SS"
     exit 1
 fi
 
