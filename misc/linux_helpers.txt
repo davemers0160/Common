@@ -46,6 +46,11 @@ nmcli con con "Wired connection 1" -ipv4.addresses "172.26.63.254"
 #
 sudo nmcli con mod <connection name> autoconnect no
 
+# turn wifi on
+sudo nmcli radio wifi on
+
+
+
 
 ###############################################################################
 
@@ -56,6 +61,18 @@ sudo nano /boot/firmware/config.txt
 # 2. add dtoverlay=disable-wifi within the [all] section
 dtoverlay=disable-wifi
 dtoverlay=disable-bt
+
+# 3. enable SPI
+dtoverlay=spi=on
+
+###############################################################################
+
+# set volume on pi
+amixer sset Master 35%
+
+
+# use SoX to play single tone sine waves
+play -n synth sine 300
 
 
 
