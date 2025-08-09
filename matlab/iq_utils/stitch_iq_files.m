@@ -54,6 +54,29 @@ num_busrts = str2double(res{1});
 
 iq_data_n = repmat(iq_data, num_busrts, 1);
 
+%% pad data
+
+% answer = questdlg('Pad Data',' ', 'Yes','No','No');
+% 
+% pad_multiple = 1024*4;
+% 
+% switch answer
+%     case 'Yes'
+%         pad = ceil(numel(iq_data_n)/pad_multiple);
+%         pad_n = (pad*pad_multiple) - numel(iq_data_n);
+%         iq_pad = cat(1, iq_data_n, zeros(pad_n,1));
+%         fprintf("adding samples: %d\n", pad_n);
+%     case 'No'
+%         % do nothing
+         iq_pad = iq_data_n;
+% end
+% 
+% fprintf("\n");
+% fprintf("max real: %f\n", max(real(iq_pad)));
+% fprintf("min real: %f\n", min(real(iq_pad)));
+% fprintf("max imag: %f\n", max(imag(iq_pad)));
+% fprintf("min imag: %f\n", min(imag(iq_pad)));
+% fprintf("\n");
 
 %% Plot the data
 figure(plot_num)
@@ -73,6 +96,6 @@ if(save_path == 0)
     return;
 end
 
-write_binary_iq_data(fullfile(save_path, save_file), iq_data_n, data_type, byte_order)
+write_binary_iq_data(fullfile(save_path, save_file), iq_pad, data_type, byte_order)
 
 fprintf('Complete!\n');

@@ -273,7 +273,7 @@ plot_num = plot_num + 1;
 
 %%
 
-iq_start = 1;%ceil(fs*1.969e-5);
+iq_start = ceil(fs*9);
 iq_stop = numel(iqc);
 step = 1;
 
@@ -295,6 +295,30 @@ drawnow;
 
 %%
 return;
+
+%% Limited FFT
+
+iq_start = ceil(fs*9)+15500;
+iq_stop = numel(iqc);
+step = 1;
+
+iqc_s = abs(iqc(iq_start:step:iq_stop));
+iqc_sm = mean(iqc_s);
+iqc_s = iqc_s - iqc_sm;
+
+Y = fft(iqc_s)/numel(iqc_s);
+f = linspace(-fs/2, fs/2, numel(Y));
+
+figure(plot_num)
+set(gcf,'position',([50,50,1400,500]),'color','w')
+plot(f, 20*log10(abs(fftshift(Y))), 'b');
+box on
+grid on
+xlabel('Frequency (Hz)', 'fontweight','bold');
+ylabel('amplitude', 'fontweight','bold');
+plot_num = plot_num + 1;
+
+
 
 %% comet plot
 

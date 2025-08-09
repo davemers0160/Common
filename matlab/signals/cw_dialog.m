@@ -81,7 +81,7 @@ iq = repmat(iq, num_pulses, 1);
 %% filter
 
 if(num_taps > 0)
-    w = blackman_nuttall_window(num_taps);
+    w = blackman_harris_window(num_taps);
     lpf = create_fir_filter(fc/sample_rate, w);
     
     iq_p = cat(1, zeros(ceil(num_taps/2)+1,1), iq);
@@ -182,12 +182,12 @@ plot_num  = plot_num + 1;
 
 figure(plot_num)
 spectrogram(iq_filt, 512, floor(0.75*512), 512, sample_rate, 'centered')
+view(0,0)
 plot_num  = plot_num + 1;
 
-%% save data
+%% pad data
 
 answer = questdlg('Pad Data',' ', 'Yes','No','No');
-
 
 pad_multiple = 1024*4;
 
@@ -200,6 +200,14 @@ switch answer
         % do nothing
         iq_pad = iq_filt;
 end
+
+fprintf("\n");
+fprintf("max real: %f\n", max(real(iq_pad)));
+fprintf("min real: %f\n", min(real(iq_pad)));
+fprintf("max imag: %f\n", max(imag(iq_pad)));
+fprintf("min imag: %f\n", min(imag(iq_pad)));
+fprintf("\n");
+
 
 %% save data
 
