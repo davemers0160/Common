@@ -106,8 +106,8 @@ set(gcf,'position',([50,50,1400,500]),'color','w')
 plot(t, real(iqc),'b')
 hold on
 plot(t, imag(iqc),'r')
-xlabel('Frequency (MHz)', 'fontweight','bold');
-ylabel('amplitude', 'fontweight','bold');
+xlabel('Time (s)', 'fontweight','bold');
+ylabel('Amplitude', 'fontweight','bold');
 plot_num = plot_num + 1;
 drawnow;
 
@@ -298,11 +298,13 @@ return;
 
 %% Limited FFT
 
-iq_start = ceil(fs*9)+15500;
-iq_stop = numel(iqc);
+% iq_start = ceil(fs*9)+15500;
+% iq_stop = numel(iqc);
+iq_start = ceil(5.1*fs);
+iq_stop = ceil(5.6*fs);
 step = 1;
 
-iqc_s = abs(iqc(iq_start:step:iq_stop));
+iqc_s = (iqc(iq_start:step:iq_stop));
 iqc_sm = mean(iqc_s);
 iqc_s = iqc_s - iqc_sm;
 
@@ -315,9 +317,32 @@ plot(f, 20*log10(abs(fftshift(Y))), 'b');
 box on
 grid on
 xlabel('Frequency (Hz)', 'fontweight','bold');
-ylabel('amplitude', 'fontweight','bold');
+ylabel('Amplitude (dBfs)', 'fontweight','bold');
 plot_num = plot_num + 1;
 
+%% real FFT
+
+% iq_start = ceil(fs*9)+15500;
+% iq_stop = numel(iqc);
+iq_start = ceil(5.1*fs);
+iq_stop = ceil(5.6*fs);
+step = 1;
+
+iqc_s = abs(iqc(iq_start:step:iq_stop));
+iqc_sm = mean(iqc_s);
+iqc_s = iqc_s - iqc_sm;
+
+Y = fft(iqc_s)/numel(iqc_s);
+f = linspace(0, fs/2, floor(numel(Y)/2));
+
+figure(plot_num)
+set(gcf,'position',([50,50,1400,500]),'color','w')
+plot(f, 20*log10(abs((Y(1:floor(numel(Y)/2))))), 'b');
+box on
+grid on
+xlabel('Frequency (Hz)', 'fontweight','bold');
+ylabel('Amplitude (dBfs)', 'fontweight','bold');
+plot_num = plot_num + 1;
 
 
 %% comet plot

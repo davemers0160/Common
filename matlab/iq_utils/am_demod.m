@@ -94,13 +94,15 @@ xlabel('Frequency (Hz)', 'fontweight','bold');
 ylabel('amplitude', 'fontweight','bold');
 plot_num = plot_num + 1;
 
-%%
+%% play audio
 
 audio_out = abs(iqc);
 sound(audio_out, fs_audio); 
 
+%% save audio
+file_filter = {'*.wav','WAV Files';'*.*','All Files' };
+[save_file, save_filepath] = uiputfile(file_filter, 'Select File', data_filepath);
 
-
-
-
+% filename = 'd:/Projects/apt-decoder-master/examples/noaa18_202202013_1201.wav';
+audiowrite(fullfile(save_filepath,save_file), audio_out, fs_audio);
 
