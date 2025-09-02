@@ -11,7 +11,7 @@ plot_num = 1;
 commandwindow;
 
 %% load in data
-file_filter = {'*.sc16;*.fc32','IQ Files';'*.*','All Files' };
+file_filter = {'*.sc16;*.fc32;*.iq','IQ Files';'*.*','All Files' };
 
 [data_file, data_filepath] = uigetfile(file_filter, 'Select File', startpath, 'MultiSelect', 'on');
 if(data_filepath == 0)
