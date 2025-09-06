@@ -273,8 +273,8 @@ plot_num = plot_num + 1;
 
 %%
 
-iq_start = 61000;
-iq_stop = ceil(fs*0.0015);
+iq_start = ceil(fs*0.1);
+iq_stop = iq_start + ceil(fs*0.00001);
 step = 1;
 
 figure(plot_num)
