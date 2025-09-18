@@ -13,11 +13,11 @@ commandwindow;
 %% create the data
 analog_sample_rate = 44100;
 t_step = 1/analog_sample_rate;
-duration = 0.1;
+duration = 2.0;
 
 t = 0:t_step:duration-t_step;
 
-analog_data = 0.5 * cos(2*pi*800*t) + 0.8 * cos(2*pi*1200*t) + 0.4*cos(2*pi*2000*t);
+analog_data = 0.5 * cos(2*pi*800*t); % + 0.8 * cos(2*pi*1200*t);
 
 disp("max data: " + num2str(max(analog_data)));
 disp("min data: " + num2str(min(analog_data)));
@@ -54,7 +54,7 @@ symbol_length = 1/analog_sample_rate;
 sample_rate = analog_sample_rate * 20;
 amplitude = 2046;
 data_scale = max(abs(analog_data));
-k = 0.95;
+k = 0.6;
 
 [iqc] = generate_dsb_sc(analog_data, sample_rate, symbol_length, k, amplitude, data_scale);
 
@@ -133,9 +133,10 @@ an_demod = amdemod(real(iqc), 1000, sample_rate);
 
 data_type = 'int16';
 byte_order = 'ieee-le';
-iq_data = complex(int16(real(iqc)), int16(imag(iqc)));
+% iq_data = complex(int16(real(iqc)), int16(imag(iqc)));
+iq_data = complex(int16(amplitude*real(iq_usb)), int16(amplitude*imag(iq_usb)));
 
-filename = 'C:\Projects\data\RF\test_tones2_882k000.sc16';
+filename = 'D:\Projects\data\RF\test_tones3_usb_882k000.sc16';
 
 write_binary_iq_data(filename, iq_data, data_type, byte_order);
 
