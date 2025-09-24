@@ -4,7 +4,7 @@ function [iq_data] = generate_dsb_sc(data, sample_rate, symbol_length, k, amplit
 
     c1 = (k*amplitude) / (data_scale);
 
-    iq_data = zeros(numel(data) * samples_per_symbol, 1);
+    iq_data = zeros((numel(data)-1) * samples_per_symbol, 1);
     y2 = zeros(numel(data) * samples_per_symbol, 1);
 
     index = 1;
