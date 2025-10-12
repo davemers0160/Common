@@ -39,7 +39,7 @@ byte_order = 'ieee-le';
 dlgtitle = 'Input';
 prompt = {'Sample Rate:', 'Down Samples Rate:', 'num taps:'};
 fieldsize = [1 30; 1 30; 1 30];
-definput = {'50e6', '1', '1'};
+definput = {'40e6', '1', '1'};
 
 res = inputdlg(prompt, dlgtitle, fieldsize, definput);
 
@@ -188,31 +188,31 @@ plot_num = plot_num + 1;
 % drawnow;
 
 %%
-const_diag = comm.ConstellationDiagram;
-
-step = 40;
-const_diag(iqc(1:step:end));
+% const_diag = comm.ConstellationDiagram;
+% 
+% step = 40;
+% const_diag(iqc(1:step:end));
 
 
 %% eye diagram
 
-prompt = {'samples per symbol:'};
-dlgtitle = 'Input';
-fieldsize = [1 30];
-definput = {'6'};
-
-res = inputdlg(prompt, dlgtitle, fieldsize, definput);
-
-if(isempty(res))
-    return;
-end
-
-samples_per_symbol = str2double(res{1});
-
-step = 1;
-eyediagram(iqc_f(1:step:min(10000,numel(iqc_f))), samples_per_symbol)
-
-plot_num = plot_num + 1;
+% prompt = {'samples per symbol:'};
+% dlgtitle = 'Input';
+% fieldsize = [1 30];
+% definput = {'6'};
+% 
+% res = inputdlg(prompt, dlgtitle, fieldsize, definput);
+% 
+% if(isempty(res))
+%     return;
+% end
+% 
+% samples_per_symbol = str2double(res{1});
+% 
+% step = 1;
+% eyediagram(iqc_f(1:step:min(10000,numel(iqc_f))), samples_per_symbol)
+% 
+% plot_num = plot_num + 1;
 
 
 %%
@@ -274,7 +274,7 @@ plot_num = plot_num + 1;
 %%
 
 iq_start = ceil(fs*0.0001);
-iq_stop = iq_start + ceil(fs*0.00005);
+iq_stop = iq_start + ceil(fs*0.0005);
 step = 1;
 
 figure(plot_num)
@@ -405,7 +405,7 @@ x_edges = -1:0.05:1;
 y_edges = -1:0.05:1;
 
 iq_start = max(1, ceil(fs*0.0001));
-iq_stop = min(iq_start + ceil(fs*0.0001), numel(iqc));
+iq_stop = min(iq_start + ceil(fs*0.1), numel(iqc));
 step = 1;
 
 iq_section = iqc(iq_start:step:iq_stop);

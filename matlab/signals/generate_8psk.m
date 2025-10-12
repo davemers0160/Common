@@ -22,9 +22,9 @@ function [iq] = generate_8psk(data, amplitude, sample_rate, symbol_length)
 
     for idx=1:3:numel(data)
     
-        num = data(idx+2)*4 + data(idx+1)*2 + data(idx);
+        num = data(idx)*4 + data(idx+1)*2 + data(idx+2) + 1;
 
-        iq = cat(1, iq, bit_mapper(num + 1)*ones(samples_per_symbol,1));
+        iq = cat(1, iq, bit_mapper(num)*ones(samples_per_symbol,1));
     end
 
 end
