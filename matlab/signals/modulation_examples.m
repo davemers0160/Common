@@ -1010,7 +1010,7 @@ xlim([0, t_iq(end)]);
 legend({'I', 'Q'});
 ax = gca;
 ax.Position = [0.02 0.125 0.96 ax.Position(4)];
-print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_time_plot.png')));
+% print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_time_plot.png')));
 plot_num = plot_num + 1;
 
 % iq map plot
@@ -1036,7 +1036,7 @@ ax = gca;
 ax.XAxisLocation = 'origin';
 ax.YAxisLocation = 'origin';
 ax.Position = [0.04 0.04 0.92 0.92];
-print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_iqmap_plot.png')));
+% print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_iqmap_plot.png')));
 plot_num = plot_num + 1;
 
 % iq data plot
@@ -1054,7 +1054,7 @@ zlabel('Q', 'fontweight','bold');
 view(-70,10);
 ax = gca;
 ax.Position = [0.08 0.08 0.875 0.88];
-print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_iq_plot.png')));
+% print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_iq_plot.png')));
 plot_num = plot_num + 1;
 
 [s, f, ts] = spectrogram(iq, 128, 64, 128, sample_rate, 'centered'); 
@@ -1074,10 +1074,10 @@ ax = gca;
 ax.Position = [0.08 0.08 0.875 0.88];
 
 view(0,0);
-print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_spectrogram_0_0.png')));
+% print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_spectrogram_0_0.png')));
 view(90,0)
-print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_spectrogram_90_0.png')));
+% print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_spectrogram_90_0.png')));
 view(90,-90)
-print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_spectrogram_90_90.png')));
+% print(plot_num, '-dpng', fullfile(data_path,strcat('64qam_spectrogram_90_90.png')));
 
 plot_num = plot_num + 1;
