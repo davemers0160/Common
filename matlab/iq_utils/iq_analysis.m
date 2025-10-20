@@ -64,7 +64,7 @@ min(imag(iqc_in))
 
 max_v = max([max(real(iqc_in)), max(imag(iqc_in)), abs(min(real(iqc_in))), abs(min(imag(iqc_in)))])
 
-iqc_o = (1/max_v) * iqc_in;
+iqc_o = scale * iqc_in;
 % tmt = timetable(seconds(t.'), iqc_o);
 
 %% filter and downsample
@@ -273,8 +273,8 @@ plot_num = plot_num + 1;
 
 %%
 
-iq_start = ceil(fs*0.0001);
-iq_stop = iq_start + ceil(fs*0.0005);
+iq_start = ceil(fs*0.00001);
+iq_stop = iq_start + ceil(fs*0.0001);
 step = 1;
 
 figure(plot_num)
