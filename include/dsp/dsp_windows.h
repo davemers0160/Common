@@ -299,6 +299,71 @@ inline std::vector<float> create_rrc_filter(uint32_t span, double beta, double s
 
 }   // end of create_rrc_filter
 
+//-----------------------------------------------------------------------------
+/**
+ * Calculate IIR filter coefficients using Butterworth design
+ * 
+ * @param cutoff_frequency Normalized cutoff frequency (0 to 0.5, where 0.5 = Nyquist)
+ * @param order Filter order (number of poles, typically 2-8)
+ * @return std::vector<std::pair<float,float>> structure containing first (denominator) and second (numerator) coefficients
+ */
+std::vector<std::pair<float,float>> calculate_iir_filter(double cutoff_frequency, int32_t order = 12) 
+{
+    int32_t idx, jdx;
+    std::vector<std::pair<float, float>> coeffs(order + 1, { 0.0, 0.0 });    // a = first, b = second
+    coeffs[0].first = 1.0;    
+
+    std::complex<double> digital_pole;
+    double a_sum = 0.0, b_sum = 0.0;
+
+    // Prewarp the cutoff frequency for bilinear transform
+    double omega_warped = 2.0 * std::tan(M_1PI * cutoff_frequency);
+    
+    // Calculate analog Butterworth poles
+    std::vector<std::complex<double>> digital_poles;
+    for (idx = 0; idx < order; ++idx) 
+    {
+        double theta = M_PI * (2.0 * idx + order + 1.0) / (2.0 * order);
+        std::complex<double> pole(std::cos(theta), std::sin(theta));
+        pole *= omega_warped;
+
+        // Apply bilinear transform to convert analog poles to digital
+        digital_pole = (2.0 + pole) / (2.0 - pole);
+
+        // Calculate denominator coefficients from poles
+        for (jdx = order; jdx >= 1; --jdx)
+        {
+            //coeffs.a[idx] = coeffs.a[idx] - pole.real() * coeffs.a[idx - 1];
+            coeffs[jdx].first -= digital_pole.real() * coeffs[jdx - 1].first;
+        }
+
+    }
+    
+    // For Butterworth lowpass: all zeros at z = -1
+    // Numerator has all zeros at -1, giving coefficients [1, order, ...]
+    double binom_coeff = 1.0;
+    for (idx = 0; idx <= order; ++idx) 
+    {
+        //coeffs.b[i] = binom_coeff;
+        coeffs[idx].second = binom_coeff;
+        binom_coeff = binom_coeff * (order - idx) / (double)(idx + 1);
+
+        a_sum += coeffs[idx].first;
+        b_sum += coeffs[idx].second;
+    }
+    
+    // Normalize to get unity gain at DC    
+    double gain = a_sum / b_sum;
+    for (idx = 0; idx <= order; ++idx) 
+    {
+        coeffs[idx].second *= gain;
+    }
+    
+    return coeffs;
+
+}   // end of calculate_iir_filter
+
+
 }  // end of namespace DSP
 
 #endif  // DSP_WINDOW_DEFINITION_H_
