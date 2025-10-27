@@ -353,7 +353,7 @@ void print_constellation(std::vector<std::complex<float>> con)
         std::cout << std::endl;
     }
     std::cout << std::endl;
-}
+}	// end of print_constellation
 
 
 #endif  // end of _ENCODERS_H_
