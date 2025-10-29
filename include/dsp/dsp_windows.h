@@ -369,6 +369,7 @@ struct sos_coefficients
 {
     double b0, b1, b2;  // Numerator coefficients
     double a0, a1, a2;  // Denominator coefficients (a0 is typically 1)
+    double gain;
 };
 
 /**
@@ -426,6 +427,7 @@ std::vector<sos_coefficients> butterworth_sos_iir(double fc_normalized, int32_t 
                 sos.b0 = 2.0 / (2.0 + wc); // wc / (2.0 + wc);
                 sos.b1 = sos.b0;
                 sos.b2 = 0.0;
+                sos.gain = wc / (2.0 + wc);
             }
             else 
             {
@@ -452,6 +454,7 @@ std::vector<sos_coefficients> butterworth_sos_iir(double fc_normalized, int32_t 
                 sos.b0 = beta; // K / ((1.0 + alpha + beta));
                 sos.b1 = 2.0 * sos.b0;
                 sos.b2 = sos.b0;
+                sos.gain = (1.0 + alpha + beta);
             }
             else 
             {
@@ -460,6 +463,7 @@ std::vector<sos_coefficients> butterworth_sos_iir(double fc_normalized, int32_t 
                 sos.b0 = beta; // K / ((1.0 - alpha + beta));
                 sos.b1 = -2.0 * sos.b0;
                 sos.b2 = sos.b0;
+                sos.gain = (1.0 - alpha + beta);
             }
 
             sos.a0 = 1.0;
@@ -471,6 +475,83 @@ std::vector<sos_coefficients> butterworth_sos_iir(double fc_normalized, int32_t 
     return sections;
 
 }   // end of butterworth_sos_iir
+
+
+/**
+ * Calculate Butterworth IIR filter coefficients as second-order sections
+ *
+ * @param cutoff Normalized cutoff frequency (0 < cutoff < 0.5, where 0.5 = Nyquist)
+ * @param order Filter order (must be positive)
+ * @param lowpass True for lowpass, false for highpass
+ * @return Vector of biquad coefficients for each second-order section
+ */
+ // Compute Butterworth IIR Direct Form II Transposed SOS coefficients
+std::vector<sos_coefficients> calculate_butterworth_sos(double normCutoff, int order)
+{
+    //if (order < 1)
+    //    throw std::invalid_argument("Filter order must be >= 1.");
+    //if (normCutoff <= 0.0 || normCutoff >= 0.5)
+    //    throw std::invalid_argument("Normalized cutoff must be between 0 and 0.5.");
+
+    std::vector<sos_coefficients> sections;
+
+    // Prewarp cutoff frequency for bilinear transform
+    double omega_c = std::tan(M_PI * normCutoff);
+    int n = order;
+
+    // For even orders: n/2 biquads; for odd, (n-1)/2 + one 1st order section
+    int numBiquads = n / 2;
+
+    // Loop over complex-conjugate pole pairs
+    for (int k = 0; k < numBiquads; ++k) {
+        // Butterworth pole angle
+        double theta = M_PI * (2.0 * k + 1.0 + n) / (2.0 * n);
+        std::complex<double> pole = std::polar(1.0, theta);
+        pole = -pole * omega_c;  // Scale by cutoff
+
+        // Analog section: s^2 - 2*Re(pole)*s + |pole|^2
+        double a0 = 1.0;
+        double a1 = -2.0 * pole.real();
+        double a2 = std::norm(pole);
+
+        // Bilinear transform substitution: s = (1 - z^-1) / (1 + z^-1)
+        double K = 2.0;
+        double denom = a0 * K * K + a1 * K + a2;
+
+        sos_coefficients c;
+
+        // Low-pass numerator: (omega_c^2) / denom * (1 + 2z^-1 + z^-2)
+        c.b0 = (omega_c * omega_c) / denom;
+        c.b1 = 2.0 * c.b0;
+        c.b2 = c.b0;
+
+        // Denominator coefficients
+        c.a0 = 1.0;
+        c.a1 = (2.0 * a2 - 2.0 * a0 * K * K) / denom;
+        c.a2 = (a0 * K * K - a1 * K + a2) / denom;
+
+        sections.push_back(c);
+    }
+
+    // Handle odd order: one extra first-order section
+    if (n % 2 == 1) {
+        double a0 = 1.0;
+        double a1 = omega_c;
+        double denom = a0 * 2.0 + a1;
+
+        sos_coefficients c;
+        c.b0 = omega_c / denom;
+        c.b1 = c.b0;
+        c.b2 = 0.0;
+        c.a0 = 1.0;
+        c.a1 = (2.0 - a1) / denom;
+        c.a2 = 0.0;
+        sections.push_back(c);
+    }
+
+    return sections;
+}
+
 
 }  // end of namespace DSP
 
