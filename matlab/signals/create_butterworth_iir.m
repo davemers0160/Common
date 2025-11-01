@@ -12,14 +12,14 @@ function [b, a] = create_butterworth_iir(fc, order)
     
     % Prewarp the cutoff frequency for bilinear transform
     omega = 2 * pi * fc;
-    omegaPrewarped = 2 * tan(omega / 2);
+    omega_prewarped = tan(omega);
     
     % Calculate analog Butterworth poles in s-plane
     % Poles are equally spaced on unit circle in left half-plane
     poles = zeros(order, 1);
     for k = 0:order-1
         theta = pi * (2*k + order + 1) / (2*order);
-        poles(k+1) = omegaPrewarped * (cos(theta) + 1i*sin(theta));
+        poles(k+1) = omega_prewarped * complex(cos(theta) + 1i*sin(theta));
     end
     
     % Apply bilinear transform: s -> 2(z-1)/(z+1)
@@ -34,10 +34,26 @@ function [b, a] = create_butterworth_iir(fc, order)
     for k = 1:order
         pole = digitalPoles(k);
         % Multiply existing polynomial by (z - pole)
+%       k = 1
+%       i = k+1 = 2
+%       a[1] = 1
+%       a[2] = 0 - pole*a[1] = -pole  
+%       k = 2
+%       i = k+1 = 3
+%       a[3] = 0 - pole * -pole = pa * pa + 2*pa*pb i + -pb*pb         
+%       a[2] = -pole - pole * 1 = -2*pole
+%       
+%       
+
         for i = k+1:-1:2
             a(i) = a(i) - pole * a(i-1);
         end
     end
+    
+    
+    
+    
+    
     
     % Take real part (imaginary parts should cancel for conjugate pairs)
     a = real(a);

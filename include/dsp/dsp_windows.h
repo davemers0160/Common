@@ -381,100 +381,100 @@ struct sos_coefficients
  * @param isLowpass True for lowpass, false for highpass
  * @return Vector of SOS coefficient structures
  */
-std::vector<sos_coefficients> butterworth_sos_iir(double fc_normalized, int32_t order, bool low_pass = true) 
-{
-    int32_t idx;
-    //int32_t pole_index;
-    double theta;
-
-    // Pre-warp the cutoff frequency for bilinear transform
-    double wc = std::tan(M_2PI * fc_normalized);
-
-    // Number of second-order sections
-    int num_sections = (order + 1) / 2;
-    std::vector<sos_coefficients> sections(num_sections);
-
-    // Generate poles for analog Butterworth filter
-    // Poles are equally spaced on unit circle in s-plane
-    for (idx = 0; idx < num_sections; ++idx)
-    {
-        sos_coefficients& sos = sections[idx];
-
-        // For each SOS, we process a pair of complex conjugate poles
-        // (or a single real pole for odd orders)
-        //pole_index = idx;
-
-        // Angle for pole placement
-        theta = M_1PI * (2.0 * idx + order + 1.0) / (2.0 * order);
-
-        // Analog prototype poles (on unit circle, left half-plane) and scale by cutoff frequency
-        //std::complex<double> pole_s(-std::sin(theta) * wc, std::cos(theta) * wc);
-        std::complex<double> pole_s(std::cos(theta) * wc, std::sin(theta) * wc);
-
-        // Apply bilinear transform: s -> 2*(z-1)/(z+1)
-        // This maps analog pole to digital pole
-        std::complex<double> pole_z = (2.0 + pole_s) / (2.0 - pole_s);
-
-        // Handle last section for odd-order filters (single real pole)
-        if ((idx == num_sections - 1) && (order % 2 == 1))
-        {
-            // Single real pole case
-            pole_z.imag(0.0);
-
-            if (low_pass == true)
-            {
-                // Lowpass: place zero at z = -1 (Nyquist)
-                sos.b0 = 2.0 / (2.0 + wc); // wc / (2.0 + wc);
-                sos.b1 = sos.b0;
-                sos.b2 = 0.0;
-                sos.gain = wc / (2.0 + wc);
-            }
-            else 
-            {
-                // Highpass: place zero at z = 1 (DC)
-                sos.b0 = 2.0 / (2.0 + wc);
-                sos.b1 = -sos.b0;
-                sos.b2 = 0.0;
-            }
-
-            sos.a0 = 1.0;
-            sos.a1 = -pole_z.real();
-            sos.a2 = 0.0;
-        }
-        else 
-        {
-            // Complex conjugate pole pair
-            double alpha = -2.0 * pole_z.real();
-            double beta = (pole_z.real() * pole_z.real()) + (pole_z.imag() * pole_z.imag());
-
-            if (low_pass == true)
-            {
-                // Lowpass: place zeros at z = -1 (Nyquist)
-                double K = beta; // Gain normalization
-                sos.b0 = beta; // K / ((1.0 + alpha + beta));
-                sos.b1 = 2.0 * sos.b0;
-                sos.b2 = sos.b0;
-                sos.gain = (1.0 + alpha + beta);
-            }
-            else 
-            {
-                // Highpass: place zeros at z = 1 (DC)
-                double K = 1.0; // Gain normalization
-                sos.b0 = beta; // K / ((1.0 - alpha + beta));
-                sos.b1 = -2.0 * sos.b0;
-                sos.b2 = sos.b0;
-                sos.gain = (1.0 - alpha + beta);
-            }
-
-            sos.a0 = 1.0;
-            sos.a1 = alpha;
-            sos.a2 = beta;
-        }
-    }
-
-    return sections;
-
-}   // end of butterworth_sos_iir
+//std::vector<sos_coefficients> butterworth_sos_iir(double fc_normalized, int32_t order, bool low_pass = true) 
+//{
+//    int32_t idx;
+//    //int32_t pole_index;
+//    double theta;
+//
+//    // Pre-warp the cutoff frequency for bilinear transform
+//    double wc = std::tan(M_2PI * fc_normalized);
+//
+//    // Number of second-order sections
+//    int num_sections = (order + 1) / 2;
+//    std::vector<sos_coefficients> sections(num_sections);
+//
+//    // Generate poles for analog Butterworth filter
+//    // Poles are equally spaced on unit circle in s-plane
+//    for (idx = 0; idx < num_sections; ++idx)
+//    {
+//        sos_coefficients& sos = sections[idx];
+//
+//        // For each SOS, we process a pair of complex conjugate poles
+//        // (or a single real pole for odd orders)
+//        //pole_index = idx;
+//
+//        // Angle for pole placement
+//        theta = M_1PI * (2.0 * idx + order + 1.0) / (2.0 * order);
+//
+//        // Analog prototype poles (on unit circle, left half-plane) and scale by cutoff frequency
+//        //std::complex<double> pole_s(-std::sin(theta) * wc, std::cos(theta) * wc);
+//        std::complex<double> pole_s(std::cos(theta) * wc, std::sin(theta) * wc);
+//
+//        // Apply bilinear transform: s -> 2*(z-1)/(z+1)
+//        // This maps analog pole to digital pole
+//        std::complex<double> pole_z = (2.0 + pole_s) / (2.0 - pole_s);
+//
+//        // Handle last section for odd-order filters (single real pole)
+//        if ((idx == num_sections - 1) && (order % 2 == 1))
+//        {
+//            // Single real pole case
+//            //pole_z.imag(0.0);
+//
+//            if (low_pass == true)
+//            {
+//                // Lowpass: place zero at z = -1 (Nyquist)
+//                sos.b0 = 2.0 / (2.0 + wc); // wc / (2.0 + wc);
+//                sos.b1 = sos.b0;
+//                sos.b2 = 0.0;
+//                sos.gain = wc / (2.0 + wc);
+//            }
+//            else 
+//            {
+//                // Highpass: place zero at z = 1 (DC)
+//                sos.b0 = 2.0 / (2.0 + wc);
+//                sos.b1 = -sos.b0;
+//                sos.b2 = 0.0;
+//            }
+//
+//            sos.a0 = 1.0;
+//            sos.a1 = -pole_z.real();
+//            sos.a2 = 0.0;
+//        }
+//        else 
+//        {
+//            // Complex conjugate pole pair
+//            double alpha = -2.0 * pole_z.real();
+//            double beta = (pole_z.real() * pole_z.real()) + (pole_z.imag() * pole_z.imag());
+//
+//            if (low_pass == true)
+//            {
+//                // Lowpass: place zeros at z = -1 (Nyquist)
+//                double K = beta; // Gain normalization
+//                sos.b0 = beta; // K / ((1.0 + alpha + beta));
+//                sos.b1 = 2.0 * sos.b0;
+//                sos.b2 = sos.b0;
+//                sos.gain = (1.0 + alpha + beta);
+//            }
+//            else 
+//            {
+//                // Highpass: place zeros at z = 1 (DC)
+//                double K = 1.0; // Gain normalization
+//                sos.b0 = beta; // K / ((1.0 - alpha + beta));
+//                sos.b1 = -2.0 * sos.b0;
+//                sos.b2 = sos.b0;
+//                sos.gain = (1.0 - alpha + beta);
+//            }
+//
+//            sos.a0 = 1.0;
+//            sos.a1 = alpha;
+//            sos.a2 = beta;
+//        }
+//    }
+//
+//    return sections;
+//
+//}   // end of butterworth_sos_iir
 
 
 /**
@@ -486,72 +486,78 @@ std::vector<sos_coefficients> butterworth_sos_iir(double fc_normalized, int32_t 
  * @return Vector of biquad coefficients for each second-order section
  */
  // Compute Butterworth IIR Direct Form II Transposed SOS coefficients
-std::vector<sos_coefficients> calculate_butterworth_sos(double normCutoff, int order)
+std::vector<std::vector<double>> calculate_butterworth_sos(double cutoff_frequency, int32_t order)
 {
-    //if (order < 1)
-    //    throw std::invalid_argument("Filter order must be >= 1.");
+    uint32_t idx;
+    double theta = 0.0;
+    std::complex<double> pole_s, pole_z;
+    double a1, a2;
+    double sum_a = 0.0;
+    double sum_b = 4.0;
+    double stage_gain = 0.0;
+    double gain_scale;
+    std::vector<std::vector<double>> sections;
+
     //if (normCutoff <= 0.0 || normCutoff >= 0.5)
     //    throw std::invalid_argument("Normalized cutoff must be between 0 and 0.5.");
 
-    std::vector<sos_coefficients> sections;
+    if (order < 1)
+        throw std::invalid_argument("Filter order must be > 1");
+    else if (order < 4)
+        gain_scale = 0.9204;
+    else if(order > 40)
+        gain_scale = 0.978797;
+    else
+        gain_scale = -0.0000000715 * order * order * order * order + 0.00000933 * order * order * order - 0.0004626 * order * order + 0.010875 * order + 0.8693;
+        
 
     // Prewarp cutoff frequency for bilinear transform
-    double omega_c = std::tan(M_PI * normCutoff);
-    int n = order;
+    double omega_c = std::tan(M_2PI * cutoff_frequency);
 
     // For even orders: n/2 biquads; for odd, (n-1)/2 + one 1st order section
-    int numBiquads = n / 2;
+    int num_sections = order >> 1;
 
     // Loop over complex-conjugate pole pairs
-    for (int k = 0; k < numBiquads; ++k) {
-        // Butterworth pole angle
-        double theta = M_PI * (2.0 * k + 1.0 + n) / (2.0 * n);
-        std::complex<double> pole = std::polar(1.0, theta);
-        pole = -pole * omega_c;  // Scale by cutoff
+    for (idx = 0; idx < num_sections; ++idx) 
+    {
+        // analog Butterworth poles
+        theta = M_PI * (2.0 * idx + 1.0 + order) / (2.0 * order);
+        pole_s = std::polar(omega_c, theta);
 
-        // Analog section: s^2 - 2*Re(pole)*s + |pole|^2
-        double a0 = 1.0;
-        double a1 = -2.0 * pole.real();
-        double a2 = std::norm(pole);
+        // Compute digital poles - Bilinear transform : s -> (1 - z ^ -1) / (1 + z ^ -1)
+        pole_z = (2.0 + pole_s) / (2.0 - pole_s);
 
-        // Bilinear transform substitution: s = (1 - z^-1) / (1 + z^-1)
-        double K = 2.0;
-        double denom = a0 * K * K + a1 * K + a2;
+        //a = [1 - 2 * real(pole_z) (pole_z) * conj(pole_z)];
+        a1 = -2.0 * pole_z.real();
+        a2 = (pole_z * std::conj(pole_z)).real();
+        
+        stage_gain = gain_scale * (1 + a1 + a2) / sum_b;
+        std::vector<double> sos_stage{stage_gain, 2*stage_gain, stage_gain, 1.0, a1, a2};
 
-        sos_coefficients c;
-
-        // Low-pass numerator: (omega_c^2) / denom * (1 + 2z^-1 + z^-2)
-        c.b0 = (omega_c * omega_c) / denom;
-        c.b1 = 2.0 * c.b0;
-        c.b2 = c.b0;
-
-        // Denominator coefficients
-        c.a0 = 1.0;
-        c.a1 = (2.0 * a2 - 2.0 * a0 * K * K) / denom;
-        c.a2 = (a0 * K * K - a1 * K + a2) / denom;
-
-        sections.push_back(c);
+        sections.push_back(sos_stage);
     }
 
     // Handle odd order: one extra first-order section
-    if (n % 2 == 1) {
-        double a0 = 1.0;
-        double a1 = omega_c;
-        double denom = a0 * 2.0 + a1;
+    if (order % 2 == 1) 
+    {
+        theta = M_PI * (2 * num_sections + 1 + order) / (2 * order);
+        pole_s = std::polar(omega_c, theta);
 
-        sos_coefficients c;
-        c.b0 = omega_c / denom;
-        c.b1 = c.b0;
-        c.b2 = 0.0;
-        c.a0 = 1.0;
-        c.a1 = (2.0 - a1) / denom;
-        c.a2 = 0.0;
-        sections.push_back(c);
+        pole_z = (2.0 + pole_s) / (2.0 - pole_s);
+
+        a1 = -pole_z.real();
+
+        stage_gain = gain_scale * (1 + a1 + 0.0) / (1.0 + 1.0 + 0.0);
+
+        //b = [1, 1, 0], a = [1, -real(pole_z), 0];
+        std::vector<double> sos_stage{ stage_gain, stage_gain, 0.0, 1.0, a1, 0.0 };
+
+        sections.push_back(sos_stage);
     }
 
     return sections;
-}
 
+}   // end of calculate_butterworth_sos
 
 }  // end of namespace DSP
 
