@@ -1,4 +1,4 @@
-function [sos, g] = butterworth_df2t(fc, order, gain_scale)
+function [sos, g] = butterworth_df2t(fc, order)
 % BUTTERWORTH_DF2T_NORMALIZED designs a normalized Butterworth IIR filter
 % using Direct Form II Transposed structure (no built-in filter design functions).
 %
@@ -14,6 +14,27 @@ function [sos, g] = butterworth_df2t(fc, order, gain_scale)
 %
 % Example:
 %   [sos, g] = butterworth_df2t_normalized(0.2, 4);
+%
+%       Gain scale
+%     4	    0.906611
+%     6	    0.919822
+%     8	    0.931855
+%     10	0.941266
+%     12	0.948579
+%     14	0.954329
+%     16	0.958906
+%     18	0.962594
+%     20	0.965598
+%     22	0.968071
+%     24	0.970033
+%     26	0.971598
+%     28	0.972939
+%     30	0.974119
+%     32	0.975185
+%     34	0.976167
+%     36	0.977089
+%     38	0.977962
+%     40	0.978797
 
     % --- Input validation ---
     if fc <= 0 || fc >= 1
