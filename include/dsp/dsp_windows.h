@@ -29,17 +29,17 @@ inline uint64_t factorial(int64_t n){
 }
 
 //-----------------------------------------------------------------------------
-inline std::vector<float> rectangular_window(int64_t N)
+inline std::vector<double> rectangular_window(int64_t N)
 {
-    std::vector<float> w(N+1, 1.0f);
+    std::vector<double> w(N+1, 1.0f);
     
     return w;
 }   // end of rectangular_window
 
 //-----------------------------------------------------------------------------
-inline std::vector<float> triangular_window(int64_t N)
+inline std::vector<double> triangular_window(int64_t N)
 {
-    std::vector<float> w(N, 0.0f);
+    std::vector<double> w(N, 0.0f);
 
     for (int64_t idx = 0; idx < N; ++idx)
     {
@@ -50,9 +50,9 @@ inline std::vector<float> triangular_window(int64_t N)
 }   // end of triangular_window
 
 //-----------------------------------------------------------------------------
-inline std::vector<float> hann_window(int64_t N)
+inline std::vector<double> hann_window(int64_t N)
 {
-    std::vector<float> w(N, 0.0f);
+    std::vector<double> w(N, 0.0f);
 
     for (int64_t idx = 0; idx < N; ++idx)
     {
@@ -63,12 +63,12 @@ inline std::vector<float> hann_window(int64_t N)
 }   // end of hann_window
 
 //-----------------------------------------------------------------------------
-inline std::vector<float> hamming_window(int64_t N)
+inline std::vector<double> hamming_window(int64_t N)
 {
-    std::vector<float> w(N, 0.0f);
+    std::vector<double> w(N, 0.0f);
     
-    float a0 = 25.0f/46.0f;
-    float a1 = 1.0f - a0;
+    double a0 = 25.0f/46.0f;
+    double a1 = 1.0f - a0;
 
     for (int64_t idx = 0; idx < N; ++idx)
     {
@@ -79,13 +79,13 @@ inline std::vector<float> hamming_window(int64_t N)
 }   // end of hamming_window
 
 //-----------------------------------------------------------------------------
-inline std::vector<float> blackman_window(int64_t N)
+inline std::vector<double> blackman_window(int64_t N)
 {
-    std::vector<float> w(N, 0.0f);
+    std::vector<double> w(N, 0.0f);
     
-    float a0 = (1.0 - 0.16) / 2.0f;
-    float a1 = 1.0 / 2.0f;
-    float a2 = 0.16 / 2.0f;   
+    double a0 = (1.0 - 0.16) / 2.0f;
+    double a1 = 1.0 / 2.0f;
+    double a2 = 0.16 / 2.0f;   
 
     for (int64_t idx = 0; idx < N; ++idx)
     {
@@ -96,13 +96,13 @@ inline std::vector<float> blackman_window(int64_t N)
 }   // end of blackman_window
 
 //-----------------------------------------------------------------------------
-inline std::vector<float> nuttall_window(int64_t N)
+inline std::vector<double> nuttall_window(int64_t N)
 {
-    std::vector<float> w(N, 0.0f);
-    float a0 = 0.355768;
-    float a1 = 0.487396;
-    float a2 = 0.144232;
-    float a3 = 0.012604;
+    std::vector<double> w(N, 0.0f);
+    double a0 = 0.355768;
+    double a1 = 0.487396;
+    double a2 = 0.144232;
+    double a3 = 0.012604;
 
     for (int64_t idx = 0; idx < N; ++idx)
     {
@@ -114,13 +114,13 @@ inline std::vector<float> nuttall_window(int64_t N)
 
 
 //-----------------------------------------------------------------------------
-inline std::vector<float> blackman_nuttall_window(int64_t N)
+inline std::vector<double> blackman_nuttall_window(int64_t N)
 {
-    std::vector<float> w(N, 0.0f);
-    float a0 = 0.3635819;
-    float a1 = 0.4891775;
-    float a2 = 0.1365995;
-    float a3 = 0.0106411;
+    std::vector<double> w(N, 0.0f);
+    double a0 = 0.3635819;
+    double a1 = 0.4891775;
+    double a2 = 0.1365995;
+    double a3 = 0.0106411;
 
     for (int64_t idx = 0; idx < N; ++idx)
     {
@@ -131,13 +131,13 @@ inline std::vector<float> blackman_nuttall_window(int64_t N)
 }   // end of blackman_nuttall_window
 
 //-----------------------------------------------------------------------------
-inline std::vector<float> blackman_harris_window(int64_t N)
+inline std::vector<double> blackman_harris_window(int64_t N)
 {
-    std::vector<float> w(N, 0.0f);
-    float a0 = 0.35875;
-    float a1 = 0.48829;
-    float a2 = 0.14128;
-    float a3 = 0.01168;
+    std::vector<double> w(N, 0.0f);
+    double a0 = 0.35875;
+    double a1 = 0.48829;
+    double a2 = 0.14128;
+    double a3 = 0.01168;
 
     for (int64_t idx = 0; idx < N; ++idx)
     {
@@ -149,12 +149,12 @@ inline std::vector<float> blackman_harris_window(int64_t N)
 
 //-----------------------------------------------------------------------------
 template <typename T, typename funct>
-std::vector<T> create_fir_filter(int64_t N, float fc, funct window_function, float scale = 1.0)
+std::vector<T> create_fir_filter(int64_t N, double fc, funct window_function, double scale = 1.0)
 {
     int32_t idx;
     std::vector<T> g(N, 0);
 
-    std::vector<float> w = window_function(N);
+    std::vector<double> w = window_function(N);
 
     double t = 0.0;
     double g_sum = 0.0;
@@ -181,7 +181,7 @@ std::vector<T> create_fir_filter(int64_t N, float fc, funct window_function, flo
 
 //-----------------------------------------------------------------------------
 template <typename T>
-std::vector<T> create_fir_filter(int64_t N, float fc, std::vector<float> w, float scale = 1.0)
+std::vector<T> create_fir_filter(int64_t N, double fc, std::vector<double> w, double scale = 1.0)
 {
     int32_t idx;
     std::vector<T> g(N, 0);
@@ -218,13 +218,13 @@ std::vector<T> create_fir_filter(int64_t N, float fc, std::vector<float> w, floa
 
 //-----------------------------------------------------------------------------
 template <typename OUTPUT, typename INPUT>
-std::vector<std::complex<OUTPUT>> apply_filter(std::vector<std::complex<INPUT>>& src, std::vector<float> &filter)
+std::vector<std::complex<OUTPUT>> apply_filter(std::vector<std::complex<INPUT>>& src, std::vector<double> &filter)
 {
     int32_t idx, jdx;
     int32_t dx = filter.size() >> 1;
     int32_t x;
 
-    std::complex<float> accum;
+    std::complex<double> accum;
 
     std::vector<std::complex<OUTPUT>> iq_data(src.size(), std::complex<OUTPUT>(0, 0));
 
@@ -237,7 +237,7 @@ std::vector<std::complex<OUTPUT>> apply_filter(std::vector<std::complex<INPUT>>&
             x = idx + jdx - dx;
 
             if (x >= 0 && x < src.size())
-                accum += std::complex<float>(src[x].real(), src[x].imag()) * filter[jdx];
+                accum += std::complex<double>(src[x].real(), src[x].imag()) * filter[jdx];
         }
 
         iq_data[idx] = std::complex<OUTPUT>(accum);
@@ -265,7 +265,7 @@ inline std::vector<std::complex<OUTPUT>> create_freq_rotation(uint64_t N, double
 }   // end of create_freq_rotation
 
 //-----------------------------------------------------------------------------
-inline std::vector<float> create_rrc_filter(uint32_t span, double beta, double symbol_length, uint32_t sample_rate, float scale = 1.0)
+inline std::vector<double> create_rrc_filter(uint32_t span, double beta, double symbol_length, uint32_t sample_rate, double scale = 1.0)
 {
     int32_t idx;
 
@@ -278,7 +278,7 @@ inline std::vector<float> create_rrc_filter(uint32_t span, double beta, double s
     double a3 = M_1PI * (1.0 - beta) / samples_per_symbol;
 
     double t = 0.0;
-    std::vector<float> g(N, 0);
+    std::vector<double> g(N, 0);
 
     for (idx = 0; idx < N; ++idx)
     {
@@ -305,12 +305,12 @@ inline std::vector<float> create_rrc_filter(uint32_t span, double beta, double s
  * 
  * @param cutoff_frequency Normalized cutoff frequency (0 to 0.5, where 0.5 = Nyquist)
  * @param order Filter order (number of poles, typically 2-8)
- * @return std::vector<std::pair<float,float>> structure containing first (denominator) and second (numerator) coefficients
+ * @return std::vector<std::pair<double,double>> structure containing first (denominator) and second (numerator) coefficients
  */
-std::vector<std::pair<float,float>> calculate_iir_filter(double cutoff_frequency, int32_t order = 12) 
+std::vector<std::pair<double,double>> calculate_iir_filter(double cutoff_frequency, int32_t order = 12) 
 {
     int32_t idx, jdx;
-    std::vector<std::pair<float, float>> coeffs(order + 1, { 0.0, 0.0 });    // a = first, b = second
+    std::vector<std::pair<double, double>> coeffs(order + 1, { 0.0, 0.0 });    // a = first, b = second
     coeffs[0].first = 1.0;    
 
     std::complex<double> digital_pole;
@@ -476,17 +476,15 @@ struct sos_coefficients
 //
 //}   // end of butterworth_sos_iir
 
-
+//-----------------------------------------------------------------------------
 /**
- * Calculate Butterworth IIR filter coefficients as second-order sections
+ * Calculate Butterworth IIR filter coefficients as second-order sections to be used in a Direct Form II Transposed filter
  *
- * @param cutoff Normalized cutoff frequency (0 < cutoff < 0.5, where 0.5 = Nyquist)
+ * @param cutoff Normalized cutoff frequency (0 < cutoff < 1)
  * @param order Filter order (must be positive)
- * @param lowpass True for lowpass, false for highpass
  * @return Vector of biquad coefficients for each second-order section
  */
- // Compute Butterworth IIR Direct Form II Transposed SOS coefficients
-std::vector<std::vector<double>> calculate_butterworth_sos(double cutoff_frequency, int32_t order)
+std::vector<std::vector<double>> create_butterworth_sos_filter(double cutoff_frequency, int32_t order)
 {
     uint32_t idx;
     double theta = 0.0;
@@ -498,23 +496,20 @@ std::vector<std::vector<double>> calculate_butterworth_sos(double cutoff_frequen
     double gain_scale;
     std::vector<std::vector<double>> sections;
 
-    //if (normCutoff <= 0.0 || normCutoff >= 0.5)
-    //    throw std::invalid_argument("Normalized cutoff must be between 0 and 0.5.");
-
+	// quick checks to make sure the order is within appropriate values
     if (order < 1)
-        throw std::invalid_argument("Filter order must be > 1");
+        std::throw std::invalid_argument("Filter order must be > 1");
     else if (order < 4)
         gain_scale = 0.9204;
     else if(order > 40)
         gain_scale = 0.978797;
     else
         gain_scale = -0.0000000715 * order * order * order * order + 0.00000933 * order * order * order - 0.0004626 * order * order + 0.010875 * order + 0.8693;
-        
-
+    
     // Prewarp cutoff frequency for bilinear transform
     double omega_c = std::tan(M_2PI * cutoff_frequency);
 
-    // For even orders: n/2 biquads; for odd, (n-1)/2 + one 1st order section
+    // number of 2nd order sections: order/2
     int num_sections = order >> 1;
 
     // Loop over complex-conjugate pole pairs
@@ -540,9 +535,11 @@ std::vector<std::vector<double>> calculate_butterworth_sos(double cutoff_frequen
     // Handle odd order: one extra first-order section
     if (order % 2 == 1) 
     {
+        // analog Butterworth poles
         theta = M_PI * (2 * num_sections + 1 + order) / (2 * order);
         pole_s = std::polar(omega_c, theta);
 
+        // Compute digital poles - Bilinear transform : s -> (1 - z ^ -1) / (1 + z ^ -1)
         pole_z = (2.0 + pole_s) / (2.0 - pole_s);
 
         a1 = -pole_z.real();
@@ -557,7 +554,7 @@ std::vector<std::vector<double>> calculate_butterworth_sos(double cutoff_frequen
 
     return sections;
 
-}   // end of calculate_butterworth_sos
+}   // end of create_butterworth_sos_filter
 
 }  // end of namespace DSP
 
