@@ -39,7 +39,7 @@ iqc_d = complex(zeros(1,samples_per_symbol), amplitude*ones(1,samples_per_symbol
 f_rot_d = exp(1j*2*pi*(freq_offset/sample_rate)*n);
 
 iqc_rd = f_rot_d.*iqc_d;
-iqc_rd = complex(double(int16(real(iqc_rd))), double(int16(imag(iqc_rd))));
+iqc_rd = complex(int16(real(iqc_rd)), int16(imag(iqc_rd)));
 
 
  %% FFT
@@ -83,4 +83,5 @@ plot(fd*1e-6, 20*log10(abs(fftshift(iqc_rd_fft+complex(1e-9,1e-9)))), '--r');
 
 xlabel('Frequency (MHz)', 'fontweight','bold');
 ylabel('amplitude', 'fontweight','bold');
+legend('32-bit','64-bit', 'fontweight','bold');
 plot_num = plot_num + 1; 
