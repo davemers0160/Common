@@ -13,6 +13,8 @@
 #include <cmath>
 #include <vector>
 #include <complex>
+#include <exception>
+#include <stdexcept>
 
 namespace DSP
 {
@@ -328,7 +330,7 @@ std::vector<std::pair<double,double>> calculate_iir_filter(double cutoff_frequen
     std::vector<std::complex<double>> digital_poles;
     for (idx = 0; idx < order; ++idx) 
     {
-        double theta = M_PI * (2.0 * idx + order + 1.0) / (2.0 * order);
+        double theta = M_1PI * (2.0 * idx + order + 1.0) / (2.0 * order);
         std::complex<double> pole(std::cos(theta), std::sin(theta));
         pole *= omega_warped;
 
@@ -503,7 +505,7 @@ std::vector<std::vector<double>> create_butterworth_sos_filter(double cutoff_fre
 
 	// quick checks to make sure the order is within appropriate values
     if (order < 1)
-        std::throw std::invalid_argument("Filter order must be > 1");
+        throw std::invalid_argument("Filter order must be > 1");
     else if (order < 4)
         gain_scale = 0.9204;
     else if(order > 40)
@@ -521,7 +523,7 @@ std::vector<std::vector<double>> create_butterworth_sos_filter(double cutoff_fre
     for (idx = 0; idx < num_sections; ++idx) 
     {
         // analog Butterworth poles
-        theta = M_PI * (2.0 * idx + 1.0 + order) / (2.0 * order);
+        theta = M_1PI * (2.0 * idx + 1.0 + order) / (2.0 * order);
         pole_s = std::polar(omega_c, theta);
 
         // Compute digital poles - Bilinear transform : s -> (1 - z ^ -1) / (1 + z ^ -1)
@@ -541,7 +543,7 @@ std::vector<std::vector<double>> create_butterworth_sos_filter(double cutoff_fre
     if (order % 2 == 1) 
     {
         // analog Butterworth poles
-        theta = M_PI * (2 * num_sections + 1 + order) / (2 * order);
+        theta = M_1PI * (2 * num_sections + 1 + order) / (2 * order);
         pole_s = std::polar(omega_c, theta);
 
         // Compute digital poles - Bilinear transform : s -> (1 - z ^ -1) / (1 + z ^ -1)
