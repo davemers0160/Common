@@ -74,11 +74,11 @@ plot_num = plot_num + 1;
 
 figure(plot_num)
 set(gcf,'position',([50,50,1400,500]),'color','w')
-% plot(f*1e-6, 20*log10(abs(fftshift(iqc_rs_fft))), 'b');
+plot(f*1e-6, 20*log10(abs(fftshift(iqc_rs_fft))), 'b');
 box on
 grid on
 hold on
-plot(fd*1e-6, 20*log10(abs(fftshift(iqc_rd_fft))), '--r');
+plot(fd*1e-6, 20*log10(abs(fftshift(iqc_rd_fft+complex(1e-9,1e-9)))), '--r');
 % plot(f*1e-6, 20*log10(abs(fftshift(Y_filt_t))), 'g');
 
 xlabel('Frequency (MHz)', 'fontweight','bold');
