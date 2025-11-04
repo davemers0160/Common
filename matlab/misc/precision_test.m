@@ -42,6 +42,9 @@ iqc_rd = f_rot_d.*iqc_d;
 iqc_rd = complex(int16(real(iqc_rd)), int16(imag(iqc_rd)));
 
 
+iqc_r = f_rot_d.*iqc_d;
+
+
  %% FFT
 iqc_rs_fft = fft(iqc_rs)/numel(iqc_rs);
 f = linspace(-sample_rate/2, sample_rate/2, numel(iqc_rs_fft));
@@ -49,9 +52,12 @@ f = linspace(-sample_rate/2, sample_rate/2, numel(iqc_rs_fft));
 iqc_rd_fft = fft(iqc_rd)/numel(iqc_rd);
 fd = linspace(-sample_rate/2, sample_rate/2, numel(iqc_rd_fft));
 
+iqc_r_fft = fft(iqc_r)/numel(iqc_r);
+
+
 %%
 iq_start = max(floor(sample_rate*0.00999), 1);
-iq_stop = min(iq_start + ceil(sample_rate*0.01), numel(iqc));
+iq_stop = min(iq_start + ceil(sample_rate*0.02), numel(iqc));
 step = 1;
 
 figure(plot_num)
@@ -62,12 +68,13 @@ box on
 grid on
 hold on
 plot(real(iqc_rd(iq_start:step:iq_stop)),'--r')
-% plot(real(iqc_filt_t),'g')
+plot(real(iqc_r(iq_start:step:iq_stop)),'g')
 % plot(imag(iqc),'m')
 % plot(real(filtered),'c')
 
-xlabel('Frequency (MHz)', 'fontweight','bold');
-ylabel('amplitude', 'fontweight','bold');
+xlabel('Samples', 'fontweight','bold');
+ylabel('Amplitude', 'fontweight','bold');
+legend('32-bit --> 16bit','64-bit --> 16-bit ', 'Full Precision', 'fontweight','bold');
 plot_num = plot_num + 1; 
 
 %%
@@ -79,9 +86,9 @@ box on
 grid on
 hold on
 plot(fd*1e-6, 20*log10(abs(fftshift(iqc_rd_fft+complex(1e-9,1e-9)))), '--r');
-% plot(f*1e-6, 20*log10(abs(fftshift(Y_filt_t))), 'g');
+plot(f*1e-6, 20*log10(abs(fftshift(iqc_r_fft))), 'g');
 
 xlabel('Frequency (MHz)', 'fontweight','bold');
-ylabel('amplitude', 'fontweight','bold');
-legend('32-bit','64-bit', 'fontweight','bold');
+ylabel('Amplitude', 'fontweight','bold');
+legend('32-bit --> 16bit','64-bit --> 16-bit ', 'Full Precision', 'fontweight','bold');
 plot_num = plot_num + 1; 
