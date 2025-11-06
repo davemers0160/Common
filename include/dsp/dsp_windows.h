@@ -445,6 +445,8 @@ inline void chebyshev2_poles_zeros(int32_t N, double epsilon, std::vector<std::c
     //std::vector<std::complex<double>> z(N, { 0.0,0.0 });
     //std::vector<std::complex<double>> p(N, { 0.0,0.0 });
 
+    std::complex<double> p_gain(1.0, 0.0), z_gain(1.0, 0.0);
+
     //Calculate zero locations(on imaginary axis)
     for (idx = 0; idx < N; ++idx)
     {
@@ -461,8 +463,11 @@ inline void chebyshev2_poles_zeros(int32_t N, double epsilon, std::vector<std::c
         p[idx] = std::complex<double>(1.0,0.0) / p_temp;
 
         // Calculate gain to ensure unit gain at DC(for lowpass)
-        k *= (-p[idx]/-z[idx]).real();
+        p_gain *= -p[idx];
+        z_gain *= -z[idx];
     }
+
+    k = std::real(p_gain / z_gain);
 
     // Adjust for Chebyshev Type II (unit gain in passband)
     for (idx = 0; idx < N; ++idx) 
@@ -597,9 +602,9 @@ std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<double>>& z
         sos_filter.push_back(section);
     }
 
-    sos_filter[0][0] *= k;
-    sos_filter[0][1] *= k;
-    sos_filter[0][2] *= k;
+    sos_filter[0][0] *= 1.0/k;
+    sos_filter[0][1] *= 1.0/k;
+    sos_filter[0][2] *= 1.0/k;
 
     return sos_filter;
 
@@ -612,7 +617,7 @@ std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_fre
     double k = 1.0;
 
     // Calculate Chebyshev Type II parameters
-    double epsilon = 1 / std::sqrt(std::pow(10, (r_s / 10.0) - 1.0));
+    double epsilon = 1 / std::sqrt(std::pow(10, (r_s / 10.0)) - 1.0);
 
     // Calculate polesand zeros for normalized lowpass prototype
     std::vector<std::complex<double>> z(N, { 0.0,0.0 });
@@ -620,7 +625,7 @@ std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_fre
     chebyshev2_poles_zeros(N, epsilon, z, p, k);
 
     //Frequency transformation(lowpass to lowpass with cutoff Wn)
-    double omega_warped = 4.0 * std::tan(M_1PI * cutoff_frequency / 2.0);
+    double omega_warped = 4.0 * std::tan(M_1PI * cutoff_frequency);
     for (idx = 0; idx < N; ++idx)
     {
         z[idx] *= omega_warped;
@@ -633,7 +638,7 @@ std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_fre
     std::vector<std::complex<double>> zd = bilinear_transform(z, 2.0, kz);
     std::vector<std::complex<double>> pd = bilinear_transform(p, 2.0, kp);
 
-    double kd = std::real((k *kz) / kd);
+    double kd = std::real((k *kz) / kp);
 
     std::vector<std::vector<double>> sos_filter = zpk_to_sos(zd, pd, kd);
 
