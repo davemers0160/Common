@@ -28,6 +28,7 @@ const double SQRT_2 = 1.4142135623730951454746218587388284504413604736328125;	  
 const double SQRT_2_INV = 0.707106781186547461715008466853760182857513427734375;	//* 1.0/sqrt(2.0)
 const double COS_3PI_8 = 0.3826834323650898372903839117498137056827545166015625; 	//* cos(3pi/8)
 const double SIN_3PI_8 = 0.9238795325112867384831361050601117312908172607421875;	//* sin(3pi/8)
+const std::complex<double> j(0.0, 1.0);
 
 //-----------------------------------------------------------------------------
 inline uint64_t factorial(int64_t n){
@@ -371,14 +372,276 @@ std::vector<std::pair<double,double>> calculate_iir_filter(double cutoff_frequen
 }   // end of calculate_iir_filter
 
 //-----------------------------------------------------------------------------
-// Structure to hold second-order section coefficients
-struct sos_coefficients 
+inline std::vector<std::complex<double>> sort_conjugate_pairs(std::vector<std::complex<double>>& vec) 
 {
-    double b0, b1, b2;  // Numerator coefficients
-    double a0, a1, a2;  // Denominator coefficients (a0 is typically 1)
-    double gain;
-};
+    const double tolerance = 1.0e-9;
 
+    std::vector<std::complex<double>> sorted;
+
+    while (!vec.empty()) 
+    {
+        // Take first element
+        std::complex<double> val = vec[0];
+        sorted.push_back(val);
+        vec.erase(vec.begin());
+
+        // If complex, find and add conjugate
+        if (std::abs(val.imag()) > tolerance) 
+        {
+            std::complex<double> conj_val = std::conj(val);
+
+            // Find conjugate in remaining elements
+            auto it = std::find_if(vec.begin(), vec.end(), [&conj_val, &tolerance](const std::complex<double>& x) 
+                {
+                    return std::abs(x - conj_val) < tolerance;
+                });
+
+            if (it != vec.end()) 
+            {
+                sorted.push_back(*it);
+                vec.erase(it);
+            }
+        }
+    }
+
+    return sorted;
+}
+
+//-----------------------------------------------------------------------------
+// Bilinear transformation from s - domain to z - domain
+inline std::vector<std::complex<double>> bilinear_transform(std::vector<std::complex<double>> s, double a, std::complex<double>& gain)
+{
+    std::vector<std::complex<double>> result;
+
+    double half_a = 0.5 / a;
+
+    // Transform
+    result.reserve(s.size());
+    for (const auto& si : s) 
+    {
+        result.push_back((1.0 + si * half_a) / (1.0 - si * half_a));
+        gain *= (a - si);
+    }
+
+    return result;
+
+}   // end of bilinear_transform
+
+//-----------------------------------------------------------------------------
+// returns the [z,p,k] form
+inline void chebyshev2_poles_zeros(int32_t N, double epsilon, std::vector<std::complex<double>> &z, std::vector<std::complex<double>> &p, double &k)
+{
+    uint32_t idx;
+    double theta;
+    double sigma, omega;
+    //double k = 1.0;
+
+    std::complex<double> p_temp;
+
+    // inverse Chebyshev parameters
+    double mu = std::asinh(1.0 / epsilon) / (double)N;
+
+    // Chebyshev Type II has zeros on the imaginary axis.  Number of zeros and poles equals filter order N
+    //std::vector<std::complex<double>> z(N, { 0.0,0.0 });
+    //std::vector<std::complex<double>> p(N, { 0.0,0.0 });
+
+    //Calculate zero locations(on imaginary axis)
+    for (idx = 0; idx < N; ++idx)
+    {
+        // pole angles
+        theta = (2.0 * (idx + 1) - 1) * M_1PI / (2.0 * N);
+        z[idx] = std::complex<double>(0.0, 1.0 / std::cos(theta));
+
+        // Calculate pole in s - domain
+        sigma = -std::sinh(mu) * std::sin(theta);
+        omega = std::cosh(mu) * std::cos(theta);
+
+        // Poles are inverse of Chebyshev Type I poles
+        p_temp = std::complex<double>(sigma, omega);
+        p[idx] = std::complex<double>(1.0,0.0) / p_temp;
+
+        // Calculate gain to ensure unit gain at DC(for lowpass)
+        k *= (-p[idx]/-z[idx]).real();
+    }
+
+    // Adjust for Chebyshev Type II (unit gain in passband)
+    for (idx = 0; idx < N; ++idx) 
+    {
+        // Even order
+        k *= std::abs(z[idx]) / std::abs(p[idx]);
+    }
+
+}   // end of chebyshev2_poles_zeros
+
+//-----------------------------------------------------------------------------
+std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<double>>& z, std::vector<std::complex<double>>& p, double k)
+{
+    uint32_t idx;
+
+    std::vector<std::vector<double>> sos_filter;
+    const double tolerance = 1e-10;
+
+    // Remove any infinite zeros (shouldn't have any, but check)
+    std::vector<std::complex<double>> z_finite;
+    for (const auto& zi : z) 
+    {
+        if (std::isfinite(zi.real()) && std::isfinite(zi.imag())) 
+        {
+            z_finite.push_back(zi);
+        }
+    }
+
+    // Sort complex conjugate pairs
+    std::vector<std::complex<double>> z_sorted = sort_conjugate_pairs(z);
+    std::vector<std::complex<double>> p_sorted = sort_conjugate_pairs(p);
+
+    // Determine number of sections needed
+    size_t n_sections = (p_sorted.size() + 1) / 2;
+    //sos_filter.resize(n_sections);
+
+    size_t idx_z = 0;
+    size_t idx_p = 0;
+
+    for (idx = 0; idx < n_sections; ++idx) 
+    {
+        std::vector<double> section(6, 0);
+
+        // Get pole pair (or single real pole)
+        if (idx_p < p_sorted.size()) 
+        {
+            if ((idx_p < (p_sorted.size() - 1)) && (std::abs(p_sorted[idx_p].imag()) > tolerance)) 
+            {
+                // Complex conjugate pair
+                std::complex<double> p1 = p_sorted[idx_p];
+                //std::complex<double> p2 = p_sorted[idx_p + 1];
+
+                // Denominator: (z - p1)(z - p2) = z^2 - (p1+p2)z + p1*p2
+                // For conjugate pair: z^2 - 2*Re(p1)*z + |p1|^2
+                //section.a0 = 1.0;
+                //section.a1 = -2.0 * p1.real();
+                //section.a2 = std::norm(p1);  // |p1|^2 = p1 * conj(p1)
+                section[3] = 1.0;
+                section[4] = -2.0 * p1.real();
+                section[5] = std::norm(p1);
+
+                idx_p += 2;
+            }
+            else 
+            {
+                // Real pole
+                std::complex<double> p1 = p_sorted[idx_p];
+                //section.a0 = 1.0;
+                //section.a1 = -p1;
+                //section.a2 = 0.0;
+                section[3] = 1.0;
+                section[4] = -p1.real();
+                section[5] = std::norm(p1);
+
+                idx_p += 1;
+            }
+        }
+        else 
+        {
+            //section.a0 = 1.0;
+            //section.a1 = 0.0;
+            //section.a2 = 0.0;
+            section[3] = 1.0;
+            section[4] = 0.0;
+            section[5] = 0.0;
+        }
+
+        // Get zero pair (or single real zero)
+        if (idx_z < z_sorted.size()) 
+        {
+            if ((idx_z < z_sorted.size() - 1) && (std::abs(z_sorted[idx_z].imag()) > tolerance)) 
+            {
+                // Complex conjugate pair
+                std::complex<double> z1 = z_sorted[idx_z];
+                //std::complex<double> z2 = z_sorted[idx_z + 1];
+
+                // Numerator: (z - z1)(z - z2) = z^2 - (z1+z2)z + z1*z2
+                //section.b0 = 1.0;
+                //section.b1 = -2.0 * z1.real();
+                //section.b2 = std::norm(z1);  // |z1|^2
+                section[0] = 1.0;
+                section[1] = -2.0 * z1.real();
+                section[2] = std::norm(z1);
+
+                idx_z += 2;
+            }
+            else {
+                // Real zero
+                std::complex<double> z1 = z_sorted[idx_z];
+                //section.b0 = 1.0;
+                //section.b1 = -z1;
+                //section.b2 = 0.0;
+                section[0] = 1.0;
+                section[1] = -z1.real();
+                section[2] = 0.0;
+
+                idx_z += 1;
+            }
+        }
+        else 
+        {
+            // No more zeros
+            //section.b0 = 1.0;
+            //section.b1 = 0.0;
+            //section.b2 = 0.0;
+            section[0] = 1.0;
+            section[1] = 0.0;
+            section[2] = 0.0;
+        }
+
+        //result.sos[i] = section;
+        sos_filter.push_back(section);
+    }
+
+    sos_filter[0][0] *= k;
+    sos_filter[0][1] *= k;
+    sos_filter[0][2] *= k;
+
+    return sos_filter;
+
+}   // end of zpk_to_sos
+
+//-----------------------------------------------------------------------------
+std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_frequency, double r_s)
+{
+    uint32_t idx;
+    double k = 1.0;
+
+    // Calculate Chebyshev Type II parameters
+    double epsilon = 1 / std::sqrt(std::pow(10, (r_s / 10.0) - 1.0));
+
+    // Calculate polesand zeros for normalized lowpass prototype
+    std::vector<std::complex<double>> z(N, { 0.0,0.0 });
+    std::vector<std::complex<double>> p(N, { 0.0,0.0 });
+    chebyshev2_poles_zeros(N, epsilon, z, p, k);
+
+    //Frequency transformation(lowpass to lowpass with cutoff Wn)
+    double omega_warped = 4.0 * std::tan(M_1PI * cutoff_frequency / 2.0);
+    for (idx = 0; idx < N; ++idx)
+    {
+        z[idx] *= omega_warped;
+        p[idx] *= omega_warped;
+    }
+    
+    // Bilinear transformation to z - domain
+    //[zd, pd, kd] = bilinear_transform(z, p, k, 2);
+    std::complex<double> kz(1.0,0.0), kp(1.0,0.0);
+    std::vector<std::complex<double>> zd = bilinear_transform(z, 2.0, kz);
+    std::vector<std::complex<double>> pd = bilinear_transform(p, 2.0, kp);
+
+    double kd = std::real((k *kz) / kd);
+
+    std::vector<std::vector<double>> sos_filter = zpk_to_sos(zd, pd, kd);
+
+    return sos_filter;
+}   // end of chebyshev2_iir_sos
+
+
+//-----------------------------------------------------------------------------
 /**
  * Calculate coefficients for Direct Form II Butterworth IIR filter
  * implemented as Second-Order Sections (SOS)
