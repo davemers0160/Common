@@ -409,18 +409,18 @@ inline std::vector<std::complex<double>> sort_conjugate_pairs(std::vector<std::c
 
 //-----------------------------------------------------------------------------
 // Bilinear transformation from s - domain to z - domain
-inline std::vector<std::complex<double>> bilinear_transform(std::vector<std::complex<double>> s, double a, std::complex<double>& gain)
+inline std::vector<std::complex<double>> bilinear_transform(std::vector<std::complex<double>> s, std::complex<double>& gain)
 {
     std::vector<std::complex<double>> result;
 
-    double half_a = 0.5 / a;
+    gain = std::complex<double>(1.0, 0.0);
 
     // Transform
     result.reserve(s.size());
     for (const auto& si : s) 
     {
-        result.push_back((1.0 + si * half_a) / (1.0 - si * half_a));
-        gain *= (a - si);
+        result.push_back((2.0 + si) / (2.0 - si));
+        gain *= (2.0 - si);
     }
 
     return result;
@@ -508,14 +508,14 @@ std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<double>>& z
     std::vector<std::complex<double>> p_sorted = sort_conjugate_pairs(p);
 
     // Determine number of sections needed
-    size_t n_sections = (p_sorted.size() + 1) / 2;
+    size_t num_sections = (p_sorted.size() + 1) / 2;
 
     size_t idx_z = 0;
     size_t idx_p = 0;
 
     double gain = 1.0;
 
-    for (idx = 0; idx < n_sections; ++idx) 
+    for (idx = 0; idx < num_sections; ++idx)
     {
         std::vector<double> section(6, 0);
 
@@ -615,7 +615,8 @@ std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_fre
     k = chebyshev2_poles_zeros(N, epsilon, z, p);
 
     //Frequency transformation(lowpass to lowpass with cutoff Wn)
-    double omega_warped = 4.0 * std::tan(M_1PI * cutoff_frequency);
+    double omega_warped = 2.0 * std::tan(M_1PI * cutoff_frequency); 
+
     for (idx = 0; idx < N; ++idx)
     {
         z[idx] *= omega_warped;
@@ -625,8 +626,8 @@ std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_fre
     // Bilinear transformation to z - domain
     //[zd, pd, kd] = bilinear_transform(z, p, k, 2);
     std::complex<double> kz(1.0,0.0), kp(1.0,0.0);
-    std::vector<std::complex<double>> zd = bilinear_transform(z, 2.0, kz);
-    std::vector<std::complex<double>> pd = bilinear_transform(p, 2.0, kp);
+    std::vector<std::complex<double>> zd = bilinear_transform(z, kz);
+    std::vector<std::complex<double>> pd = bilinear_transform(p, kp);
 
     //double kd = std::real((kz / kp));
 
@@ -749,77 +750,83 @@ std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_fre
  * @param order Filter order (must be positive)
  * @return Vector of biquad coefficients for each second-order section
  */
-std::vector<std::vector<double>> create_butterworth_sos_filter(double cutoff_frequency, int32_t order)
+std::vector<std::vector<double>> butterworth_iir_sos(int32_t order, double cutoff_frequency)
 {
     uint32_t idx;
     double theta = 0.0;
-    std::complex<double> pole_s, pole_z;
-    double a1, a2;
-    double sum_a = 0.0;
-    double sum_b = 4.0;
-    double stage_gain = 0.0;
-    double gain_scale;
-    std::vector<std::vector<double>> sections;
+    double gain = 1.0;
+
+    std::vector<std::vector<double>> sos_filter;
 
 	// quick checks to make sure the order is within appropriate values
     if (order < 1)
         throw std::invalid_argument("Filter order must be > 1");
-    else if (order < 4)
-        gain_scale = 0.9204;
-    else if(order > 40)
-        gain_scale = 0.978797;
-    else
-        gain_scale = -0.0000000715 * order * order * order * order + 0.00000933 * order * order * order - 0.0004626 * order * order + 0.010875 * order + 0.8693;
-    
-    // Prewarp cutoff frequency for bilinear transform
-    double omega_c = std::tan(M_2PI * cutoff_frequency);
 
-    // number of 2nd order sections: order/2
-    int num_sections = order >> 1;
+    if (cutoff_frequency >= 0.5)
+        throw std::invalid_argument("Normalized cutoff frequency must be < 0.5");
+
+    // Determine number of sections needed
+    int32_t num_sections = order >> 1;
+
+    // Prewarp cutoff frequency for bilinear transform std::tan(M_2PI * cutoff_frequency);
+    double omega_c = 2.0 * std::tan(M_1PI * cutoff_frequency);
 
     // Loop over complex-conjugate pole pairs
     for (idx = 0; idx < num_sections; ++idx) 
     {
+        std::vector<double> section(6, 0);
+
         // analog Butterworth poles
         theta = M_1PI * (2.0 * idx + 1.0 + order) / (2.0 * order);
-        pole_s = std::polar(omega_c, theta);
+
+        std::complex<double> pole_s = std::complex<double>(omega_c * std::cos(theta), omega_c * std::sin(theta));
 
         // Compute digital poles - Bilinear transform : s -> (1 - z ^ -1) / (1 + z ^ -1)
-        pole_z = (2.0 + pole_s) / (2.0 - pole_s);
+        std::complex<double> pole_z = (2.0 + pole_s) / (2.0 - pole_s);
 
-        //a = [1 - 2 * real(pole_z) (pole_z) * conj(pole_z)];
-        a1 = -2.0 * pole_z.real();
-        a2 = (pole_z * std::conj(pole_z)).real();
-        
-        stage_gain = gain_scale * (1 + a1 + a2) / sum_b;
-        std::vector<double> sos_stage{stage_gain, 2*stage_gain, stage_gain, 1.0, a1, a2};
+        section[0] = 1.0;
+        section[1] = 2.0;
+        section[2] = 1.0;
+        section[3] = 1.0;
+        section[4] = -2.0 * pole_z.real();
+        section[5] = std::norm(pole_z);
 
-        sections.push_back(sos_stage);
+        sos_filter.push_back(section);
+        gain *= ((section[3] + section[4] + section[5]) / (section[0] + section[1] + section[2]));
     }
 
     // Handle odd order: one extra first-order section
-    if (order % 2 == 1) 
+    if ((order & 0x01) == 1) 
     {
+        std::vector<double> section(6, 0);
+
         // analog Butterworth poles
         theta = M_1PI * (2 * num_sections + 1 + order) / (2 * order);
-        pole_s = std::polar(omega_c, theta);
+        std::complex<double> pole_s = std::polar(omega_c, theta);
 
         // Compute digital poles - Bilinear transform : s -> (1 - z ^ -1) / (1 + z ^ -1)
-        pole_z = (2.0 + pole_s) / (2.0 - pole_s);
+        std::complex<double> pole_z = (2.0 + pole_s) / (2.0 - pole_s);
 
-        a1 = -pole_z.real();
+        section[0] = 1.0;
+        section[1] = 1.0;
+        section[2] = 0.0;
+        section[3] = 1.0;
+        section[4] = -pole_z.real();
+        section[5] = 0.0;
 
-        stage_gain = gain_scale * (1 + a1 + 0.0) / (1.0 + 1.0 + 0.0);
+        sos_filter.push_back(section);
+        gain *= ((section[3] + section[4] + section[5]) / (section[0] + section[1] + section[2]));
 
-        //b = [1, 1, 0], a = [1, -real(pole_z), 0];
-        std::vector<double> sos_stage{ stage_gain, stage_gain, 0.0, 1.0, a1, 0.0 };
-
-        sections.push_back(sos_stage);
     }
 
-    return sections;
+    // adjust for gain of coeffeicients - shooting for DC gain = 1
+    sos_filter[0][0] *= gain;
+    sos_filter[0][1] *= gain;
+    sos_filter[0][2] *= gain;
 
-}   // end of create_butterworth_sos_filter
+    return sos_filter;
+
+}   // end of butterworth_iir_sos
 
 }  // end of namespace DSP
 

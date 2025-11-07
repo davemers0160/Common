@@ -155,14 +155,14 @@ inline std::vector<uint32_t> gray_code(uint16_t num_bits)
 }   // end of gray_code
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::complex<float>> generate_square_qam_constellation(uint16_t num_bits)
+inline std::vector<std::complex<double>> generate_square_qam_constellation(uint16_t num_bits)
 {
     uint32_t idx, jdx;
     uint32_t index = 0;
     int16_t rows, cols;
 
     uint32_t num = 1 << num_bits;
-    std::vector<std::complex<float>> bit_mapper(num);
+    std::vector<std::complex<double>> bit_mapper(num);
 
     std::pair<int64_t, int64_t> int_div = closest_integer_divisors(num);
     rows = int_div.first;
@@ -172,14 +172,14 @@ inline std::vector<std::complex<float>> generate_square_qam_constellation(uint16
     std::vector<uint32_t> gc = gray_code(num_bits);
 
     // create the base locations for the constellation
-    std::vector<float> c_y(rows, 0);
-    std::vector<float> c_x(cols, 0);
+    std::vector<double> c_y(rows, 0);
+    std::vector<double> c_x(cols, 0);
 
-    float row_start = (-rows + 1);
-    float row_scale = 1.0 / (float)abs(row_start);
+    double row_start = (-rows + 1);
+    double row_scale = 1.0 / (float)abs(row_start);
 
-    float col_start = (-cols + 1);
-    float col_scale = 1.0 / (float)abs(col_start);
+    double col_start = (-cols + 1);
+    double col_scale = 1.0 / (double)abs(col_start);
 
     // create the primary normalized points for the constellation
     for (idx = 0; idx < rows; ++idx)
@@ -204,7 +204,7 @@ inline std::vector<std::complex<float>> generate_square_qam_constellation(uint16
             // check row and perform zig-zag assignment
             index = ((idx & 0x01) == 1) ? (idx + 1) * cols - (jdx + 1) : idx * cols + jdx;
             // assign to bit_mapper
-            bit_mapper[gc[index]] = std::complex<float>(c_x[jdx], c_y[idx]);
+            bit_mapper[gc[index]] = std::complex<double>(c_x[jdx], c_y[idx]);
         }
     }
 
