@@ -214,13 +214,13 @@ inline std::vector<std::complex<float>> generate_square_qam_constellation(uint16
 
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::complex<float>> generate_cross_qam_constellation(uint16_t num_bits)
+inline std::vector<std::complex<double>> generate_cross_qam_constellation(uint16_t num_bits)
 {
     int32_t idx;
 
     uint32_t num = 1 << num_bits;
-    std::vector<std::complex<float>> bit_mapper(num);
-    std::vector<std::complex<float>> tmp_mapper(num);
+    std::vector<std::complex<double>> bit_mapper(num);
+    std::vector<std::complex<double>> tmp_mapper(num);
 
     // Step 1: Get the integer divisors to determine the shape of the constellation.  Put the smallest value as the number of rows
     std::pair<int64_t, int64_t> int_div = closest_integer_divisors(num);
@@ -251,7 +251,7 @@ inline std::vector<std::complex<float>> generate_cross_qam_constellation(uint16_
         i_data = std::floor(idx / (double)rows);
         q_data = (double)(idx & tmp1);
 
-        tmp_c = std::complex<float>((2 * i_data + i_start), (-1 * (2 * q_data + q_start)));
+        tmp_c = std::complex<double>((2 * i_data + i_start), (-1 * (2 * q_data + q_start)));
 
         i_mag = std::abs(std::floor(tmp_c.real()));
 
@@ -265,11 +265,11 @@ inline std::vector<std::complex<float>> generate_cross_qam_constellation(uint16_
             // check max q value and move if needed
             if (q_mag > q_max)
             {
-                tmp_c = std::complex<float>(i_sign * (i_mag - i_offset), (q_sign * (q_offset - q_mag)));
+                tmp_c = std::complex<double>(i_sign * (i_mag - i_offset), (q_sign * (q_offset - q_mag)));
             }
             else
             {
-                tmp_c = std::complex<float>(i_sign * (cols - i_mag), (q_sign * (rows + q_mag)));
+                tmp_c = std::complex<double>(i_sign * (cols - i_mag), (q_sign * (rows + q_mag)));
             }
         }
 
@@ -288,7 +288,7 @@ inline std::vector<std::complex<float>> generate_cross_qam_constellation(uint16_
 }   // end of generate_cross_qam_constellation
 
 //-----------------------------------------------------------------------------
-void print_constellation(std::vector<std::complex<float>> con)
+void print_constellation(std::vector<std::complex<double>> con)
 {
 
     uint32_t num = con.size();
