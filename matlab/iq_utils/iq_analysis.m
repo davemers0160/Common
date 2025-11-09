@@ -56,13 +56,14 @@ num_taps = str2double(res{3});
 
 %%
 % iqc = iqc()
-max(real(iqc_in))
-min(real(iqc_in))
+fprintf('max real: %f\n', max(real(iqc_in)));
+fprintf('min real: %f\n', min(real(iqc_in)));
 
-max(imag(iqc_in))
-min(imag(iqc_in))
+fprintf('max imag: %f\n', max(imag(iqc_in)));
+fprintf('min imag: %f\n', min(imag(iqc_in)));
 
-max_v = max([max(real(iqc_in)), max(imag(iqc_in)), abs(min(real(iqc_in))), abs(min(imag(iqc_in)))])
+max_v = max([max(real(iqc_in)), max(imag(iqc_in)), abs(min(real(iqc_in))), abs(min(imag(iqc_in)))]);
+fprintf('overal max: %f\n', max_v);
 
 iqc_o = scale * iqc_in;
 % tmt = timetable(seconds(t.'), iqc_o);
@@ -105,9 +106,13 @@ figure(plot_num)
 set(gcf,'position',([50,50,1400,500]),'color','w')
 plot(t, real(iqc),'b')
 hold on
+box on
+grid on
 plot(t, imag(iqc),'r')
 xlabel('Time (s)', 'fontweight','bold');
 ylabel('Amplitude', 'fontweight','bold');
+ylim([-1.2, 1.2]);
+
 plot_num = plot_num + 1;
 drawnow;
 
@@ -139,8 +144,8 @@ grid on
 box on
 
 set(gca,'fontweight','bold','FontSize',12);
-xlim([-1, 1]);
-ylim([-1, 1]);
+xlim([-1.2, 1.2]);
+ylim([-1.2, 1.2]);
 
 xlabel('I', 'fontweight','bold','FontSize',12);
 ylabel('Q', 'fontweight','bold','FontSize',12);

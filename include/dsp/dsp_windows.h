@@ -671,6 +671,7 @@ std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_fre
     std::vector<std::vector<double>> sos_filter = zpk_to_sos(zd, pd);
 
     return sos_filter;
+
 }   // end of chebyshev2_iir_sos
 
 
