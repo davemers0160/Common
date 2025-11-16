@@ -16,9 +16,11 @@ commandwindow;
 data_type = 'int16';
 byte_order = 'ieee-le';
 
-filename = 'D:\Projects\SDR\bladerf\rx_record\recordings\137M000_1M000__600s_20221120_0955.bin';
+% filename = 'D:\Projects\SDR\bladerf\rx_record\recordings\137M000_1M000__600s_20221120_0955.bin';
 % filename = 'D:\Projects\bladerf\rx_record\recordings\137M800_1M000__600s_20221120_1110.bin';
-filename = 'D:\data\RF\20240224\blade_F137.912M_SR0.624M_20240224_222353.sc16';
+filename = 'D:\data\RF\20240224\blade_F137.620M_SR0.624M_20240224_194922.sc16';
+% filename = 'D:\data\RF\20240224\blade_F137.100M_SR0.624M_20240224_205207.sc16';
+% filename = 'D:\data\RF\20240224\blade_F137.912M_SR0.624M_20240224_222353.sc16';
 
 [~, iqc] = read_binary_iq_data(filename, data_type, byte_order);
 
@@ -106,7 +108,7 @@ fprintf('\n');
 %% start block processing
 
 % number of samples to process at one time
-block_size = floor(sample_rate);    %65536*8;
+block_size = floor(2*sample_rate);    %65536*8;
 
 fft_size = 8192;
 fft_bin = floor((rf_freq_offset/sample_rate) * fft_size);
@@ -136,31 +138,50 @@ for idx=1:num_blocks
     x3 = filter(lpf_rf, 1, x2);
 
     % downsample
-%     x4 = x3(floor(1:rf_dec_rate:numel(x3)));
-    x4 = cat(1, x4, x3(floor(1:rf_decimation_factor:numel(x3))));
+    x4 = x3(floor(1:rf_decimation_factor:numel(x3)));
+%     x4 = cat(1, x4, x3(floor(1:rf_decimation_factor:numel(x3))));
+       
+    % filter the downsampled RF
+%     x5 = filter(lpf_fm, 1, x4);
+
+    x5a = x4(2:end) .* conj(x4(1:end-1));
+    x6 = angle(x5a) * phasor_scale;
+
+    % rotate the signal
+    am_rot = exp(-1.0j*2.0*pi()* am_offset/fs_rf2*(0:(numel(x6)-1)))';
+    x7 = x6 .* am_rot;
+
+    % filter the am
+    x8 = filter(lpf_am, 1, x7);
+
+    % magnitude
+    x9 = abs(x8);  
+
+    x10 = cat(1, x10, x9(floor(1:am_decimation_factor:numel(x9))));
+    
 end
 
 fprintf('Processing Complete!\n');
 
 %%
 % filter the downsampled RF
-x5 = filter(lpf_fm, 1, x4);
-
-x5a = x5(2:end) .* conj(x5(1:end-1));
-x6 = angle(x5a) * phasor_scale;
-
-% rotate the signal
-am_rot = exp(-1.0j*2.0*pi()* am_offset/fs_rf2*(0:(numel(x6)-1)))';
-x7 = x6 .* am_rot;
-
-% filter the am
-x8 = filter(lpf_am, 1, x7);
-
-% magnitude
-x9 = abs(x8);
-
-% downsample the AM
-x10 = x9(floor(1:am_decimation_factor:numel(x9)));   
+% x5 = filter(lpf_fm, 1, x4);
+% 
+% x5a = x5(2:end) .* conj(x5(1:end-1));
+% x6 = angle(x5a) * phasor_scale;
+% 
+% % rotate the signal
+% am_rot = exp(-1.0j*2.0*pi()* am_offset/fs_rf2*(0:(numel(x6)-1)))';
+% x7 = x6 .* am_rot;
+% 
+% % filter the am
+% x8 = filter(lpf_am, 1, x7);
+% 
+% % magnitude
+% x9 = abs(x8);
+% 
+% % downsample the AM
+% x10 = x9(floor(1:am_decimation_factor:numel(x9)));   
 
  
 %% digitize
@@ -177,19 +198,19 @@ delta = max_val - min_val;
 
 % Normalize the signal to px luminance values, discretize
 x11 = floor((255 * (x10 - min_val) / delta) + 0.5);
-
-d5 = x11;
-d5(d5 < 0) = 0;
-d5(d5 > 255) = 255;
+% 
+% d5 = x11;
+% d5(d5 < 0) = 0;
+% d5(d5 > 255) = 255;
 
 %% correlations
 
-d5s = d5 - 128;
+d5s = x11 - 128;
 % sync = [0 0 255 255 0 0 255 255 0 0 255 255 0 0 255 255 0 0 255 255 0 0 255 255 0 0 255 255 0 0 0 0] - 128;
 sync = 255*[0 0 0 0 1 1 0 0 1 1 0 0 1 1 0 0 1 1 0 0 1 1 0 0 1 1 0 0 1 1 0 0 0 0 0 0 0 0 0] - 128;
 % sync = 255*[0 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 0 0 0 0] - 128;
 
-mindistance = 2000;
+mindistance = ceil(2080 * 0.950);
 
 peaks = [1,0];
 
@@ -204,10 +225,11 @@ while(idx <= numel(d5s)-numel(sync))
     % If previous peak is too far, we keep it but add this value as new
     if ((idx - peaks(end,1)) > mindistance)
         peaks(end+1,:) = [idx, corr];
-%         idx = idx + ceil(mindistance/4);
+        idx = idx + 500;
     elseif (corr > peaks(end,2))
-        peaks(end,:) = [idx, corr];
+        peaks(end,:) = [idx, corr];    
     end
+    
     idx = idx + 1;
 end
 
@@ -216,7 +238,7 @@ end
 img = [];
 
 for idx=1:(size(peaks,1) - 2)
-    img = cat(1,img, d5(peaks(idx,1):peaks(idx,1)+2079)');
+    img = cat(1, img, x11(peaks(idx,1):peaks(idx,1)+2079)');
 end
 
 figure
