@@ -18,9 +18,9 @@ byte_order = 'ieee-le';
 
 % filename = 'D:\Projects\SDR\bladerf\rx_record\recordings\137M000_1M000__600s_20221120_0955.bin';
 % filename = 'D:\Projects\bladerf\rx_record\recordings\137M800_1M000__600s_20221120_1110.bin';
-filename = 'D:\data\RF\20240224\blade_F137.620M_SR0.624M_20240224_194922.sc16';
+% filename = 'D:\data\RF\20240224\blade_F137.620M_SR0.624M_20240224_194922.sc16';
 % filename = 'D:\data\RF\20240224\blade_F137.100M_SR0.624M_20240224_205207.sc16';
-% filename = 'D:\data\RF\20240224\blade_F137.912M_SR0.624M_20240224_222353.sc16';
+filename = 'D:\data\RF\20240224\blade_F137.912M_SR0.624M_20240224_222353.sc16';
 
 [~, iqc] = read_binary_iq_data(filename, data_type, byte_order);
 
@@ -31,25 +31,30 @@ num_samples = numel(iqc);
 % sample_rate = 1000000;
 sample_rate = 624000;
 
+% RF decimation rate
+rf_decimation_factor = 10;
+
+am_decimation_factor = 15;
+
 % offset from the center where we want to demodulate (Hz)
 % rf_freq_offset = 116000; 
 % rf_freq_offset = 103000;
 rf_freq_offset = 0;
 
 % number of taps to create a low pass RF filter
-rf_taps = 200;
+rf_taps = 201;
 
 % rf frequency filter cutoff
 fc_rf = 45000;
 
 % the FM broadcast signal has a bandwidth (Hz)
-fs_rf2 = 104000;
+% fs_rf2 = sample_rate/rf_decimation_factor;
 
 % FM cutoff frequency
 fc_fm = 20000;
 
 % number of taps for the FM filtering
-fm_taps = 200;
+fm_taps = 201;
 
 % plot the spectrogram
 figure;
@@ -58,7 +63,7 @@ spectrogram(iqc(1:(5*sample_rate)), 4096, 1024, 4096, sample_rate, 'centered');
 %% setup the specific decimation rates
 
 % RF decimation rate
-rf_decimation_factor = (sample_rate / fs_rf2);
+% rf_decimation_factor = (sample_rate / fs_rf2);
 
 % calculate the new sampling rate based on the original and the decimated sample rate
 decimated_sample_rate = sample_rate/rf_decimation_factor;
@@ -70,10 +75,11 @@ decimated_sample_rate = sample_rate/rf_decimation_factor;
 %freq_cutoff = pi()/(fs/2) * (channel_bw / 4.0);
 lpf_rf = fir1(rf_taps, fc_rf/sample_rate, 'low');
 
-lpf_fm = fir1(fm_taps, fc_fm/fs_rf2, 'low');
+lpf_fm = fir1(fm_taps, fc_fm/decimated_sample_rate, 'low');
 
 % scaling for tangent
-phasor_scale = 1.0 /((2 * pi()) / (decimated_sample_rate / fs_rf2));
+% phasor_scale = 1.0 /((2 * pi()) / (decimated_sample_rate / decimated_sample_rate));
+phasor_scale = 1.0 /(2 * pi());
 
 % dec_audio = (fs_d/fs_audio);  
 % fs_audio = fs_d / dec_audio;
@@ -83,11 +89,11 @@ phasor_scale = 1.0 /((2 * pi()) / (decimated_sample_rate / fs_rf2));
 am_offset = 2400;
 fc_am = 2400;
 
-fs_am = 4160;
+fs_am = decimated_sample_rate/am_decimation_factor; %4160;
     
-am_decimation_factor = fs_rf2/fs_am;
+% am_decimation_factor = fs_rf2/fs_am;
 
-lpf_am = fir1(fm_taps, fc_am/fs_rf2, 'low');
+lpf_am = fir1(fm_taps, fc_am/decimated_sample_rate, 'low');
 
 %% print out the parameters
 
@@ -135,7 +141,7 @@ for idx=1:num_blocks
     x2 = x1 .* rf_rot;
 
     % filter the frequency shifted signal since there is a close signal
-    x3 = filter(lpf_rf, 1, x2);
+    x3 = filter(lpf_fm, 1, x2);
 
     % downsample
     x4 = x3(floor(1:rf_decimation_factor:numel(x3)));
@@ -148,7 +154,7 @@ for idx=1:num_blocks
     x6 = angle(x5a) * phasor_scale;
 
     % rotate the signal
-    am_rot = exp(-1.0j*2.0*pi()* am_offset/fs_rf2*(0:(numel(x6)-1)))';
+    am_rot = exp(-1.0j*2.0*pi()* am_offset/decimated_sample_rate*(0:(numel(x6)-1)))';
     x7 = x6 .* am_rot;
 
     % filter the am
