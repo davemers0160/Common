@@ -54,7 +54,7 @@ fc_rf = 45000;
 fc_fm = 20000;
 
 % number of taps for the FM filtering
-fm_taps = 201;
+fm_taps = 200;
 
 % plot the spectrogram
 figure;
@@ -111,6 +111,19 @@ fprintf('fc_am: %d\n', fc_am);
 
 fprintf('\n');
 
+%%
+% Decompose FIR filter into polyphase components
+
+taps_per_phase = floor(fm_taps/rf_decimation_factor);
+E = zeros(rf_decimation_factor, taps_per_phase);
+
+for idx = 0:rf_decimation_factor-1
+    for jdx=0:taps_per_phase-1
+%         index = k:rf_decimation_factor:fm_taps;
+        E(idx+1, jdx+1) = lpf_fm(jdx * rf_decimation_factor + idx + 1);
+    end
+end
+
 %% start block processing
 
 % number of samples to process at one time
@@ -129,33 +142,59 @@ x10 = [];
 x4 = [];
 
 fprintf('Number of blocks to process: %04d\n', num_blocks);
-for idx=1:num_blocks
+for bdx=1:num_blocks
     
-    fprintf('Processing block %04d\n', idx-1);
+    fprintf('Processing block %04d\n', bdx-1);
     
-    index = (1:block_size)+(idx-1)*block_size;
+    index = (1:block_size)+(bdx-1)*block_size;
     
-    x1 = iqc(index)/2048;
+    x2 = iqc(index)/2048;
 
     % perform the frequency rotation to put the desired frequency at 0Hz
-    x2 = x1 .* rf_rot;
+%     x2 = x1 .* rf_rot;
 
     % filter the frequency shifted signal since there is a close signal
-    x3 = filter(lpf_fm, 1, x2);
+%     x3 = filter(lpf_fm, 1, x2);
 
     % downsample
-    x4 = x3(floor(1:rf_decimation_factor:numel(x3)));
+%     x4 = x3(floor(1:rf_decimation_factor:numel(x3)));
 %     x4 = cat(1, x4, x3(floor(1:rf_decimation_factor:numel(x3))));
-       
+
+
+    num_x4_samples = ceil(block_size / rf_decimation_factor);
+    x4p = zeros(num_x4_samples, 1);
+
+    % Compute output using polyphase structure
+    for idx = 0:num_x4_samples-1
+        
+        sum = 0;
+        
+        for jdx = 0:rf_decimation_factor-1
+            
+            for kdx = 0:taps_per_phase-1
+                
+                index = rf_decimation_factor * (idx - kdx) - jdx;  % 0-based index
+                if index >= 0 && index < block_size
+%                     x4p(idx+1) = x4p(idx+1) + E(k+1, l+1) * x2(index+1);
+                    sum = sum + E(jdx+1, kdx+1) * x2(index+1);
+                end
+                
+            end
+        end
+        x4p(idx+1) = sum;
+    end
+  
     % filter the downsampled RF
 %     x5 = filter(lpf_fm, 1, x4);
 
-    x5a = x4(2:end) .* conj(x4(1:end-1));
+    x5a = x4p(2:end) .* conj(x4p(1:end-1));
     x6 = angle(x5a) * phasor_scale;
 
     % rotate the signal
     am_rot = exp(-1.0j*2.0*pi()* am_offset/decimated_sample_rate*(0:(numel(x6)-1)))';
-    x7 = x6 .* am_rot;
+    x7 = x6 .* am_rot;      
+%     am_rot = cos(2.0*pi()* am_offset/decimated_sample_rate*(0:(numel(x6)-1)))';
+%     x7 = x6 .* am_rot;
 
     % filter the am
     x8 = filter(lpf_am, 1, x7);
