@@ -121,7 +121,7 @@ drawnow;
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
-surf(ts, f/1e6, 20*log10(abs(s)), 'EdgeColor', 'none')
+surf(ts, f/1e6, max(-110, 20*log10(abs(s))), 'EdgeColor', 'none')
 colormap(jet(100));
 
 grid on
