@@ -200,9 +200,11 @@ for bdx=1:num_blocks
     x8 = filter(lpf_am, 1, x7);
 
     % magnitude
-    x9 = abs(x8);  
-
-    x10 = cat(1, x10, x9(floor(1:am_decimation_factor:numel(x9))));
+%     x9 = abs(x8);  
+%     x10 = cat(1, x10, x9(floor(1:am_decimation_factor:numel(x9))));
+        
+    x9 = x8(floor(1:am_decimation_factor:numel(x8)));  
+    x10 = cat(1, x10, abs(x9));
     
 end
 
@@ -242,7 +244,10 @@ max_val = max(x10);
 delta = max_val - min_val;
 
 % Normalize the signal to px luminance values, discretize
-x11 = floor((255 * (x10 - min_val) / delta) + 0.5);
+% x11 = floor((255 * (x10 - min_val) / delta) + 0.5);
+x11 = floor((255/delta) * (x10 - min_val) + 0.5);
+
+
 % 
 % d5 = x11;
 % d5(d5 < 0) = 0;
