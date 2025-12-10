@@ -4,6 +4,7 @@
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 // need for VS for pi and other math constatnts
 #define _USE_MATH_DEFINES
+//#define _USE_MATH_DEFINES
 
 #elif defined(__linux__)
 
@@ -13,9 +14,8 @@
 #include <cmath>
 #include <vector>
 #include <complex>
-#include <exception>
 #include <stdexcept>
-#include <numeric>
+#include <iostream>
 
 namespace DSP
 {
