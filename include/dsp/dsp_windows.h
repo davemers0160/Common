@@ -5,6 +5,7 @@
 // need for VS for pi and other math constatnts
 #define _USE_MATH_DEFINES
 //#define _USE_MATH_DEFINES
+#define _SILENCE_NONFLOATING_COMPLEX_DEPRECATION_WARNING
 
 #elif defined(__linux__)
 
@@ -16,10 +17,12 @@
 #include <complex>
 #include <stdexcept>
 #include <iostream>
+#include <iomanip>
 
 namespace DSP
 {
 
+	
 // constansts
 const double M_1PI = 3.14159265358979323846;            							//* pi
 const double M_2PI = 2.0 * 3.14159265358979323846;      							//* 2pi
@@ -139,7 +142,6 @@ inline std::vector<double> blackman_nuttall_window(int64_t N)
     return w;
 }   // end of blackman_nuttall_window
 
-//-----------------------------------------------------------------------------
 inline std::vector<double> blackman_harris_window(int64_t N)
 {
     std::vector<double> w(N, 0.0f);
