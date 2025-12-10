@@ -141,6 +141,23 @@ inline std::vector<double> blackman_nuttall_window(int64_t N)
 }   // end of blackman_nuttall_window
 
 //-----------------------------------------------------------------------------
+inline std::vector<double> blackman_harris_window(int64_t N)
+{
+    std::vector<double> w(N, 0.0f);
+    double a0 = 0.35875;
+    double a1 = 0.48829;
+    double a2 = 0.14128;
+    double a3 = 0.01168;
+
+    for (int64_t idx = 0; idx < N; ++idx)
+    {
+        w[idx] = a0 - a1 * std::cos(M_2PI * idx / (double)(N - 1)) + a2 * std::cos(M_4PI * idx / (double)(N - 1)) - a3 * std::cos(M_6PI * idx / (double)(N - 1));
+    }
+
+    return w;
+}   // end of blackman_harris_window
+
+//-----------------------------------------------------------------------------
 template <typename T, typename funct>
 std::vector<T> create_fir_filter(int32_t N, double fc, funct window_function, double scale = 1.0)
 {
