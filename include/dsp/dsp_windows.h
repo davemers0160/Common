@@ -18,6 +18,7 @@
 #include <iomanip>
 #include <deque>
 #include <algorithm>
+#include <numeric>
 
 namespace DSP
 {
@@ -309,6 +310,42 @@ inline std::vector<double> create_rrc_filter(uint32_t span, double beta, double 
     return g;
 
 }   // end of create_rrc_filter
+
+//-----------------------------------------------------------------------------
+// to use filter signal (x) and consruct complex version: y = x + j*h(x)
+inline std::vector<double> create_hilbert_filter(uint32_t N)
+{
+    uint32_t idx;
+
+    // make sure the number is odd
+    if ((N & 0x01) == 0)
+        ++N;
+
+    std::vector<double> g(N, 0);
+    std::vector<double> w = hamming_window(N);
+
+    // The center point(non - causal index m = 0)
+    int32_t delay = (N - 1) >> 1;
+
+    // The non - causal index vector m, centered around 0
+    std::vector<int32_t> m(N, 0);
+    std::iota(m.begin(), m.end(), -delay);
+
+    for (idx = 0; idx < N; ++idx)
+    {
+        if ((m[idx] & 0x01) == 1)
+        {
+            g[idx] = w[idx] * (2.0 / (M_1PI * m[idx]));
+        }
+        else
+        {
+            g[idx] = 0.0;
+        }
+    }
+
+    return g;
+
+}   // end of create_hilbert_filter
 
 //-----------------------------------------------------------------------------
 inline std::vector<std::complex<double>> sort_conjugate_pairs(std::vector<std::complex<double>>& vec)
