@@ -19,6 +19,7 @@ f_sc    = 10.23e6;        % Subcarrier frequency (Hz)
 f_code  = 5.115e6;        % Code rate (Hz)
 
 symbol_length = 1/f_code;
+amplitude = 1 / sqrt(2);
 
 %% Generate PRN code (simple random ±1)
 numChips = 100;
@@ -43,9 +44,38 @@ I = prn .* subcarrier_I;
 % Q = prn .* subcarrier_Q;
 Q = prn .* zeros(1, numel(subcarrier_I));
 
+%%
+index = 0;
+I2 = zeros(1, samples_per_symbol * numel(data));
+Q2 = zeros(1, samples_per_symbol * numel(data));
+
+c1 = 2*pi*(f_sc/fs);
+
+for idx=1:numel(data)
+
+    for jdx=1:samples_per_symbol
+        cosine_phase = sign(cos(c1 * index));
+        % cosine_phase *= (data[idx] == 0) ? -a1 : a1;
+        if(data(idx) == 0)
+            cosine_phase = -amplitude * cosine_phase;
+        else
+            cosine_phase = amplitude * cosine_phase;
+        end
+
+        iq_data(index) = static_cast<std::complex<OUTPUT>>(cosine_phase, 0);
+
+        index = index + 1;
+    end
+end
+
+
+
+
+
+
 %% Normalize (optional)
-I = I / sqrt(2);
-Q = Q / sqrt(2);
+I = amplitude * I;
+Q = amplitude * Q;
 
 %% Constellation plot
 
