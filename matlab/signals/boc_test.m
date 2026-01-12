@@ -12,8 +12,8 @@ commandwindow;
 
 %% Parameters
 fs      = 61.44e6;          % Sampling frequency (Hz)
-T       = 1e-4;           % Signal duration (s)
-t       = (0:1/fs:T-1/fs);
+% T       = 1e-4;           % Signal duration (s)
+% t       = (0:1/fs:T-1/fs);
 
 f_sc    = 10.23e6;        % Subcarrier frequency (Hz)
 f_code  = 5.115e6;        % Code rate (Hz)
@@ -21,21 +21,22 @@ f_code  = 5.115e6;        % Code rate (Hz)
 symbol_length = 1/f_code;
 
 %% Generate PRN code (simple random ±1)
-numChips = 1000;
-prnChips = randi([0 1], 1, numChips) * 2 - 1;
+numChips = 100;
+% prnChips = randi([0 1], 1, numChips) * 2 - 1;
 
-prnChips = repmat([0, 1], 1, ceil(numChips/2)) * 2 - 1;
+data = repmat([0, 1], 1, ceil(numChips/2)) * 2 - 1;
 
 % Upsample PRN to sampling frequency
 samples_per_symbol = floor(fs * symbol_length + 0.5);
 
-prn = repelem(prnChips, samples_per_symbol);
-prn = prn(1:length(t));
+prn = repelem(data, samples_per_symbol);
+
+n = 0:numel(prn)-1;
 
 %% Generate square-wave subcarriers
-subcarrier_I = sign(cos(2*pi*f_sc*t));   % Cosine-phased
-sc_I = cos(2*pi*f_sc*t);
-subcarrier_Q = sign(sin(2*pi*f_sc*t));   % Sine-phased
+subcarrier_I = sign(cos(2*pi*(f_sc/fs)*n));   % Cosine-phased
+sc_I = cos(2*pi*(f_sc/fs)*n);
+subcarrier_Q = sign(sin(2*pi*(f_sc/fs)*n));   % Sine-phased
 
 %% QBOC baseband I/Q
 I = prn .* subcarrier_I;
@@ -51,6 +52,8 @@ Q = Q / sqrt(2);
 iq_start = 1;
 iq_stop = 100;
 step = 1;
+
+t = n/fs;
 
 figure(1);
 grid on;
