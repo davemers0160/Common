@@ -1,7 +1,7 @@
-function [iq] = generate_bpsk(data, amplitude, sample_rate, bit_length)
+function [iq] = generate_bpsk(data, amplitude, sample_rate, symbol_length)
 
     num_bits = numel(data);
-    samples_per_bit = floor(sample_rate*bit_length);
+    samples_per_bit = floor(sample_rate*symbol_length + 0.5);
     
     iq = [];
     

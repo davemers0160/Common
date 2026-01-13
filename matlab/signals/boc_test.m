@@ -11,7 +11,7 @@ plot_num = 1;
 commandwindow;
 
 %% Parameters
-fs      = 61.44e6;          % Sampling frequency (Hz)
+sample_rate = 61.44e6;          % Sampling frequency (Hz)
 % T       = 1e-4;           % Signal duration (s)
 % t       = (0:1/fs:T-1/fs);
 
@@ -20,24 +20,25 @@ f_code  = 5.115e6;        % Code rate (Hz)
 
 symbol_length = 1/f_code;
 amplitude = 1 / sqrt(2);
+% amplitude = 1;
 
 %% Generate PRN code (simple random ±1)
 numChips = 100;
-% prnChips = randi([0 1], 1, numChips) * 2 - 1;
 
+% data = randi([0 1], 1, numChips) * 2 - 1;
 data = repmat([0, 1], 1, ceil(numChips/2)) * 2 - 1;
 
 % Upsample PRN to sampling frequency
-samples_per_symbol = floor(fs * symbol_length + 0.5);
+samples_per_symbol = floor(sample_rate * symbol_length + 0.5);
 
 prn = repelem(data, samples_per_symbol);
 
 n = 0:numel(prn)-1;
 
 %% Generate square-wave subcarriers
-subcarrier_I = sign(cos(2*pi*(f_sc/fs)*n));   % Cosine-phased
-sc_I = cos(2*pi*(f_sc/fs)*n);
-subcarrier_Q = sign(sin(2*pi*(f_sc/fs)*n));   % Sine-phased
+subcarrier_I = sign(cos(2*pi*(f_sc/sample_rate)*n));   % Cosine-phased
+sc_I = cos(2*pi*(f_sc/sample_rate)*n);
+subcarrier_Q = sign(sin(2*pi*(f_sc/sample_rate)*n));   % Sine-phased
 
 %% QBOC baseband I/Q
 I = prn .* subcarrier_I;
@@ -49,28 +50,23 @@ index = 0;
 I2 = zeros(1, samples_per_symbol * numel(data));
 Q2 = zeros(1, samples_per_symbol * numel(data));
 
-c1 = 2*pi*(f_sc/fs);
+c1 = 2*pi*(f_sc/sample_rate);
 
 for idx=1:numel(data)
 
     for jdx=1:samples_per_symbol
         cosine_phase = sign(cos(c1 * index));
         % cosine_phase *= (data[idx] == 0) ? -a1 : a1;
-        if(data(idx) == 0)
+        if(data(idx) == -1)
             cosine_phase = -amplitude * cosine_phase;
         else
             cosine_phase = amplitude * cosine_phase;
         end
 
-        iq_data(index) = static_cast<std::complex<OUTPUT>>(cosine_phase, 0);
-
+        I2(index+1) = cosine_phase;
         index = index + 1;
     end
 end
-
-
-
-
 
 
 %% Normalize (optional)
@@ -83,7 +79,7 @@ iq_start = 1;
 iq_stop = 100;
 step = 1;
 
-t = n/fs;
+t = n/sample_rate;
 
 figure(1);
 grid on;
@@ -109,28 +105,31 @@ plot(I(iq_start:step:iq_stop), '-b')
 hold on;
 box on; 
 grid on;
-plot(prn(iq_start:step:iq_stop), '-k', 'LineWidth', 2)
-plot(subcarrier_I(iq_start:step:iq_stop),'--r')
-plot(sc_I(iq_start:step:iq_stop),'-c')
+plot(I2(iq_start:step:iq_stop), '--m')
+
+plot(prn(iq_start:step:iq_stop), '-k', 'LineWidth', 1.5)
+% plot(subcarrier_I(iq_start:step:iq_stop),'--r')
+% plot(sc_I(iq_start:step:iq_stop),'-c')
 hold off;
 
 %% Complex baseband QBOC signal
 x = I;
 
 % FFT parameters
-Nfft = 2^nextpow2(length(x));   % FFT size
+Nfft = 2^(nextpow2(length(x))+2);   % FFT size
 Xf   = fftshift(fft(x, Nfft));
 
-f = (-Nfft/2:Nfft/2-1)*(fs/Nfft);   % Frequency axis
+f = (-Nfft/2:Nfft/2-1)*(sample_rate/Nfft);   % Frequency axis
 
 % Power spectrum (dB)
 PSD = 20*log10(abs(Xf) / max(abs(Xf)));
 
-% Plot FFT
+
+%% Plot FFT
 figure(3);
 hold on;
 grid on;
-plot(f/1e6, PSD, 'LineWidth', 1.2);
+plot(f/1e6, PSD, '-m', 'LineWidth', 1);
 
 xlabel('Frequency (MHz)');
 ylabel('Magnitude (dB)');
