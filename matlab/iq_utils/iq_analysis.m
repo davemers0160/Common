@@ -11,7 +11,7 @@ plot_num = 1;
 commandwindow;
 
 %% load in data
-file_filter = {'*.sc16;*.fc32;*.iq','IQ Files';'*.*','All Files' };
+file_filter = {'*.sc16;*.fc32;*.iq;*.sigmf-data','IQ Files';'*.*','All Files' };
 
 [data_file, data_filepath] = uigetfile(file_filter, 'Select File', startpath, 'MultiSelect', 'on');
 if(data_filepath == 0)
@@ -23,9 +23,17 @@ end
 if (strcmp(ext,'.fc32') == 1)
     scale = 32768/2048;
     data_type = 'single';
-else
+elseif(strcmp(ext,'.sc16') == 1)
     scale = 1/2048;
     data_type = 'int16';
+elseif(strcmp(ext,'.sigmf-data') == 1)
+    scale = 1/2048;
+    data_type = 'int16';
+elseif(strcmp(ext,'.iq') == 1)
+    scale = 1/2048;
+    data_type = 'int16';
+else
+    return;
 end
 
 byte_order = 'ieee-le';
@@ -409,8 +417,8 @@ y_edges = linspace(-1,1,const_y+1);
 x_edges = -1:0.05:1;
 y_edges = -1:0.05:1;
 
-iq_start = max(1, ceil(fs*0.0001));
-iq_stop = min(iq_start + ceil(fs*0.1), numel(iqc));
+iq_start = 1; %max(1, ceil(fs*0.01));
+iq_stop = min(iq_start + ceil(fs*0.0005), numel(iqc));
 step = 1;
 
 iq_section = iqc(iq_start:step:iq_stop);
