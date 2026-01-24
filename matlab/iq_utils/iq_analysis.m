@@ -38,6 +38,7 @@ end
 
 byte_order = 'ieee-le';
 
+fprintf('file: %s\n\n', fullfile(data_filepath, data_file));
 
 %%
 
@@ -47,7 +48,7 @@ byte_order = 'ieee-le';
 dlgtitle = 'Input';
 prompt = {'Sample Rate:', 'Down Samples Rate:', 'num taps:'};
 fieldsize = [1 30; 1 30; 1 30];
-definput = {'40e6', '1', '1'};
+definput = {'20e6', '1', '1'};
 
 res = inputdlg(prompt, dlgtitle, fieldsize, definput);
 
@@ -306,6 +307,31 @@ zlabel('Q', 'fontweight','bold');
 plot_num = plot_num + 1;
 drawnow;
 
+%% constellation histogram
+
+const_x = 200;
+const_y = 200;
+
+x_edges = linspace(-1,1,const_x+1);
+y_edges = linspace(-1,1,const_y+1);
+
+x_edges = -1:0.05:1;
+y_edges = -1:0.05:1;
+
+iq_start = 1; %max(1, ceil(fs*0.01));
+iq_stop = min(iq_start + ceil(fs*0.0005), numel(iqc));
+step = 1;
+
+iq_section = iqc(iq_start:step:iq_stop);
+
+[iq_hist, Xedges, Yedges, binx, biny] = histcounts2(real(iq_section), imag(iq_section), x_edges, y_edges);
+
+figure;
+% histogram2(real(iq_section), imag(iq_section), [const_x, const_y], 'DisplayStyle','tile','ShowEmptyBins','on');
+s1 = surf(Xedges(1:end-1), Yedges(1:end-1), iq_hist);
+set(s1,'edgecolor','none');
+colormap(jet(100));
+
 %%
 return;
 
@@ -405,31 +431,6 @@ PlotComet_3D(t(1:step:end), real(iqc(1:step:end)), imag(iqc(1:step:end)), 'cFigu
 % PlotComet_3D(real(iqc), imag(iqc), t, 'Frequency', 100000, 'blockSize', 1000, 'tailFormat',tailFormat, 'headFormat',headFormat);
 
 plot_num = plot_num + 1;
-
-%% constellation histogram
-
-const_x = 100;
-const_y = 100;
-
-x_edges = linspace(-1,1,const_x+1);
-y_edges = linspace(-1,1,const_y+1);
-
-x_edges = -1:0.05:1;
-y_edges = -1:0.05:1;
-
-iq_start = 1; %max(1, ceil(fs*0.01));
-iq_stop = min(iq_start + ceil(fs*0.0005), numel(iqc));
-step = 1;
-
-iq_section = iqc(iq_start:step:iq_stop);
-
-[iq_hist, Xedges, Yedges, binx, biny] = histcounts2(real(iq_section), imag(iq_section), x_edges, y_edges);
-
-figure;
-% histogram2(real(iq_section), imag(iq_section), [const_x, const_y], 'DisplayStyle','tile','ShowEmptyBins','on');
-s1 = surf(Xedges(1:end-1), Yedges(1:end-1), iq_hist);
-set(s1,'edgecolor','none');
-colormap(jet(100));
 
 %% FM demod
 

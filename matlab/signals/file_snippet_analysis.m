@@ -230,6 +230,17 @@ for kdx=1:numel(frame_id)
                 bp = 1;
 
 
+                Y = fft(iq_snippet)/numel(iq_snippet);
+                f = linspace(-sample_rate/2, sample_rate/2, numel(Y));
+                
+                figure(106)
+                set(gcf,'position',([50,50,1400,500]),'color','w')
+                plot(f*1e-6, 20*log10(abs(fftshift(Y))), 'b');
+                box on
+                grid on
+                xlabel('Frequency (MHz)', 'fontweight','bold');
+                ylabel('amplitude', 'fontweight','bold');
+
 
                 % figure(plot_num)
                 % set(gcf,'position',([50,50,800,500]),'color','w')
