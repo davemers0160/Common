@@ -309,14 +309,14 @@ drawnow;
 
 %% constellation histogram
 
-const_x = 200;
-const_y = 200;
+% const_x = 50;
+% const_y = 50;
 
-x_edges = linspace(-1,1,const_x+1);
-y_edges = linspace(-1,1,const_y+1);
+% x_edges = linspace(-1.1,1.1,const_x+1);
+% y_edges = linspace(-1.1,1.1,const_y+1);
 
-x_edges = -1:0.05:1;
-y_edges = -1:0.05:1;
+x_edges = -1.1:0.05:1.1;
+y_edges = -1.1:0.05:1.1;
 
 iq_start = 1; %max(1, ceil(fs*0.01));
 iq_stop = min(iq_start + ceil(fs*0.0005), numel(iqc));
@@ -332,8 +332,35 @@ s1 = surf(Xedges(1:end-1), Yedges(1:end-1), iq_hist);
 set(s1,'edgecolor','none');
 colormap(jet(100));
 
+xlim([-1.1, 1.1]);
+ylim([-1.1, 1.1]);
+
+xlabel('I', 'fontweight','bold');
+ylabel('Q', 'fontweight','bold');
+
+view(0, 90)
+
 %%
 return;
+
+%%
+
+iq_start = max(floor(fs*1.57), 1);
+iq_stop = min(iq_start + ceil(fs*0.1), numel(iqc));
+
+figure(plot_num)
+set(gcf,'position',([50,50,1400,500]),'color','w')
+plot(t(iq_start:step:iq_stop), real(iqc(iq_start:step:iq_stop)),'b')
+hold on
+box on
+grid on
+plot(t(iq_start:step:iq_stop), imag(iqc(iq_start:step:iq_stop)),'r')
+xlabel('Time (s)', 'fontweight','bold');
+ylabel('Amplitude', 'fontweight','bold');
+ylim([-1.2, 1.2]);
+
+plot_num = plot_num + 1;
+drawnow;
 
 %% Limited FFT
 
