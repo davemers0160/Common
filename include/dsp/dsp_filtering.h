@@ -21,10 +21,9 @@
 
 namespace DSP
 {
-	
     //-----------------------------------------------------------------------------
     //std::vector<std::complex<int16_t>> apply_rotation(std::vector<std::complex<float>>& src, std::vector<std::complex<float>>& f_rot)
-    std::vector<std::complex<int16_t>> apply_rotation(std::vector<std::complex<int16_t>>& src, std::complex<double> channel_coeff)
+    inline std::vector<std::complex<int16_t>> apply_rotation(std::vector<std::complex<int16_t>>& src, std::complex<double> channel_coeff)
     {
         uint32_t idx;
 
@@ -41,10 +40,10 @@ namespace DSP
 
     //-----------------------------------------------------------------------------
     //std::vector<std::complex<int16_t>> apply_filter_rotation(std::vector<std::complex<float>>& src, std::vector<std::complex<float>>& f_rot)
-    std::vector<std::complex<int16_t>> apply_fir_filter_rotation(std::vector<std::complex<int16_t>>& src, const std::vector<double>& fir_filter, std::complex<double> channel_coeff)
+    inline std::vector<std::complex<int16_t>> apply_fir_filter_rotation(std::vector<std::complex<int16_t>>& src, const std::vector<double>& fir_filter, std::complex<double> channel_coeff)
     {
         uint32_t idx, jdx;
-        int32_t dx = fir_filter.size() >> 1;
+        int32_t dx = (int32_t)(fir_filter.size() >> 1);
         int32_t x;
         //int32_t temp = 0;
 
@@ -74,10 +73,10 @@ namespace DSP
     }   // end of apply_fir_filter_rotation
 
     //-----------------------------------------------------------------------------
-    std::vector<std::complex<int16_t>> apply_fir_filter(std::vector<std::complex<int16_t>>& src, const std::vector<double> &fir_filter)
+    inline std::vector<std::complex<int16_t>> apply_fir_filter(std::vector<std::complex<int16_t>>& src, const std::vector<double> &fir_filter)
     {
         int32_t idx, jdx;
-        int32_t dx = fir_filter.size() >> 1;
+        int32_t dx = (int32_t)(fir_filter.size() >> 1);
         int32_t x;
 
         std::complex<double> accum;
@@ -128,12 +127,12 @@ namespace DSP
 
     */
     template <typename T>
-    std::vector<std::complex<T>> apply_df2t_filter(const std::vector<std::complex<T>>& data, const std::vector<std::vector<double>> &sos_filter)
+    inline std::vector<std::complex<T>> apply_df2t_filter(const std::vector<std::complex<T>>& data, const std::vector<std::vector<double>> &sos_filter)
     {
         uint64_t idx, jdx;
         std::complex<double> current_input, section_output;
 
-        uint32_t num_sections = sos_filter.size();
+        uint32_t num_sections = (uint32_t)(sos_filter.size());
 
         // state variables for the filter: w1 --> w[n-1], w2 --> w[n-2]
         //std::vector<std::vector<std::complex<double>>> w(num_sections, std::vector<std::complex<double>>(2, { 0.0, 0.0 }));
@@ -193,12 +192,12 @@ namespace DSP
 
     */
     template <typename T>
-    std::vector<std::complex<T>> apply_df2t_filter_rotation(const std::vector<std::complex<T>>& data, const std::vector<std::vector<double>>& sos_filter, std::complex<double> channel_coeff)
+    inline std::vector<std::complex<T>> apply_df2t_filter_rotation(const std::vector<std::complex<T>>& data, const std::vector<std::vector<double>>& sos_filter, std::complex<double> channel_coeff)
     {
         uint64_t idx, jdx;
         std::complex<double> current_input, section_output;
 
-        uint32_t num_sections = sos_filter.size();
+        uint32_t num_sections = (uint32_t)(sos_filter.size());
 
         // state variables for the filter: w1 --> w[n-1], w2 --> w[n-2]
         //std::vector<std::vector<std::complex<double>>> w(num_sections, std::vector<std::complex<double>>(2, { 0.0, 0.0 }));
@@ -230,6 +229,32 @@ namespace DSP
 
         return output;
     }   // end of apply_df2t_filter_rotation
+
+    //-----------------------------------------------------------------------------
+    inline void adjust_iir_filter_overshoot(std::vector<std::vector<double>>& sos_filter, uint32_t samples_per_symbol)
+    {
+        // run filter through a high speed step transition to get the maximum overshoot value for the data rate
+        std::vector<std::complex<double>> step(4 * samples_per_symbol, { -1.01, 0.0 });
+        std::vector<std::complex<double>> step_1(2 * samples_per_symbol, { 1.01, 0.0 });
+        std::vector<std::complex<double>> step_0(2 * samples_per_symbol, { -1.01, 0.0 });
+        step.insert(step.end(), step_1.begin(), step_1.end());
+        step.insert(step.end(), step_0.begin(), step_0.end());
+        step.insert(step.end(), step_1.begin(), step_1.end());
+
+        // filter the result to get the response
+        std::vector<std::complex<double>> results = apply_df2t_filter(step, sos_filter);
+
+        // get the max value of the step response
+        double max_step = std::abs(std::real(*std::max_element(results.begin(), results.end(), [](const std::complex<double>& a, const std::complex<double>& b) {
+            return std::abs(a.real()) < std::abs(b.real());
+            })));
+
+        // adjust b values in the first section of the filter
+        sos_filter[0][0] /= max_step;
+        sos_filter[0][1] /= max_step;
+        sos_filter[0][2] /= max_step;
+
+    }   // end of adjust_iir_filter_overshoot
 
 }  // end of namespace DSP
 
