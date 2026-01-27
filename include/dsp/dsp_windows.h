@@ -669,6 +669,38 @@ inline std::vector<std::vector<double>> butterworth_iir_sos(int32_t order, doubl
 
 }   // end of butterworth_iir_sos
 
+//-----------------------------------------------------------------------------
+inline std::vector<std::complex<double>> create_complex_notch_iir(uint64_t sample_rate, uint64_t notch_frequency, uint64_t notch_bandwidth)
+{
+    // convert frequencies to normalized radians
+    double w0 = M_2PI * notch_frequency / (double)sample_rate;
+    double bw_rad = M_2PI * notch_bandwidth / (double)sample_rate;
+
+    // determine pole radius based on bandwidth
+    double R = 1 - (bw_rad / 2.0);
+
+    // define the zero and pole locations
+    std::complex<double> z0 = std::exp(j * w0);
+    std::complex<double> p0 = R * std::exp(j * w0);
+
+    // create Second Order Section by squaring the first order notch this ensures a sharper null and meets the "second order" requirement.
+    //    % H(z) = ((z - z0)(z - z0)) / ((z - p0)(z - p0))
+    //b0 = 1.0; b1 = -2 * z0; b2 = z0 ^ 2; a0 = 1.0; a1 = -2 * p0; a2 = p0 ^ 2;
+    std::vector<std::complex<double>> sos = { {1.0, 0.0}, -2.0 * z0, z0 * z0, {1.0, 0.0}, -2.0 * p0, p0 * p0 };
+
+    // DC Gain Normalization(0dB at DC): For complex filters, "DC" is z = 1.
+    std::complex<double> gain_at_dc = (sos[0] + sos[1] + sos[2]) / (sos[3] + sos[4] + sos[5]);
+
+    // apply normalization to b coefficients
+    sos[0] /= gain_at_dc;
+    sos[1] /= gain_at_dc;
+    sos[2] /= gain_at_dc;
+
+    return sos;
+
+}   // end of create_complex_notch_iir
+
+
 }  // end of namespace DSP
 
 #endif  // DSP_WINDOW_DEFINITION_H_
