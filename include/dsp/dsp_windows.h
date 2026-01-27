@@ -375,7 +375,7 @@ inline std::vector<std::complex<double>> bilinear_transform(std::vector<std::com
 // returns the [z,p,k] form
 inline double chebyshev2_poles_zeros(int32_t N, double epsilon, std::vector<std::complex<double>>& z, std::vector<std::complex<double>>& p)
 {
-    uint32_t idx;
+    int32_t idx;
     double theta;
     double sigma, omega;
     bool is_odd = false;
@@ -548,7 +548,7 @@ inline std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<doub
 //-----------------------------------------------------------------------------
 inline std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_frequency, double r_s)
 {
-    uint32_t idx;
+    int32_t idx;
     double k = 0.99;
 
     // Calculate Chebyshev Type II parameters
@@ -593,7 +593,7 @@ inline std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cut
 */
 inline std::vector<std::vector<double>> butterworth_iir_sos(int32_t order, double cutoff_frequency)
 {
-    uint32_t idx;
+    int32_t idx;
     double theta = 0.0;
     double gain = 1.0;
 
