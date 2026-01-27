@@ -160,7 +160,7 @@ inline std::vector<double> blackman_harris_window(int64_t N)
 
 //-----------------------------------------------------------------------------
 template <typename T, typename funct>
-std::vector<T> create_fir_filter(int32_t N, double fc, funct window_function, double scale = 1.0)
+inline std::vector<T> create_fir_filter(int32_t N, double fc, funct window_function, double scale = 1.0)
 {
     int32_t idx;
     std::vector<T> g(N, 0);
@@ -227,37 +227,6 @@ inline std::vector<T> create_fir_filter(int64_t N, double fc, std::vector<double
     return g;
 
 }   // end of create_fir_filter
-
-//-----------------------------------------------------------------------------
-template <typename OUTPUT, typename INPUT>
-std::vector<std::complex<OUTPUT>> apply_filter(std::vector<std::complex<INPUT>>& src, std::vector<double> &filter)
-{
-    int32_t idx, jdx;
-    int32_t dx = filter.size() >> 1;
-    int32_t x;
-
-    std::complex<double> accum;
-
-    std::vector<std::complex<OUTPUT>> iq_data(src.size(), std::complex<OUTPUT>(0, 0));
-
-    for (idx = 0; idx < src.size(); ++idx)
-    {
-        accum = 0.0;
-
-        for (jdx = 0; jdx < filter.size(); ++jdx)
-        {
-            x = idx + jdx - dx;
-
-            if (x >= 0 && x < src.size())
-                accum += std::complex<double>(src[x].real(), src[x].imag()) * filter[jdx];
-        }
-
-        iq_data[idx] = std::complex<OUTPUT>(accum);
-    }
-
-    return iq_data;
-
-}   // end of apply_filter
 
 //-----------------------------------------------------------------------------
 template <typename OUTPUT>
@@ -462,7 +431,7 @@ inline double chebyshev2_poles_zeros(int32_t N, double epsilon, std::vector<std:
 }   // end of chebyshev2_poles_zeros
 
 //-----------------------------------------------------------------------------
-std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<double>>& z, std::vector<std::complex<double>>& p, double gain)
+inline std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<double>>& z, std::vector<std::complex<double>>& p, double gain)
 {
     uint32_t idx;
 
@@ -577,7 +546,7 @@ std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<double>>& z
 }   // end of zpk_to_sos
 
 //-----------------------------------------------------------------------------
-std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_frequency, double r_s)
+inline std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_frequency, double r_s)
 {
     uint32_t idx;
     double k = 0.99;
@@ -622,7 +591,7 @@ std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_fre
 @param order Filter order (must be positive)
 @return Vector of biquad coefficients for each second-order section
 */
-std::vector<std::vector<double>> butterworth_iir_sos(int32_t order, double cutoff_frequency)
+inline std::vector<std::vector<double>> butterworth_iir_sos(int32_t order, double cutoff_frequency)
 {
     uint32_t idx;
     double theta = 0.0;
