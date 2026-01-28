@@ -328,7 +328,7 @@ iq_section = iqc(iq_start:step:iq_stop);
 
 figure;
 % histogram2(real(iq_section), imag(iq_section), [const_x, const_y], 'DisplayStyle','tile','ShowEmptyBins','on');
-s1 = surf(Xedges(1:end-1), Yedges(1:end-1), iq_hist);
+s1 = surf(Xedges(1:end-1), Yedges(1:end-1), iq_hist.');
 set(s1,'edgecolor','none');
 colormap(jet(100));
 
