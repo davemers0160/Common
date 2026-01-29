@@ -1,6 +1,6 @@
-function sos_filter = create_cheby2_lowpass_sos(sample_rate, cutoff_freq)
+function sos_filter = create_cheby2_lowpass_sos(sample_rate, cutoff_freq, N)
     % Hardcoded order N = 4
-    N = 4;
+    % N = 4;
     stopband_atten_db = 40; % Standard ripple attenuation in dB
     
     % 1. Pre-warp the cutoff frequency for Bilinear Transform
