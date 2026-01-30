@@ -357,7 +357,8 @@ inline std::vector<double> create_hilbert_filter(uint32_t N)
 }   // end of create_hilbert_filter
 
 //-----------------------------------------------------------------------------
-inline std::vector< std::vector<std::complex<double>>> normalize_sos_filter_gain(std::vector< std::vector<std::complex<double>>> sos_filter, uint32_t num_frequency_points = 1000)
+template <typename T>
+inline std::vector< std::vector<T>> normalize_sos_filter_gain(std::vector< std::vector<T>> sos_filter, uint32_t num_frequency_points = 1000)
 {
     uint32_t idx;
     double max_gain = 0.0;
@@ -395,7 +396,6 @@ inline std::vector< std::vector<std::complex<double>>> normalize_sos_filter_gain
         omega += step;
     }
 
-    //std::cout << "max_gain: " << max_gain << std::endl;
     std::cout << "Peak gain in the passband is: " << 20 * log10(max_gain) << " dB" << std::endl;
 
     double gain_correction_factor = 1.0 / max_gain;
@@ -867,7 +867,7 @@ inline std::vector<std::vector<std::complex<double>>> create_complex_notch_iir(u
     //b0 = 1.0; b1 = -2 * z0; b2 = z0 ^ 2; a0 = 1.0; a1 = -2 * p0; a2 = p0 ^ 2;
     std::vector<std::complex<double>> sos = { {1.0, 0.0}, -2.0 * z0, z0 * z0, {1.0, 0.0}, -2.0 * p0, p0 * p0 };
 
-    std::vector<std::vector<std::complex<double>>> sos_filter = normalize_sos_filter_gain({ sos });
+    std::vector<std::vector<std::complex<double>>> sos_filter = normalize_sos_filter_gain<std::complex<double>>({ sos });
      
     return sos_filter;
 
