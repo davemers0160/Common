@@ -34,12 +34,15 @@ function sos_filter = create_complex_notch_sos(sample_rate, notch_freqs, notch_b
         % 5. DC Gain Normalization (0dB at DC)
         % For complex filters, "DC" is z=1. 
         % We want |H(1)| = 1.
+%         denominator = (a0 + a1 + a2);
         gain_at_dc = (b0 + b1 + b2) / (a0 + a1 + a2);
         
-        % Apply normalization to b coefficients
-        b0 = b0 / gain_at_dc;
-        b1 = b1 / gain_at_dc;
-        b2 = b2 / gain_at_dc;
+        if(abs(gain_at_dc) > 1)        
+            % Apply normalization to b coefficients
+            b0 = b0 / gain_at_dc;
+            b1 = b1 / gain_at_dc;
+            b2 = b2 / gain_at_dc;
+        end
         
         sos_filter(i, :) = [b0, b1, b2, a0, a1, a2];
     end

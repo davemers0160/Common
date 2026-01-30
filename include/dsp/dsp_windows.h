@@ -41,6 +41,46 @@ inline uint64_t factorial(int64_t n){
 }
 
 //-----------------------------------------------------------------------------
+inline std::vector<double> generate_linspace(double start_val, double stop_val, int32_t num_points) 
+{
+    std::vector<double> result;
+
+    // Handle case where no points are requested
+    if (num_points <= 0) 
+    {
+        return result;
+    }
+
+    // Handle case where only one point is requested
+    if (num_points == 1) 
+    {
+        result.push_back(stop_val);
+        return result;
+    }
+
+    result.reserve(num_points);
+
+    // Calculate the step size, (n - 1) intervals are needed to include both endpoints
+    double step = (stop_val - start_val) / (static_cast<double>(num_points) - 1.0);
+
+    for (int32_t idx = 0; idx < num_points; ++idx) 
+    {
+        // For the last point, we use stop_val directly to avoid 
+        // accumulated floating point precision errors
+        if (idx == num_points - 1) 
+        {
+            result.push_back(stop_val);
+        }
+        else 
+        {
+            result.push_back(start_val + idx * step);
+        }
+    }
+
+    return result;
+}   // end of generate_linspace
+
+//-----------------------------------------------------------------------------
 inline std::vector<double> rectangular_window(int64_t N)
 {
     std::vector<double> w(N+1, 1.0f);
@@ -670,7 +710,7 @@ inline std::vector<std::vector<double>> butterworth_iir_sos(int32_t order, doubl
 }   // end of butterworth_iir_sos
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::complex<double>> create_complex_notch_iir(uint64_t sample_rate, uint64_t notch_frequency, uint64_t notch_bandwidth)
+inline std::vector<std::complex<double>> create_complex_notch_iir(uint64_t sample_rate, double notch_frequency, double notch_bandwidth)
 {
     // convert frequencies to normalized radians
     double w0 = M_2PI * notch_frequency / (double)sample_rate;
@@ -692,13 +732,70 @@ inline std::vector<std::complex<double>> create_complex_notch_iir(uint64_t sampl
     std::complex<double> gain_at_dc = (sos[0] + sos[1] + sos[2]) / (sos[3] + sos[4] + sos[5]);
 
     // apply normalization to b coefficients
-    sos[0] /= gain_at_dc;
-    sos[1] /= gain_at_dc;
-    sos[2] /= gain_at_dc;
+    if (std::abs(gain_at_dc) > 1.0)
+    {
+        sos[0] /= gain_at_dc;
+        sos[1] /= gain_at_dc;
+        sos[2] /= gain_at_dc;
+    }
 
     return sos;
 
 }   // end of create_complex_notch_iir
+
+//-----------------------------------------------------------------------------
+inline std::vector<double> get_sos_filter_magnitude(std::vector<std::vector<std::complex<double>>> sos_filter, uint32_t num_points)
+{
+    int32_t idx, jdx;
+    std::complex<double> numerator, denominator;
+
+    std::vector<double> w = generate_linspace(-M_1PI, M_1PI, num_points);
+
+    std::vector<std::complex<double>> z_inv(num_points);
+    std::vector<std::complex<double>> z_inv_sq(num_points);
+    std::vector<std::complex<double>> H(num_points, 1.0);
+
+    std::vector<double> m(num_points, 0.0);
+
+    // create z_inv and z_inv^2
+    for (idx = 0; idx < num_points; ++idx)
+    {
+        z_inv[idx] = std::exp(-j * w[idx]);
+        z_inv_sq[idx] = z_inv[idx] * z_inv[idx];
+    }
+
+    // loop through each section and multiply their frequency responses
+    for (idx = 0; idx < sos_filter.size(); ++idx)
+    {
+        // ensure a0 is 1, as per standard SOS representation (division by a0)
+        if (sos_filter[idx][3] != 1.0)
+        {
+            for (jdx = 0; jdx < 6; ++jdx)
+            {
+                sos_filter[idx][jdx] /= sos_filter[idx][3];
+            }
+        }
+        
+        // calculate frequency response for this section
+        // numerator and denominator polynomial evaluation without polyval        
+        for (jdx = 0; jdx < num_points; ++jdx)
+        {
+            numerator = sos_filter[idx][0] + (sos_filter[idx][1] * z_inv[jdx]) + (sos_filter[idx][2] * z_inv_sq[jdx]);
+            denominator = sos_filter[idx][3] + (sos_filter[idx][4] * z_inv[jdx]) + (sos_filter[idx][5] * z_inv_sq[jdx]);
+
+            H[jdx] *= (numerator / denominator);
+        }           
+    }
+
+    // H = 20 * log10(abs(H));  % magnitude_dB
+    for (idx = 0; idx < num_points; ++idx)
+    {
+        m[idx] = 20.0 * std::log10(std::abs(H[idx]));
+    }
+
+    return m;
+
+}   // end of get_sos_filter_magnitude
 
 
 }  // end of namespace DSP
