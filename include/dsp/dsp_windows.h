@@ -357,6 +357,57 @@ inline std::vector<double> create_hilbert_filter(uint32_t N)
 }   // end of create_hilbert_filter
 
 //-----------------------------------------------------------------------------
+inline std::vector< std::vector<std::complex<double>>> normalize_sos_filter_gain(std::vector< std::vector<std::complex<double>>> sos_filter, uint32_t num_frequency_points = 1000)
+{
+    uint32_t idx;
+    double max_gain = 0.0;
+
+    if (sos_filter.empty() == true)
+    {
+        std::cout << "SoS filter is empty" << std::endl;
+        return sos_filter;
+    }
+
+    double step = M_2PI / (double)num_frequency_points;
+    double omega = -M_1PI;
+
+    // Iterate over the specified frequency range to find the peak gain
+    for (idx = 0; idx < num_frequency_points; ++idx)
+    {
+        std::complex<double> z(cos(omega), sin(omega));
+        std::complex<double> z_inv = 1.0 / z;
+        std::complex<double> overall_response(1.0, 0.0);
+
+        // Cascade the response of each SOS
+        for (const auto& sos : sos_filter)
+        {
+            std::complex<double> numerator = sos[0] + sos[1] * z_inv + sos[2] * z_inv * z_inv;
+            std::complex<double> denominator = sos[3] + sos[4] * z_inv + sos[5] * z_inv * z_inv;
+            overall_response *= numerator / denominator;
+        }
+
+        double current_gain = std::abs(overall_response);
+        if (current_gain > max_gain)
+        {
+            max_gain = current_gain;
+        }
+
+        omega += step;
+    }
+
+    //std::cout << "max_gain: " << max_gain << std::endl;
+    std::cout << "Peak gain in the passband is: " << 20 * log10(max_gain) << " dB" << std::endl;
+
+    double gain_correction_factor = 1.0 / max_gain;
+
+    sos_filter[0][0] *= gain_correction_factor;
+    sos_filter[0][1] *= gain_correction_factor;
+    sos_filter[0][2] *= gain_correction_factor;
+
+    return sos_filter;
+}   // end of normalize_sos_filter_gain
+
+//-----------------------------------------------------------------------------
 inline std::vector<std::complex<double>> sort_conjugate_pairs(std::vector<std::complex<double>>& vec)
 {
     const double tolerance = 1.0e-9;
@@ -469,6 +520,49 @@ inline double chebyshev2_poles_zeros(int32_t N, double epsilon, std::vector<std:
     return k;
 
 }   // end of chebyshev2_poles_zeros
+
+//-----------------------------------------------------------------------------
+inline std::vector<std::vector<std::complex<double>>> zpk_to_sos_complex(const std::vector<std::complex<double>>& zeros, const std::vector<std::complex<double>>& poles)
+{
+    uint32_t idx;
+
+    int64_t n = std::floor(poles.size() / 2.0 + 0.5);
+    std::vector<std::vector<std::complex<double>>> sos(n);
+
+    if (zeros.size() != poles.size())
+    {
+        std::cerr << "The number of poles and zeros is not the same." << std::endl;
+        return sos;
+    }
+
+    // Naive pairing: pole 2k with 2k+1, zero 2k with 2k+1
+    // Better: sort by angle, pair nearest conjugates, etc.
+    for (idx = 0; idx < poles.size(); idx += 2)
+    {
+        std::complex<double> p1 = poles[idx];
+        std::complex<double> p2 = (idx + 1 < poles.size()) ? poles[idx + 1] : std::complex<double>(0.0, 0.0);
+
+        std::complex<double> z1 = (idx < zeros.size()) ? zeros[idx] : std::complex<double>(0.0, 0.0);
+        std::complex<double> z2 = (idx + 1 < zeros.size()) ? zeros[idx + 1] : std::complex<double>(0.0, 0.0);
+
+        // Quadratic numerator: b0 (z-z1)(z-z2) --> b0 z^2 - b0(z1+z2) z + b0 z1 z2
+        // We usually set b0 = 1 for each section, scale overall gain later
+        std::complex<double> b0 = 1.0;
+        std::complex<double> b1 = -(z1 + z2);
+        std::complex<double> b2 = z1 * z2;
+
+        // Denominator
+        std::complex<double> a0 = 1.0;
+        std::complex<double> a1 = -(p1 + p2);
+        std::complex<double> a2 = p1 * p2;
+
+        sos[idx >> 1] = { b0, b1, b2, a0, a1, a2 };
+
+    }
+
+    return sos;
+
+}   // end of zpk_to_sos_complex
 
 //-----------------------------------------------------------------------------
 inline std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<double>>& z, std::vector<std::complex<double>>& p, double gain)
@@ -622,6 +716,51 @@ inline std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cut
 
 }   // end of chebyshev2_iir_sos
 
+//-----------------------------------------------------------------------------
+inline std::vector<std::vector<std::complex<double>>> chebyshev2_complex_bandpass_iir_sos(int32_t N, double normalized_center_freq, double normalized_cutoff_freq, double rs)
+{
+    // design real Chebyshev Type II lowpass prototype
+    double epsilon = 1.0 / std::sqrt(std::pow(10.0, rs / 10.0) - 1.0);
+
+    std::vector<std::complex<double>> z_lp(N, { 0.0, 0.0 });
+    std::vector<std::complex<double>> p_lp(N, { 0.0, 0.0 });
+
+    chebyshev2_poles_zeros(N, epsilon, z_lp, p_lp);  // your existing function
+
+    // Scale prototype to desired cutoff (your original code did scaling via omega_warped)
+    double omega_warped = 2.0 * std::tan(M_PI * normalized_cutoff_freq / 2.0);
+    for (auto& zz : z_lp) zz *= omega_warped;
+    for (auto& pp : p_lp) pp *= omega_warped;
+
+    // 2. Bilinear transform lowpass prototype --> digital lowpass
+    std::complex<double> kz(1.0, 0.0);
+    std::complex<double> kp(1.0, 0.0);   // usually same prewarping constant
+
+    auto zd_lp = bilinear_transform(z_lp, kz);
+    auto pd_lp = bilinear_transform(p_lp, kp);
+
+    // apply complex frequency shift z --> z * exp(-j wo)
+    std::complex<double> rot = std::exp((double)M_2PI * j * normalized_center_freq);
+
+    std::vector<std::complex<double>> zd_bp(N);
+    std::vector<std::complex<double>> pd_bp(N);
+
+    for (int i = 0; i < N; ++i)
+    {
+        zd_bp[i] = zd_lp[i] * rot;
+        pd_bp[i] = pd_lp[i] * rot;
+    }
+
+    // convert zpk --> second-order sections (complex)
+    // It must pair conjugates (or near-conjugates) correctly when possible,
+    // but since we expect complex coeffs anyway, we can pair arbitrarily
+    // (but better to pair conjugates for numerical reasons when they exist)
+    std::vector< std::vector<std::complex<double>>> sos_complex = zpk_to_sos_complex(zd_bp, pd_bp);
+
+    sos_complex = normalize_sos_filter_gain(sos_complex);
+
+    return sos_complex;
+}   // end of chebyshev2_complex_bandpass_iir_sos
 
 //-----------------------------------------------------------------------------
 /*!
@@ -710,7 +849,7 @@ inline std::vector<std::vector<double>> butterworth_iir_sos(int32_t order, doubl
 }   // end of butterworth_iir_sos
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::complex<double>> create_complex_notch_iir(uint64_t sample_rate, double notch_frequency, double notch_bandwidth)
+inline std::vector<std::vector<std::complex<double>>> create_complex_notch_iir(uint64_t sample_rate, double notch_frequency, double notch_bandwidth)
 {
     // convert frequencies to normalized radians
     double w0 = M_2PI * notch_frequency / (double)sample_rate;
@@ -728,22 +867,12 @@ inline std::vector<std::complex<double>> create_complex_notch_iir(uint64_t sampl
     //b0 = 1.0; b1 = -2 * z0; b2 = z0 ^ 2; a0 = 1.0; a1 = -2 * p0; a2 = p0 ^ 2;
     std::vector<std::complex<double>> sos = { {1.0, 0.0}, -2.0 * z0, z0 * z0, {1.0, 0.0}, -2.0 * p0, p0 * p0 };
 
-    // DC Gain Normalization(0dB at DC): For complex filters, "DC" is z = 1.
-    std::complex<double> gain_at_dc = (sos[0] + sos[1] + sos[2]) / (sos[3] + sos[4] + sos[5]);
-
-    // apply normalization to b coefficients
-    if (std::abs(gain_at_dc) > 1.0)
-    {
-        sos[0] /= gain_at_dc;
-        sos[1] /= gain_at_dc;
-        sos[2] /= gain_at_dc;
-    }
-
-    return sos;
+    std::vector<std::vector<std::complex<double>>> sos_filter = normalize_sos_filter_gain({ sos });
+     
+    return sos_filter;
 
 }   // end of create_complex_notch_iir
 
-//-----------------------------------------------------------------------------
 inline std::vector<double> get_sos_filter_magnitude(std::vector<std::vector<std::complex<double>>> sos_filter, uint32_t num_points)
 {
     int32_t idx, jdx;
