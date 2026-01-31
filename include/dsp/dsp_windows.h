@@ -526,8 +526,7 @@ inline std::vector<std::vector<std::complex<double>>> zpk_to_sos_complex(const s
 {
     uint32_t idx;
 
-    int64_t n = std::floor(poles.size() / 2.0 + 0.5);
-    std::vector<std::vector<std::complex<double>>> sos(n);
+    std::vector<std::vector<std::complex<double>>> sos;
 
     if (zeros.size() != poles.size())
     {
@@ -556,7 +555,7 @@ inline std::vector<std::vector<std::complex<double>>> zpk_to_sos_complex(const s
         std::complex<double> a1 = -(p1 + p2);
         std::complex<double> a2 = p1 * p2;
 
-        sos[idx >> 1] = { b0, b1, b2, a0, a1, a2 };
+        sos.push_back({ b0, b1, b2, a0, a1, a2 });
 
     }
 
@@ -570,117 +569,141 @@ inline std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<doub
     uint32_t idx;
 
     std::vector<std::vector<double>> sos_filter;
-    const double tolerance = 1e-10;
+    //const double tolerance = 1e-10;
+
+    //std::vector<std::vector<double>> sos;
 
     // Remove any infinite zeros (shouldn't have any, but check)
-    std::vector<std::complex<double>> z_finite;
-    for (const auto& zi : z)
-    {
-        if (std::isfinite(zi.real()) && std::isfinite(zi.imag()))
-        {
-            z_finite.push_back(zi);
-        }
-    }
+    //std::vector<std::complex<double>> z_finite;
+    //for (const auto& zi : z)
+    //{
+    //    if (std::isfinite(zi.real()) && std::isfinite(zi.imag()))
+    //    {
+    //        z_finite.push_back(zi);
+    //    }
+    //}
 
     // Sort complex conjugate pairs
     std::vector<std::complex<double>> z_sorted = sort_conjugate_pairs(z);
     std::vector<std::complex<double>> p_sorted = sort_conjugate_pairs(p);
 
-    // Determine number of sections needed
-    size_t num_sections = (p_sorted.size() + 1) / 2;
+    //// Determine number of sections needed
+    //size_t num_sections = (p_sorted.size() + 1) / 2;
 
-    size_t idx_z = 0;
-    size_t idx_p = 0;
+    //size_t idx_z = 0;
+    //size_t idx_p = 0;
 
-    //double gain = 1.0;
+    ////double gain = 1.0;
 
-    for (idx = 0; idx < num_sections; ++idx)
-    {
-        std::vector<double> section(6, 0);
+    //for (idx = 0; idx < num_sections; ++idx)
+    //{
+    //    std::vector<double> section(6, 0);
 
-        // Get pole pair (or single real pole)
-        if (idx_p < p_sorted.size())
-        {
-            if ((idx_p < (p_sorted.size() - 1)) && (std::abs(p_sorted[idx_p].imag()) > tolerance))
-            {
-                // Complex conjugate pair
-                std::complex<double> p1 = p_sorted[idx_p];
+    //    // Get pole pair (or single real pole)
+    //    if (idx_p < p_sorted.size())
+    //    {
+    //        if ((idx_p < (p_sorted.size() - 1)) && (std::abs(p_sorted[idx_p].imag()) > tolerance))
+    //        {
+    //            // Complex conjugate pair
+    //            std::complex<double> p1 = p_sorted[idx_p];
 
-                // Denominator: 
-                section[3] = 1.0;
-                section[4] = -2.0 * p1.real();
-                section[5] = std::norm(p1);
+    //            // Denominator: 
+    //            section[3] = 1.0;
+    //            section[4] = -2.0 * p1.real();
+    //            section[5] = std::norm(p1);
 
-                idx_p += 2;
-            }
-            else
-            {
-                // Real pole
-                std::complex<double> p1 = p_sorted[idx_p];
+    //            idx_p += 2;
+    //        }
+    //        else
+    //        {
+    //            // Real pole
+    //            std::complex<double> p1 = p_sorted[idx_p];
 
-                section[3] = 1.0;
-                section[4] = -p1.real();
-                section[5] = 0.0;
+    //            section[3] = 1.0;
+    //            section[4] = -p1.real();
+    //            section[5] = 0.0;
 
-                idx_p += 1;
-            }
-        }
-        else
-        {
-            section[3] = 1.0;
-            section[4] = 0.0;
-            section[5] = 0.0;
-        }
+    //            idx_p += 1;
+    //        }
+    //    }
+    //    else
+    //    {
+    //        section[3] = 1.0;
+    //        section[4] = 0.0;
+    //        section[5] = 0.0;
+    //    }
 
-        // Get zero pair (or single real zero)
-        if (idx_z < z_sorted.size())
-        {
-            if ((idx_z < z_sorted.size() - 1) && (std::abs(z_sorted[idx_z].imag()) > tolerance))
-            {
-                std::complex<double> z1 = z_sorted[idx_z];
+    //    // Get zero pair (or single real zero)
+    //    if (idx_z < z_sorted.size())
+    //    {
+    //        if ((idx_z < z_sorted.size() - 1) && (std::abs(z_sorted[idx_z].imag()) > tolerance))
+    //        {
+    //            std::complex<double> z1 = z_sorted[idx_z];
 
-                // Numerator:
-                section[0] = 1.0;
-                section[1] = -2.0 * z1.real();
-                section[2] = std::norm(z1);
+    //            // Numerator:
+    //            section[0] = 1.0;
+    //            section[1] = -2.0 * z1.real();
+    //            section[2] = std::norm(z1);
 
-                idx_z += 2;
-            }
-            else {
-                // Real zero
-                std::complex<double> z1 = z_sorted[idx_z];
-                section[0] = 1.0;
-                section[1] = -z1.real();
-                section[2] = 0.0;
+    //            idx_z += 2;
+    //        }
+    //        else {
+    //            // Real zero
+    //            std::complex<double> z1 = z_sorted[idx_z];
+    //            section[0] = 1.0;
+    //            section[1] = -z1.real();
+    //            section[2] = 0.0;
 
-                idx_z += 1;
-            }
-        }
-        else
-        {
-            // No more zeros
-            section[0] = 1.0;
-            section[1] = 0.0;
-            section[2] = 0.0;
-        }
+    //            idx_z += 1;
+    //        }
+    //    }
+    //    else
+    //    {
+    //        // No more zeros
+    //        section[0] = 1.0;
+    //        section[1] = 0.0;
+    //        section[2] = 0.0;
+    //    }
 
-        //result.sos[i] = section;
-        sos_filter.push_back(section);
+    //    //result.sos[i] = section;
+    //    sos_filter.push_back(section);
 
-        gain *= ((section[3] + section[4] + section[5]) / (section[0] + section[1] + section[2]));
-    }
+    //    //gain *= ((section[3] + section[4] + section[5]) / (section[0] + section[1] + section[2]));
+    //}
 
     // adjust for gain of coeffeicients - shooting for DC gain = 1
-    sos_filter[0][0] *= gain;
-    sos_filter[0][1] *= gain;
-    sos_filter[0][2] *= gain;
+    //sos_filter[0][0] *= gain;
+    //sos_filter[0][1] *= gain;
+    //sos_filter[0][2] *= gain;
+
+    for (idx = 0; idx < p_sorted.size(); idx += 2)
+    {
+        std::complex<double> p1 = p_sorted[idx];
+        std::complex<double> p2 = (idx + 1 < p_sorted.size()) ? p_sorted[idx + 1] : std::complex<double>(0.0, 0.0);
+
+        std::complex<double> z1 = (idx < z_sorted.size()) ? z_sorted[idx] : std::complex<double>(0.0, 0.0);
+        std::complex<double> z2 = (idx + 1 < z_sorted.size()) ? z_sorted[idx + 1] : std::complex<double>(0.0, 0.0);
+
+        // Quadratic numerator: We usually set b0 = 1 for each section, scale overall gain later
+        double b0 = 1.0;
+        double b1 = -(z1 + z2).real();
+        double b2 = (z1 * z2).real();
+
+        // Denominator
+        double a0 = 1.0;
+        double a1 = -(p1 + p2).real();
+        double a2 = (p1 * p2).real();
+
+        sos_filter.push_back({ b0, b1, b2, a0, a1, a2 });
+
+    }
 
     return sos_filter;
 
 }   // end of zpk_to_sos
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cutoff_frequency, double r_s)
+inline std::vector<std::vector<double>> chebyshev2_lowpass_iir_sos(int32_t N, double cutoff_frequency, double r_s)
 {
     int32_t idx;
     double k = 0.99;
@@ -703,7 +726,6 @@ inline std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cut
     }
 
     // Bilinear transformation to z - domain
-    //[zd, pd, kd] = bilinear_transform(z, p, k, 2);
     std::complex<double> kz(1.0, 0.0), kp(1.0, 0.0);
     std::vector<std::complex<double>> zd = bilinear_transform(z, kz);
     std::vector<std::complex<double>> pd = bilinear_transform(p, kp);
@@ -712,7 +734,7 @@ inline std::vector<std::vector<double>> chebyshev2_iir_sos(int32_t N, double cut
 
     std::vector<std::vector<double>> sos_filter = zpk_to_sos(zd, pd, k);
 
-    return sos_filter;
+    return normalize_sos_filter_gain<double>(sos_filter);
 
 }   // end of chebyshev2_iir_sos
 
@@ -755,12 +777,124 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_complex_bandpas
     // It must pair conjugates (or near-conjugates) correctly when possible,
     // but since we expect complex coeffs anyway, we can pair arbitrarily
     // (but better to pair conjugates for numerical reasons when they exist)
-    std::vector< std::vector<std::complex<double>>> sos_complex = zpk_to_sos_complex(zd_bp, pd_bp);
+    std::vector< std::vector<std::complex<double>>> sos_filter = zpk_to_sos_complex(zd_bp, pd_bp);
 
-    sos_complex = normalize_sos_filter_gain(sos_complex);
-
-    return sos_complex;
+    return normalize_sos_filter_gain(sos_filter);
 }   // end of chebyshev2_complex_bandpass_iir_sos
+
+//-----------------------------------------------------------------------------
+inline std::vector<std::vector<std::complex<double>>> chebyshev2_bandreject_iir_sos(int32_t N, double normalized_center_freq, double normalized_bandwidth, double r_s)
+{
+    int32_t idx;
+    double k = 1.0; // Gain initialization
+
+    // 1. Calculate Chebyshev Type II parameters (Stopband ripple/rejection)
+    double epsilon = 1.0 / std::sqrt(std::pow(10.0, (r_s / 10.0)) - 1.0);
+
+    // 2. Calculate poles and zeros for normalized lowpass prototype
+    std::vector<std::complex<double>> z(N, { 0.0, 0.0 });
+    std::vector<std::complex<double>> p(N, { 0.0, 0.0 });
+    chebyshev2_poles_zeros(N, epsilon, z, p);
+
+    // 3. Frequency transformation (Lowpass Prototype to Highpass)
+    // Transformation: s_hp = omega_warped / s_lp
+    double omega_warped = 2.0 * std::tan(M_PI * normalized_bandwidth /2.0);
+
+    std::vector<std::complex<double>> z_hp(N);
+    std::vector<std::complex<double>> p_hp(N);
+
+    for (idx = 0; idx < N; ++idx)
+    {
+        // Highpass transformation: inverse the prototype and scale by warped frequency
+        // Handle potential division by zero for zeros at infinity in prototype
+        p_hp[idx] = omega_warped / p[idx];
+
+        if (std::abs(z[idx]) > 1e-15) {
+            z_hp[idx] = omega_warped / z[idx];
+        }
+        else {
+            // Analog zeros at infinity in LP prototype map to 0 in HP
+            z_hp[idx] = std::complex<double>(0.0, 0.0);
+        }
+    }
+
+    // 4. Bilinear transformation to z-domain
+    std::complex<double> kz(1.0, 0.0), kp(1.0, 0.0);
+    std::vector<std::complex<double>> zd = bilinear_transform(z_hp, kz);
+    std::vector<std::complex<double>> pd = bilinear_transform(p_hp, kp);
+
+    // apply complex frequency shift z --> z * exp(-j wo)
+    std::complex<double> rot = std::exp((double)M_2PI * j * normalized_center_freq);
+
+    std::vector<std::complex<double>> zd_br(N);
+    std::vector<std::complex<double>> pd_br(N);
+
+    for (int i = 0; i < N; ++i)
+    {
+        zd_br[i] = zd[i] * rot;
+        pd_br[i] = pd[i] * rot;
+    }
+    // 5. ZPK to SOS
+    // The gain 'k' usually needs correction to ensure 0dB in the passband (at Nyquist/Fs/2)
+    //std::vector<std::vector<double>> sos_filter = zpk_to_sos(zd, pd, k);
+    std::vector< std::vector<std::complex<double>>> sos_filter = zpk_to_sos_complex(zd_br, pd_br);
+
+    // Normalize gain at Fs/2 (High-pass passband)
+    // (You might need a normalize_gain function here depending on your zpk_to_sos implementation)
+
+    return normalize_sos_filter_gain<std::complex<double>>(sos_filter);
+}   // end of chebyshev2_highpass_iir_sos
+
+//-----------------------------------------------------------------------------
+inline std::vector<std::vector<double>> chebyshev2_highpass_iir_sos(int32_t N, double cutoff_frequency, double r_s)
+{
+    int32_t idx;
+    double k = 1.0; // Gain initialization
+
+    // 1. Calculate Chebyshev Type II parameters (Stopband ripple/rejection)
+    double epsilon = 1.0 / std::sqrt(std::pow(10.0, (r_s / 10.0)) - 1.0);
+
+    // 2. Calculate poles and zeros for normalized lowpass prototype
+    std::vector<std::complex<double>> z(N, { 0.0, 0.0 });
+    std::vector<std::complex<double>> p(N, { 0.0, 0.0 });
+    chebyshev2_poles_zeros(N, epsilon, z, p);
+
+    // 3. Frequency transformation (Lowpass Prototype to Highpass)
+    // Transformation: s_hp = omega_warped / s_lp
+    double omega_warped = 2.0 * std::tan(M_PI * cutoff_frequency);
+
+    std::vector<std::complex<double>> z_hp(N);
+    std::vector<std::complex<double>> p_hp(N);
+
+    for (idx = 0; idx < N; ++idx)
+    {
+        // Highpass transformation: inverse the prototype and scale by warped frequency
+        // Handle potential division by zero for zeros at infinity in prototype
+        p_hp[idx] = omega_warped / p[idx];
+
+        if (std::abs(z[idx]) > 1e-15) {
+            z_hp[idx] = omega_warped / z[idx];
+        }
+        else {
+            // Analog zeros at infinity in LP prototype map to 0 in HP
+            z_hp[idx] = std::complex<double>(0.0, 0.0);
+        }
+    }
+
+    // 4. Bilinear transformation to z-domain
+    std::complex<double> kz(1.0, 0.0), kp(1.0, 0.0);
+    std::vector<std::complex<double>> zd = bilinear_transform(z_hp, kz);
+    std::vector<std::complex<double>> pd = bilinear_transform(p_hp, kp);
+
+    // 5. ZPK to SOS
+    // The gain 'k' usually needs correction to ensure 0dB in the passband (at Nyquist/Fs/2)
+    std::vector<std::vector<double>> sos_filter = zpk_to_sos(zd, pd, k);
+
+    // Normalize gain at Fs/2 (High-pass passband)
+    // (You might need a normalize_gain function here depending on your zpk_to_sos implementation)
+
+    return normalize_sos_filter_gain<double>(sos_filter);
+}   // end of chebyshev2_highpass_iir_sos
 
 //-----------------------------------------------------------------------------
 /*!
