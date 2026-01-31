@@ -653,7 +653,7 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_complex_bandpas
     chebyshev2_poles_zeros(N, epsilon, z_lp, p_lp);  // your existing function
 
     // Scale prototype to desired cutoff (your original code did scaling via omega_warped)
-    double omega_warped = 2.0 * std::tan(M_PI * normalized_cutoff_freq / 2.0);
+    double omega_warped = 2.0 * std::tan(M_1PI * normalized_cutoff_freq / 2.0);
     for (auto& zz : z_lp) zz *= omega_warped;
     for (auto& pp : p_lp) pp *= omega_warped;
 
@@ -665,7 +665,7 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_complex_bandpas
     auto pd_lp = bilinear_transform(p_lp, kp);
 
     // apply complex frequency shift z --> z * exp(-j wo)
-    std::complex<double> rot = std::exp((double)M_2PI * j * normalized_center_freq);
+    std::complex<double> rot = std::exp(M_2PI * j * normalized_center_freq);
 
     std::vector<std::complex<double>> zd_bp(N);
     std::vector<std::complex<double>> pd_bp(N);
@@ -701,7 +701,7 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_bandreject_iir_
 
     // 3. Frequency transformation (Lowpass Prototype to Highpass)
     // Transformation: s_hp = omega_warped / s_lp
-    double omega_warped = 2.0 * std::tan(M_PI * normalized_bandwidth /2.0);
+    double omega_warped = 2.0 * std::tan(M_1PI * normalized_bandwidth /2.0);
 
     std::vector<std::complex<double>> z_hp(N);
     std::vector<std::complex<double>> p_hp(N);
@@ -727,7 +727,7 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_bandreject_iir_
     std::vector<std::complex<double>> pd = bilinear_transform(p_hp, kp);
 
     // apply complex frequency shift z --> z * exp(-j wo)
-    std::complex<double> rot = std::exp((double)M_2PI * j * normalized_center_freq);
+    std::complex<double> rot = std::exp(M_2PI * j * normalized_center_freq);
 
     std::vector<std::complex<double>> zd_br(N);
     std::vector<std::complex<double>> pd_br(N);
@@ -764,7 +764,7 @@ inline std::vector<std::vector<double>> chebyshev2_highpass_iir_sos(int32_t N, d
 
     // 3. Frequency transformation (Lowpass Prototype to Highpass)
     // Transformation: s_hp = omega_warped / s_lp
-    double omega_warped = 2.0 * std::tan(M_PI * cutoff_frequency);
+    double omega_warped = 2.0 * std::tan(M_1PI * cutoff_frequency);
 
     std::vector<std::complex<double>> z_hp(N);
     std::vector<std::complex<double>> p_hp(N);
