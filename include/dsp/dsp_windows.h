@@ -544,8 +544,7 @@ inline std::vector<std::vector<std::complex<double>>> zpk_to_sos_complex(const s
         std::complex<double> z1 = (idx < zeros.size()) ? zeros[idx] : std::complex<double>(0.0, 0.0);
         std::complex<double> z2 = (idx + 1 < zeros.size()) ? zeros[idx + 1] : std::complex<double>(0.0, 0.0);
 
-        // Quadratic numerator: b0 (z-z1)(z-z2) --> b0 z^2 - b0(z1+z2) z + b0 z1 z2
-        // We usually set b0 = 1 for each section, scale overall gain later
+        // Quadratic numerator: We usually set b0 = 1 for each section, scale overall gain later
         std::complex<double> b0 = 1.0;
         std::complex<double> b1 = -(z1 + z2);
         std::complex<double> b2 = z1 * z2;
@@ -564,117 +563,21 @@ inline std::vector<std::vector<std::complex<double>>> zpk_to_sos_complex(const s
 }   // end of zpk_to_sos_complex
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<double>>& z, std::vector<std::complex<double>>& p, double gain)
+inline std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<double>>& zeros, std::vector<std::complex<double>>& poles, double gain)
 {
     uint32_t idx;
 
     std::vector<std::vector<double>> sos_filter;
-    //const double tolerance = 1e-10;
 
-    //std::vector<std::vector<double>> sos;
-
-    // Remove any infinite zeros (shouldn't have any, but check)
-    //std::vector<std::complex<double>> z_finite;
-    //for (const auto& zi : z)
-    //{
-    //    if (std::isfinite(zi.real()) && std::isfinite(zi.imag()))
-    //    {
-    //        z_finite.push_back(zi);
-    //    }
-    //}
+    if (zeros.size() != poles.size())
+    {
+        std::cerr << "The number of poles and zeros is not the same." << std::endl;
+        return sos_filter;
+    }
 
     // Sort complex conjugate pairs
-    std::vector<std::complex<double>> z_sorted = sort_conjugate_pairs(z);
-    std::vector<std::complex<double>> p_sorted = sort_conjugate_pairs(p);
-
-    //// Determine number of sections needed
-    //size_t num_sections = (p_sorted.size() + 1) / 2;
-
-    //size_t idx_z = 0;
-    //size_t idx_p = 0;
-
-    ////double gain = 1.0;
-
-    //for (idx = 0; idx < num_sections; ++idx)
-    //{
-    //    std::vector<double> section(6, 0);
-
-    //    // Get pole pair (or single real pole)
-    //    if (idx_p < p_sorted.size())
-    //    {
-    //        if ((idx_p < (p_sorted.size() - 1)) && (std::abs(p_sorted[idx_p].imag()) > tolerance))
-    //        {
-    //            // Complex conjugate pair
-    //            std::complex<double> p1 = p_sorted[idx_p];
-
-    //            // Denominator: 
-    //            section[3] = 1.0;
-    //            section[4] = -2.0 * p1.real();
-    //            section[5] = std::norm(p1);
-
-    //            idx_p += 2;
-    //        }
-    //        else
-    //        {
-    //            // Real pole
-    //            std::complex<double> p1 = p_sorted[idx_p];
-
-    //            section[3] = 1.0;
-    //            section[4] = -p1.real();
-    //            section[5] = 0.0;
-
-    //            idx_p += 1;
-    //        }
-    //    }
-    //    else
-    //    {
-    //        section[3] = 1.0;
-    //        section[4] = 0.0;
-    //        section[5] = 0.0;
-    //    }
-
-    //    // Get zero pair (or single real zero)
-    //    if (idx_z < z_sorted.size())
-    //    {
-    //        if ((idx_z < z_sorted.size() - 1) && (std::abs(z_sorted[idx_z].imag()) > tolerance))
-    //        {
-    //            std::complex<double> z1 = z_sorted[idx_z];
-
-    //            // Numerator:
-    //            section[0] = 1.0;
-    //            section[1] = -2.0 * z1.real();
-    //            section[2] = std::norm(z1);
-
-    //            idx_z += 2;
-    //        }
-    //        else {
-    //            // Real zero
-    //            std::complex<double> z1 = z_sorted[idx_z];
-    //            section[0] = 1.0;
-    //            section[1] = -z1.real();
-    //            section[2] = 0.0;
-
-    //            idx_z += 1;
-    //        }
-    //    }
-    //    else
-    //    {
-    //        // No more zeros
-    //        section[0] = 1.0;
-    //        section[1] = 0.0;
-    //        section[2] = 0.0;
-    //    }
-
-    //    //result.sos[i] = section;
-    //    sos_filter.push_back(section);
-
-    //    //gain *= ((section[3] + section[4] + section[5]) / (section[0] + section[1] + section[2]));
-    //}
-
-    // adjust for gain of coeffeicients - shooting for DC gain = 1
-    //sos_filter[0][0] *= gain;
-    //sos_filter[0][1] *= gain;
-    //sos_filter[0][2] *= gain;
+    std::vector<std::complex<double>> z_sorted = sort_conjugate_pairs(zeros);
+    std::vector<std::complex<double>> p_sorted = sort_conjugate_pairs(poles);
 
     for (idx = 0; idx < p_sorted.size(); idx += 2)
     {
