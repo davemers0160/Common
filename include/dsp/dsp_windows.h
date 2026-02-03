@@ -522,11 +522,12 @@ inline double chebyshev2_poles_zeros(int32_t N, double epsilon, std::vector<std:
 }   // end of chebyshev2_poles_zeros
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::vector<std::complex<double>>> zpk_to_sos_complex(const std::vector<std::complex<double>>& zeros, const std::vector<std::complex<double>>& poles)
+template <typename T>
+inline std::vector<std::vector<T>> zpk_to_sos(const std::vector<std::complex<double>>& zeros, const std::vector<std::complex<double>>& poles)
 {
     uint32_t idx;
 
-    std::vector<std::vector<std::complex<double>>> sos;
+    std::vector<std::vector<T>> sos;
 
     if (zeros.size() != poles.size())
     {
@@ -534,15 +535,20 @@ inline std::vector<std::vector<std::complex<double>>> zpk_to_sos_complex(const s
         return sos;
     }
 
+    // Sort complex conjugate pairs
+    std::vector<std::complex<double>> z_sorted = sort_conjugate_pairs(zeros);
+    std::vector<std::complex<double>> p_sorted = sort_conjugate_pairs(poles);
+
+
     // Naive pairing: pole 2k with 2k+1, zero 2k with 2k+1
     // Better: sort by angle, pair nearest conjugates, etc.
-    for (idx = 0; idx < poles.size(); idx += 2)
+    for (idx = 0; idx < p_sorted.size(); idx += 2)
     {
-        std::complex<double> p1 = poles[idx];
-        std::complex<double> p2 = (idx + 1 < poles.size()) ? poles[idx + 1] : std::complex<double>(0.0, 0.0);
+        std::complex<double> p1 = p_sorted[idx];
+        std::complex<double> p2 = (idx + 1 < p_sorted.size()) ? p_sorted[idx + 1] : std::complex<double>(0.0, 0.0);
 
-        std::complex<double> z1 = (idx < zeros.size()) ? zeros[idx] : std::complex<double>(0.0, 0.0);
-        std::complex<double> z2 = (idx + 1 < zeros.size()) ? zeros[idx + 1] : std::complex<double>(0.0, 0.0);
+        std::complex<double> z1 = (idx < z_sorted.size()) ? z_sorted[idx] : std::complex<double>(0.0, 0.0);
+        std::complex<double> z2 = (idx + 1 < z_sorted.size()) ? z_sorted[idx + 1] : std::complex<double>(0.0, 0.0);
 
         // Quadratic numerator: We usually set b0 = 1 for each section, scale overall gain later
         std::complex<double> b0 = 1.0;
@@ -554,7 +560,11 @@ inline std::vector<std::vector<std::complex<double>>> zpk_to_sos_complex(const s
         std::complex<double> a1 = -(p1 + p2);
         std::complex<double> a2 = p1 * p2;
 
-        sos.push_back({ b0, b1, b2, a0, a1, a2 });
+        // std::complex<double> check.  If T is complex then return the complex version of the sos filter otherwise return the real version
+        if constexpr (std::is_same_v<T, std::complex<double>> == true)
+            sos.push_back({ b0, b1, b2, a0, a1, a2 });
+        else
+            sos.push_back({ b0.real(), b1.real(), b2.real(), a0.real(), a1.real(), a2.real() });
 
     }
 
@@ -563,50 +573,50 @@ inline std::vector<std::vector<std::complex<double>>> zpk_to_sos_complex(const s
 }   // end of zpk_to_sos_complex
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<double>>& zeros, std::vector<std::complex<double>>& poles, double gain)
-{
-    uint32_t idx;
-
-    std::vector<std::vector<double>> sos_filter;
-
-    if (zeros.size() != poles.size())
-    {
-        std::cerr << "The number of poles and zeros is not the same." << std::endl;
-        return sos_filter;
-    }
-
-    // Sort complex conjugate pairs
-    std::vector<std::complex<double>> z_sorted = sort_conjugate_pairs(zeros);
-    std::vector<std::complex<double>> p_sorted = sort_conjugate_pairs(poles);
-
-    for (idx = 0; idx < p_sorted.size(); idx += 2)
-    {
-        std::complex<double> p1 = p_sorted[idx];
-        std::complex<double> p2 = (idx + 1 < p_sorted.size()) ? p_sorted[idx + 1] : std::complex<double>(0.0, 0.0);
-
-        std::complex<double> z1 = (idx < z_sorted.size()) ? z_sorted[idx] : std::complex<double>(0.0, 0.0);
-        std::complex<double> z2 = (idx + 1 < z_sorted.size()) ? z_sorted[idx + 1] : std::complex<double>(0.0, 0.0);
-
-        // Quadratic numerator: We usually set b0 = 1 for each section, scale overall gain later
-        double b0 = 1.0;
-        double b1 = -(z1 + z2).real();
-        double b2 = (z1 * z2).real();
-
-        // Denominator
-        double a0 = 1.0;
-        double a1 = -(p1 + p2).real();
-        double a2 = (p1 * p2).real();
-
-        sos_filter.push_back({ b0, b1, b2, a0, a1, a2 });
-
-    }
-
-    return sos_filter;
-
-}   // end of zpk_to_sos
+//inline std::vector<std::vector<double>> zpk_to_sos(std::vector<std::complex<double>>& zeros, std::vector<std::complex<double>>& poles)
+//{
+//    uint32_t idx;
+//
+//    std::vector<std::vector<double>> sos_filter;
+//
+//    if (zeros.size() != poles.size())
+//    {
+//        std::cerr << "The number of poles and zeros is not the same." << std::endl;
+//        return sos_filter;
+//    }
+//
+//    // Sort complex conjugate pairs
+//    std::vector<std::complex<double>> z_sorted = sort_conjugate_pairs(zeros);
+//    std::vector<std::complex<double>> p_sorted = sort_conjugate_pairs(poles);
+//
+//    for (idx = 0; idx < p_sorted.size(); idx += 2)
+//    {
+//        std::complex<double> p1 = p_sorted[idx];
+//        std::complex<double> p2 = (idx + 1 < p_sorted.size()) ? p_sorted[idx + 1] : std::complex<double>(0.0, 0.0);
+//
+//        std::complex<double> z1 = (idx < z_sorted.size()) ? z_sorted[idx] : std::complex<double>(0.0, 0.0);
+//        std::complex<double> z2 = (idx + 1 < z_sorted.size()) ? z_sorted[idx + 1] : std::complex<double>(0.0, 0.0);
+//
+//        // Quadratic numerator: We usually set b0 = 1 for each section, scale overall gain later
+//        double b0 = 1.0;
+//        double b1 = -(z1 + z2).real();
+//        double b2 = (z1 * z2).real();
+//
+//        // Denominator
+//        double a0 = 1.0;
+//        double a1 = -(p1 + p2).real();
+//        double a2 = (p1 * p2).real();
+//
+//        sos_filter.push_back({ b0, b1, b2, a0, a1, a2 });
+//
+//    }
+//
+//    return sos_filter;
+//
+//}   // end of zpk_to_sos
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::vector<double>> chebyshev2_lowpass_iir_sos(int32_t N, double cutoff_frequency, double r_s)
+inline std::vector<std::vector<std::complex<double>>> chebyshev2_lowpass_iir_sos(int32_t N, double cutoff_frequency, double r_s)
 {
     int32_t idx;
     double k = 0.99;
@@ -635,11 +645,12 @@ inline std::vector<std::vector<double>> chebyshev2_lowpass_iir_sos(int32_t N, do
 
     //double kd = std::real((kz / kp));
 
-    std::vector<std::vector<double>> sos_filter = zpk_to_sos(zd, pd, k);
+    std::vector<std::vector<std::complex<double>>> sos_filter = zpk_to_sos<std::complex<double>>(zd, pd);
+    //std::vector<std::vector<double>> sos_filter = zpk_to_sos(zd, pd);
 
-    return normalize_sos_filter_gain<double>(sos_filter);
+    return normalize_sos_filter_gain<std::complex<double>>(sos_filter);
 
-}   // end of chebyshev2_iir_sos
+}   // end of chebyshev2_lowpass_iir_sos
 
 //-----------------------------------------------------------------------------
 inline std::vector<std::vector<std::complex<double>>> chebyshev2_complex_bandpass_iir_sos(int32_t N, double normalized_center_freq, double normalized_cutoff_freq, double rs)
@@ -680,7 +691,7 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_complex_bandpas
     // It must pair conjugates (or near-conjugates) correctly when possible,
     // but since we expect complex coeffs anyway, we can pair arbitrarily
     // (but better to pair conjugates for numerical reasons when they exist)
-    std::vector< std::vector<std::complex<double>>> sos_filter = zpk_to_sos_complex(zd_bp, pd_bp);
+    std::vector< std::vector<std::complex<double>>> sos_filter = zpk_to_sos<std::complex<double>>(zd_bp, pd_bp);
 
     return normalize_sos_filter_gain(sos_filter);
 }   // end of chebyshev2_complex_bandpass_iir_sos
@@ -740,7 +751,7 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_bandreject_iir_
     // 5. ZPK to SOS
     // The gain 'k' usually needs correction to ensure 0dB in the passband (at Nyquist/Fs/2)
     //std::vector<std::vector<double>> sos_filter = zpk_to_sos(zd, pd, k);
-    std::vector< std::vector<std::complex<double>>> sos_filter = zpk_to_sos_complex(zd_br, pd_br);
+    std::vector< std::vector<std::complex<double>>> sos_filter = zpk_to_sos<std::complex<double>>(zd_br, pd_br);
 
     // Normalize gain at Fs/2 (High-pass passband)
     // (You might need a normalize_gain function here depending on your zpk_to_sos implementation)
@@ -749,7 +760,7 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_bandreject_iir_
 }   // end of chebyshev2_highpass_iir_sos
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::vector<double>> chebyshev2_highpass_iir_sos(int32_t N, double cutoff_frequency, double r_s)
+inline std::vector<std::vector<std::complex<double>>> chebyshev2_highpass_iir_sos(int32_t N, double cutoff_frequency, double r_s)
 {
     int32_t idx;
     double k = 1.0; // Gain initialization
@@ -791,12 +802,12 @@ inline std::vector<std::vector<double>> chebyshev2_highpass_iir_sos(int32_t N, d
 
     // 5. ZPK to SOS
     // The gain 'k' usually needs correction to ensure 0dB in the passband (at Nyquist/Fs/2)
-    std::vector<std::vector<double>> sos_filter = zpk_to_sos(zd, pd, k);
+    std::vector<std::vector<std::complex<double>>> sos_filter = zpk_to_sos<std::complex<double>>(zd, pd);
 
     // Normalize gain at Fs/2 (High-pass passband)
     // (You might need a normalize_gain function here depending on your zpk_to_sos implementation)
 
-    return normalize_sos_filter_gain<double>(sos_filter);
+    return normalize_sos_filter_gain<std::complex<double>>(sos_filter);
 }   // end of chebyshev2_highpass_iir_sos
 
 //-----------------------------------------------------------------------------
