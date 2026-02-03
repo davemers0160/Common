@@ -523,7 +523,7 @@ inline double chebyshev2_poles_zeros(int32_t N, double epsilon, std::vector<std:
 
 //-----------------------------------------------------------------------------
 template <typename T>
-inline std::vector<std::vector<T>> zpk_to_sos(const std::vector<std::complex<double>>& zeros, const std::vector<std::complex<double>>& poles)
+inline std::vector<std::vector<T>> zpk_to_sos(std::vector<std::complex<double>>& zeros, std::vector<std::complex<double>>& poles)
 {
     uint32_t idx;
 
@@ -757,7 +757,7 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_bandreject_iir_
     // (You might need a normalize_gain function here depending on your zpk_to_sos implementation)
 
     return normalize_sos_filter_gain<std::complex<double>>(sos_filter);
-}   // end of chebyshev2_highpass_iir_sos
+}   // end of chebyshev2_bandreject_iir_sos
 
 //-----------------------------------------------------------------------------
 inline std::vector<std::vector<std::complex<double>>> chebyshev2_highpass_iir_sos(int32_t N, double cutoff_frequency, double r_s)
@@ -809,6 +809,41 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_highpass_iir_so
 
     return normalize_sos_filter_gain<std::complex<double>>(sos_filter);
 }   // end of chebyshev2_highpass_iir_sos
+
+//-----------------------------------------------------------------------------
+inline std::vector<std::vector<std::complex<double>>> chebyshev2_notch_iir_sos(uint64_t sample_rate, double notch_frequency, double notch_bandwidth)
+{
+    // convert frequencies to normalized radians
+    double w0 = M_2PI * notch_frequency / (double)sample_rate;
+    double bw_rad = M_2PI * notch_bandwidth / (double)sample_rate;
+
+    // determine pole radius based on bandwidth
+    double R = 1 - (bw_rad / 2.0);
+
+    // define the zero and pole locations
+    std::complex<double> z0 = std::exp(j * w0);
+    std::complex<double> p0 = R * std::exp(j * w0);
+
+    // create Second Order Section by squaring the first order notch this ensures a sharper null and meets the "second order" requirement.
+    //    % H(z) = ((z - z0)(z - z0)) / ((z - p0)(z - p0))
+    //b0 = 1.0; b1 = -2 * z0; b2 = z0 ^ 2; a0 = 1.0; a1 = -2 * p0; a2 = p0 ^ 2;
+    //std::vector<std::complex<double>> sos = { {1.0, 0.0}, -2.0 * z0, z0 * z0, {1.0, 0.0}, -2.0 * p0, p0 * p0 };
+    std::complex<double> b0 = 1.0;
+    std::complex<double> b1 = -2.0 * z0;
+    std::complex<double> b2 = z0 * z0;
+
+    // Denominator
+    std::complex<double> a0 = 1.0;
+    std::complex<double> a1 = -2.0 * p0;
+    std::complex<double> a2 = p0 * p0;
+
+    std::vector<std::complex<double>> sos = { b0, b1, b2, a0, a1, a2 };
+
+    std::vector<std::vector<std::complex<double>>> sos_filter = normalize_sos_filter_gain<std::complex<double>>({ sos });
+     
+    return sos_filter;
+
+}   // end of chebyshev2_notch_iir_sos
 
 //-----------------------------------------------------------------------------
 /*!
@@ -896,30 +931,7 @@ inline std::vector<std::vector<double>> butterworth_iir_sos(int32_t order, doubl
 
 }   // end of butterworth_iir_sos
 
-//-----------------------------------------------------------------------------
-inline std::vector<std::vector<std::complex<double>>> create_complex_notch_iir(uint64_t sample_rate, double notch_frequency, double notch_bandwidth)
-{
-    // convert frequencies to normalized radians
-    double w0 = M_2PI * notch_frequency / (double)sample_rate;
-    double bw_rad = M_2PI * notch_bandwidth / (double)sample_rate;
 
-    // determine pole radius based on bandwidth
-    double R = 1 - (bw_rad / 2.0);
-
-    // define the zero and pole locations
-    std::complex<double> z0 = std::exp(j * w0);
-    std::complex<double> p0 = R * std::exp(j * w0);
-
-    // create Second Order Section by squaring the first order notch this ensures a sharper null and meets the "second order" requirement.
-    //    % H(z) = ((z - z0)(z - z0)) / ((z - p0)(z - p0))
-    //b0 = 1.0; b1 = -2 * z0; b2 = z0 ^ 2; a0 = 1.0; a1 = -2 * p0; a2 = p0 ^ 2;
-    std::vector<std::complex<double>> sos = { {1.0, 0.0}, -2.0 * z0, z0 * z0, {1.0, 0.0}, -2.0 * p0, p0 * p0 };
-
-    std::vector<std::vector<std::complex<double>>> sos_filter = normalize_sos_filter_gain<std::complex<double>>({ sos });
-     
-    return sos_filter;
-
-}   // end of create_complex_notch_iir
 
 inline std::vector<double> get_sos_filter_magnitude(std::vector<std::vector<std::complex<double>>> sos_filter, uint32_t num_points)
 {
