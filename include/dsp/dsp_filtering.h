@@ -127,7 +127,7 @@ namespace DSP
 
     */
     template <typename T>
-    inline std::vector<std::complex<T>> apply_df2t_filter(const std::vector<std::complex<T>>& data, const std::vector<std::vector<double>> &sos_filter)
+    inline std::vector<std::complex<T>> apply_df2t_filter(const std::vector<std::complex<T>>& data, const std::vector<std::vector<std::complex<double>>> &sos_filter)
     {
         uint64_t idx, jdx;
         std::complex<double> current_input, section_output;
@@ -192,7 +192,7 @@ namespace DSP
 
     */
     template <typename T>
-    inline std::vector<std::complex<T>> apply_df2t_filter_rotation(const std::vector<std::complex<T>>& data, const std::vector<std::vector<double>>& sos_filter, std::complex<double> channel_coeff)
+    inline std::vector<std::complex<T>> apply_df2t_filter_rotation(const std::vector<std::complex<T>>& data, const std::vector<std::vector<std::complex<double>>>& sos_filter, std::complex<double> channel_coeff)
     {
         uint64_t idx, jdx;
         std::complex<double> current_input, section_output;
