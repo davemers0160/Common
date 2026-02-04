@@ -811,11 +811,11 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_highpass_iir_so
 }   // end of chebyshev2_highpass_iir_sos
 
 //-----------------------------------------------------------------------------
-inline std::vector<std::vector<std::complex<double>>> chebyshev2_notch_iir_sos(uint64_t sample_rate, double notch_frequency, double notch_bandwidth)
+inline std::vector<std::vector<std::complex<double>>> chebyshev2_notch_iir_sos(double normalized_notch_frequency, double notch_bandwidth)
 {
     // convert frequencies to normalized radians
-    double w0 = M_2PI * notch_frequency / (double)sample_rate;
-    double bw_rad = M_2PI * notch_bandwidth / (double)sample_rate;
+    double w0 = M_2PI * normalized_notch_frequency;
+    double bw_rad = M_2PI * notch_bandwidth;
 
     // determine pole radius based on bandwidth
     double R = 1 - (bw_rad / 2.0);
