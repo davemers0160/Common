@@ -932,7 +932,7 @@ inline std::vector<std::vector<double>> butterworth_iir_sos(int32_t order, doubl
 }   // end of butterworth_iir_sos
 
 
-
+//-----------------------------------------------------------------------------
 inline std::vector<double> get_sos_filter_magnitude(std::vector<std::vector<std::complex<double>>> sos_filter, uint32_t num_points)
 {
     int32_t idx, jdx;
