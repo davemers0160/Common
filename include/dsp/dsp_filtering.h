@@ -231,7 +231,7 @@ namespace DSP
     }   // end of apply_df2t_filter_rotation
 
     //-----------------------------------------------------------------------------
-    inline void adjust_iir_filter_overshoot(std::vector<std::vector<double>>& sos_filter, uint32_t samples_per_symbol)
+    inline void adjust_iir_filter_overshoot(std::vector<std::vector<std::complex<double>>>& sos_filter, uint32_t samples_per_symbol)
     {
         // run filter through a high speed step transition to get the maximum overshoot value for the data rate
         std::vector<std::complex<double>> step(4 * samples_per_symbol, { -1.01, 0.0 });

@@ -619,7 +619,7 @@ inline std::vector<std::vector<T>> zpk_to_sos(std::vector<std::complex<double>>&
 inline std::vector<std::vector<std::complex<double>>> chebyshev2_lowpass_iir_sos(int32_t N, double cutoff_frequency, double r_s)
 {
     int32_t idx;
-    double k = 0.99;
+    //double k = 0.99;
 
     // Calculate Chebyshev Type II parameters
     double epsilon = 1 / std::sqrt(std::pow(10, (r_s / 10.0)) - 1.0);
@@ -700,7 +700,7 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_complex_bandpas
 inline std::vector<std::vector<std::complex<double>>> chebyshev2_bandreject_iir_sos(int32_t N, double normalized_center_freq, double normalized_bandwidth, double r_s)
 {
     int32_t idx;
-    double k = 1.0; // Gain initialization
+    //double k = 1.0; // Gain initialization
 
     // 1. Calculate Chebyshev Type II parameters (Stopband ripple/rejection)
     double epsilon = 1.0 / std::sqrt(std::pow(10.0, (r_s / 10.0)) - 1.0);
@@ -763,7 +763,7 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_bandreject_iir_
 inline std::vector<std::vector<std::complex<double>>> chebyshev2_highpass_iir_sos(int32_t N, double cutoff_frequency, double r_s)
 {
     int32_t idx;
-    double k = 1.0; // Gain initialization
+    //double k = 1.0; // Gain initialization
 
     // 1. Calculate Chebyshev Type II parameters (Stopband ripple/rejection)
     double epsilon = 1.0 / std::sqrt(std::pow(10.0, (r_s / 10.0)) - 1.0);
