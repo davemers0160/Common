@@ -233,9 +233,11 @@ namespace DSP
     //-----------------------------------------------------------------------------
     inline std::vector<std::complex<double>> calculate_sos_impulse_response(std::vector<std::vector<std::complex<double>>> sos_filter)
     {
+        // create the impulse
         std::vector<std::complex<double>> x(500, std::complex<double>(0.0, 0.0));
         x[20] = { 1.0, 1.0 };
 
+        // get the response
         return apply_df2t_filter(x, sos_filter);
 
     }   // end of calculate_sos_impulse_response
