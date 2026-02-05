@@ -48,7 +48,7 @@ fprintf('file: %s\n\n', fullfile(data_filepath, data_file));
 dlgtitle = 'Input';
 prompt = {'Sample Rate:', 'Down Samples Rate:', 'num taps:'};
 fieldsize = [1 30; 1 30; 1 30];
-definput = {'20e6', '1', '1'};
+definput = {'10e6', '1', '1'};
 
 res = inputdlg(prompt, dlgtitle, fieldsize, definput);
 
