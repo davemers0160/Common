@@ -648,7 +648,8 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_lowpass_iir_sos
     std::vector<std::vector<std::complex<double>>> sos_filter = zpk_to_sos<std::complex<double>>(zd, pd);
     //std::vector<std::vector<double>> sos_filter = zpk_to_sos(zd, pd);
 
-    return normalize_sos_filter_gain<std::complex<double>>(sos_filter);
+    //return normalize_sos_filter_gain<std::complex<double>>(sos_filter);
+    return sos_filter;
 
 }   // end of chebyshev2_lowpass_iir_sos
 
@@ -693,7 +694,7 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_complex_bandpas
     // (but better to pair conjugates for numerical reasons when they exist)
     std::vector< std::vector<std::complex<double>>> sos_filter = zpk_to_sos<std::complex<double>>(zd_bp, pd_bp);
 
-    return normalize_sos_filter_gain(sos_filter);
+    return sos_filter;
 }   // end of chebyshev2_complex_bandpass_iir_sos
 
 //-----------------------------------------------------------------------------
@@ -748,15 +749,11 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_bandreject_iir_
         zd_br[i] = zd[i] * rot;
         pd_br[i] = pd[i] * rot;
     }
-    // 5. ZPK to SOS
-    // The gain 'k' usually needs correction to ensure 0dB in the passband (at Nyquist/Fs/2)
-    //std::vector<std::vector<double>> sos_filter = zpk_to_sos(zd, pd, k);
+
+    // ZPK to SOS
     std::vector< std::vector<std::complex<double>>> sos_filter = zpk_to_sos<std::complex<double>>(zd_br, pd_br);
 
-    // Normalize gain at Fs/2 (High-pass passband)
-    // (You might need a normalize_gain function here depending on your zpk_to_sos implementation)
-
-    return normalize_sos_filter_gain<std::complex<double>>(sos_filter);
+    return sos_filter;
 }   // end of chebyshev2_bandreject_iir_sos
 
 //-----------------------------------------------------------------------------
@@ -800,14 +797,10 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_highpass_iir_so
     std::vector<std::complex<double>> zd = bilinear_transform(z_hp, kz);
     std::vector<std::complex<double>> pd = bilinear_transform(p_hp, kp);
 
-    // 5. ZPK to SOS
-    // The gain 'k' usually needs correction to ensure 0dB in the passband (at Nyquist/Fs/2)
+    // ZPK to SOS
     std::vector<std::vector<std::complex<double>>> sos_filter = zpk_to_sos<std::complex<double>>(zd, pd);
 
-    // Normalize gain at Fs/2 (High-pass passband)
-    // (You might need a normalize_gain function here depending on your zpk_to_sos implementation)
-
-    return normalize_sos_filter_gain<std::complex<double>>(sos_filter);
+    return sos_filter;
 }   // end of chebyshev2_highpass_iir_sos
 
 //-----------------------------------------------------------------------------
@@ -837,11 +830,10 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_notch_iir_sos(d
     std::complex<double> a1 = -2.0 * p0;
     std::complex<double> a2 = p0 * p0;
 
-    std::vector<std::complex<double>> sos = { b0, b1, b2, a0, a1, a2 };
+    std::vector<std::complex<double>> sos_filter = { b0, b1, b2, a0, a1, a2 };
 
-    std::vector<std::vector<std::complex<double>>> sos_filter = normalize_sos_filter_gain<std::complex<double>>({ sos });
-     
-    return sos_filter;
+    //std::vector<std::vector<std::complex<double>>> sos_filter = normalize_sos_filter_gain<std::complex<double>>({ sos }); 
+    return { sos_filter };
 
 }   // end of chebyshev2_notch_iir_sos
 
