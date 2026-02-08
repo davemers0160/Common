@@ -971,7 +971,8 @@ inline std::vector<double> get_sos_filter_magnitude(std::vector<std::vector<std:
     // H = 20 * log10(abs(H));  % magnitude_dB
     for (idx = 0; idx < num_points; ++idx)
     {
-        m[idx] = 20.0 * std::log10(std::abs(H[idx]));
+        // adding the 1e-12 to get rid of an inf's or nan's
+        m[idx] = 20.0 * std::log10(std::abs(H[idx]) + 1e-12);
     }
 
     return m;
