@@ -979,6 +979,40 @@ inline std::vector<double> get_sos_filter_magnitude(std::vector<std::vector<std:
 
 }   // end of get_sos_filter_magnitude
 
+//-----------------------------------------------------------------------------
+std::vector<double> get_fir_filter_magnitude(const std::vector<double>& b, uint32_t num_points) 
+{
+    uint32_t idx, jdx;
+    std::vector<double> m(num_points, 0.0);
+    double omega;
+    
+    double step = (2.0 * M_PI) / static_cast<double>(num_points - 1);
+    
+    for (idx = 0; idx < num_points; ++idx) 
+    {
+        omega = -M_1PI + (idx * step);
+        
+        std::complex<double> h(0.0, 0.0);
+        std::complex<double> h2(0.0, 0.0);
+    
+        for (jdx = 0; jdx < b.size(); ++jdx) 
+        {
+            // Evaluate H(e^jω) = Σ b[n] * e^(-j * omega * n)
+            // Using Euler's formula: e^(-jθ) = cos(θ) - j*sin(θ)
+            double angle = omega * static_cast<double>(jdx);
+            h += std::complex<double>(b[jdx] * std::cos(angle), -b[jdx] * std::sin(angle));
+            h2 += (b[idx] * std::exp(-j * angle));
+        }
+        
+        //magnitudes.push_back(get_fir_filter_magnitude(b, omega));
+        m[idx] = (std::abs(h));
+        //m[idx] = 20.0 * std::log10(std::abs(h) + 1e-12);
+    }
+    
+    return m;
+    
+}   // end of get_fir_filter_magnitude
+
 
 }  // end of namespace DSP
 
