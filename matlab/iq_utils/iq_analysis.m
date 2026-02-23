@@ -72,7 +72,10 @@ fprintf('max imag: %f\n', max(imag(iqc_in)));
 fprintf('min imag: %f\n', min(imag(iqc_in)));
 
 max_v = max([max(real(iqc_in)), max(imag(iqc_in)), abs(min(real(iqc_in))), abs(min(imag(iqc_in)))]);
-fprintf('overal max: %f\n', max_v);
+fprintf('overal max: %f\n\n', max_v);
+
+fprintf('file length: %d\n', numel(iqc_in));
+fprintf('file time: %2.14f\n', numel(iqc_in)/fs_o);
 
 iqc_o = scale * iqc_in;
 % tmt = timetable(seconds(t.'), iqc_o);
@@ -142,6 +145,7 @@ xlabel('Time (s)', 'fontweight','bold','FontSize',12);
 ylabel('Frequency (MHz)', 'fontweight','bold','FontSize',12);
 
 view(90,-90);
+colormap(jet(100));
 plot_num = plot_num + 1;
 drawnow;
 
