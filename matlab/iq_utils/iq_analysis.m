@@ -101,7 +101,7 @@ ph = atan2(imag(iqc),real(iqc))/pi;
 ph = angle(iqc);
 
 %% FFT
-tmp = floor(4e-5 * fs);
+tmp = numel(iqc); % floor(4e-5 * fs);
 Y = fft(iqc(1:tmp))/numel(iqc(1:tmp));
 f = linspace(-fs/2, fs/2, numel(Y));
 
