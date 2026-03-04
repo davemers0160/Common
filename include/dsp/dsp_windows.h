@@ -980,7 +980,7 @@ inline std::vector<double> get_sos_filter_magnitude(std::vector<std::vector<std:
 }   // end of get_sos_filter_magnitude
 
 //-----------------------------------------------------------------------------
-std::vector<double> get_fir_filter_magnitude(const std::vector<double>& b, uint32_t num_points) 
+inline std::vector<double> get_fir_filter_magnitude(const std::vector<double>& b, uint32_t num_points) 
 {
     uint32_t idx, jdx;
     std::vector<double> m(num_points, 0.0);
