@@ -808,7 +808,7 @@ inline std::vector<std::vector<std::complex<double>>> chebyshev2_notch_iir_sos(d
 {
     // convert frequencies to normalized radians
     double w0 = M_2PI * normalized_notch_frequency;
-    double bw_rad = M_2PI * notch_bandwidth;
+    double bw_rad = M_1PI * notch_bandwidth;
 
     // determine pole radius based on bandwidth
     double R = 1 - (bw_rad / 2.0);
