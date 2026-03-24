@@ -38,16 +38,14 @@ const std::complex<double> j(0.0, 1.0);
 inline uint64_t factorial(int64_t n){
 
      return (n==0) || (n==1) ? 1 : n* factorial(n-1);
-}
+}   // end of factorial
 
 //-----------------------------------------------------------------------------
 template <typename T>
-inline std::complex<T> complex_clamp(std::complex<T> z, T A) 
+inline std::complex<T> complex_clamp(std::complex<T> z, T lo, T hi) 
 {
-    // Clamp real part between -A and +A
-    T c_r = std::clamp(z.real(), -A, A);
-    // Clamp imaginary part between -A and +A
-    T c_i = std::clamp(z.imag(), -A, A);
+    T c_r = std::min(hi, std::max(lo, z.real()));
+    T c_i = std::min(hi, std::max(lo, z.imag()));
 
     return std::complex<T>(c_r, c_i);
 }   // end of complex_clamp
