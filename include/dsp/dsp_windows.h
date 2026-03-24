@@ -41,6 +41,18 @@ inline uint64_t factorial(int64_t n){
 }
 
 //-----------------------------------------------------------------------------
+template <typename T>
+inline std::complex<T> complex_clamp(std::complex<T> z, T A) 
+{
+    // Clamp real part between -A and +A
+    T c_r = std::clamp(z.real(), -A, A);
+    // Clamp imaginary part between -A and +A
+    T c_i = std::clamp(z.imag(), -A, A);
+
+    return std::complex<T>(c_r, c_i);
+}   // end of complex_clamp
+
+//-----------------------------------------------------------------------------
 inline std::vector<double> generate_linspace(double start_val, double stop_val, int32_t num_points) 
 {
     std::vector<double> result;
