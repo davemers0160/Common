@@ -77,6 +77,8 @@ fprintf('overal max: %f\n\n', max_v);
 fprintf('file length: %d\n', numel(iqc_in));
 fprintf('file time: %2.14f\n', numel(iqc_in)/fs_o);
 
+fprintf('sample time: %2.14f\n', 1/fs_o);
+
 iqc_o = scale * iqc_in;
 % tmt = timetable(seconds(t.'), iqc_o);
 
