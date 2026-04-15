@@ -188,6 +188,83 @@ public:
         return num_bytes;
     }
 
+	/**
+	 * @brief Reads a specified number of bytes from a serial port in a non-blocking manner.
+	 *
+	 * This function uses select() to wait for data to become available on the port
+	 * for a specified timeout. It will retry the operation a given number of times.
+	 *
+	 * @param port The file descriptor for the serial port.
+	 * @param read_buffer A reference to a vector where the read data will be stored.
+	 * @param bytes_to_read The total number of bytes to read from the port.
+	 * @param retries The number of times to retry reading if the timeout is reached.
+	 * @param timeout_sec The seconds part of the timeout for each read attempt.
+	 * @param timeout_usec The microseconds part of the timeout for each read attempt.
+	 * @return The total number of bytes successfully read. Returns -1 on a select() error.
+	 */
+	int64_t read_port_nonblocking(int port, std::vector<uint8_t> &read_buffer, uint64_t bytes_to_read, int retries, long timeout_sec, long timeout_usec)
+	{
+		read_buffer.clear();
+		read_buffer.resize(bytes_to_read);
+
+		uint64_t total_bytes_read = 0;
+
+		while (total_bytes_read < bytes_to_read && retries >= 0)
+		{
+			fd_set read_fds;
+			FD_ZERO(&read_fds);
+			FD_SET(port, &read_fds);
+
+			// select can modify timeout, need to reinit each loop
+			struct timeval timeout;
+			timeout.tv_sec = timeout_sec;
+			timeout.tv_usec = timeout_usec;
+
+			// Wait for data to be available on the port
+			int activity = select(port + 1, &read_fds, NULL, NULL, &timeout);
+
+			if (activity < 0)
+			{
+				std::cerr << "Error during select(): " << std::string(strerror(errno)) << std::endl;
+				return -1; // Error
+			}
+
+			if (activity == 0)
+			{
+				// Timeout occurred
+				std::cout << "Read timeout, " << retries << " retries left." << std::endl;
+				retries--;
+				continue;
+			}
+
+			if (FD_ISSET(port, &read_fds))
+			{
+				// Try to read the remaining bytes
+				ssize_t bytes_just_read = read(port, &read_buffer[total_bytes_read], bytes_to_read - total_bytes_read);
+
+				if (bytes_just_read < 0)
+				{
+					std::cerr << "Error during read(): " << std::string(strerror(errno)) << std::endl;
+					// Decide if you want to break or continue on read error
+					break;
+				}
+				if (bytes_just_read > 0)
+				{
+				   total_bytes_read += bytes_just_read;
+				}
+			}
+		}
+
+		if (total_bytes_read != bytes_to_read)
+		{
+			std::cout << "Wrong number of bytes received. Expected: " << bytes_to_read << ", received: " << total_bytes_read << std::endl;
+			// Resize the buffer to the actual number of bytes read
+			read_buffer.resize(total_bytes_read);
+		}
+
+		return total_bytes_read;
+	}	// end of read_port_nonblocking
+
 //-----------------------------------------------------------------------------
     int64_t write_port(std::vector<char> write_buffer)
     {
