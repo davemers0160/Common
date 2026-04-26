@@ -51,16 +51,6 @@ inline std::string get_date()
 }   // end of get_date
 
 //-----------------------------------------------------------------------------
-//std::string get_file_name(std::string full_path)
-//{
-//    std::size_t last_file_sep;
-//    last_file_sep = full_path.find_last_of("/\\");
-//
-//    std::string file_name = full_path.substr(last_file_sep + 1, full_path.length());
-//    return file_name;
-//}   // end of get_file_name
-
-//-----------------------------------------------------------------------------
 std::ostream& info(std::ostream& os) 
 {
     os << "[INFO -  " << get_time() << "]: ";
@@ -90,129 +80,92 @@ public:
 private:
     std::string filename;
     int32_t line_num;
-};
+};  // end of error class
 
 //-----------------------------------------------------------------------------
-//class data_logger
-//{
-//public:
-//
-//    data_logger() = default;
-//    
-//    data_logger(std::string directory, std::string base_name)
-//    {
-//        // make sure there is a path seperator 
-//        directory = path_check(directory);
-//        
-//        std::string current_date = get_date();
-//        
-//        // create the full log file name
-//        std::string filename = directory + base_name + "_" + current_date + ".txt";
-//        
-//        // open up file stream as txt file and appendable
-//        data_log.open(filename, std::ios::out | std::ios::app);
-//        
-//        // write a header with the log version and date
-//        data_log << "#-----------------------------------------------------------------------------" << std::endl;
-//        data_log << "# Version: " << log_version << std::endl;
-//        data_log << "# Date: " << current_date << std::endl;
-//        data_log << "#-----------------------------------------------------------------------------" << std::endl;
-//        data_log << std::endl;
-//    }
-//    
-//    ~data_logger()
-//    {
-//        data_log.close();
-//    }
-//    
-//    //-----------------------------------------------------------------------------
-//    void log_info(std::string msg)
-//    {
-//        data_log << error_code[0] << "  ";
-//        data_log << get_time() << ": ";
-//        data_log << msg << std::endl;
-//    }   
-//    
-//    //-----------------------------------------------------------------------------
-//    void log_warning(std::string msg)
-//    {
-//        data_log << error_code[1] << "  ";
-//        data_log << get_time() << ": ";
-//        data_log << msg << std::endl;
-//    }   
-//    
-//    //-----------------------------------------------------------------------------
-//    void log_error(std::string filename, int32_t line_num, std::string msg)
-//    {
-//        data_log << error_code[2] << " ";
-//        data_log << get_time() << ": ";
-//        data_log << get_file_name(filename) << " (" << std::to_string(line_num) << "): ";
-//        data_log << msg << std::endl;
-//    }
-//       
-//    //-----------------------------------------------------------------------------
-//    void open(std::string filename)
-//    {}
-//    
-//    //-----------------------------------------------------------------------------
-//    void close()
-//    {
-//        data_log.close();
-//    }
-//
-//    //-----------------------------------------------------------------------------
-//    template <typename T>
-//    std::ostream& operator<<(T v)
-//    {
-//        data_log << v;
-//        return data_log;
-//    }
-//    
-//    std::string info() 
-//    {
-//        return error_code[0] + "  " + get_time() + ": ";
-//    }
-//
-//    std::string warn()
-//    {
-//        return error_code[1] + "  " + get_time() + ": ";
-//    }
-//
-////-----------------------------------------------------------------------------
-//private:
-//    std::ofstream data_log;
-//    std::vector<std::string> error_code = {"[INFO]", "[WARN]", "[ERROR]", "[TEST]"};
-//    std::string log_version = "1.0";
-//    
-//    //-----------------------------------------------------------------------------
-//    std::string get_time()
-//    {
-//        std::string format = "%H%M%S";
-//        char c_time[32];
-//        
-//        time_t now = time(NULL);
-//        struct tm *timeinfo = localtime(&now);;
-//        //timeinfo = 
-//
-//        strftime(c_time, 7, format.c_str(), timeinfo);
-//        return std::string(c_time);
-//    }   // end of get_time
-//    
-//    //-----------------------------------------------------------------------------
-//    std::string get_date()
-//    {
-//        std::string format = "%Y%m%d";
-//        char c_date[32];
-//        
-//        time_t now = time(NULL);
-//        struct tm *timeinfo = localtime(&now); 
-//        //timeinfo ;
-//
-//        strftime(c_date, 9, format.c_str(), timeinfo);
-//
-//        return std::string(c_date);
-//
-//    }   // end of get_date
-//};
+// custom streambuf that redirects output to two destinations
+class dual_stream_buffer : public std::streambuf 
+{
+public:
+    dual_stream_buffer(std::streambuf* first, std::streambuf* second)
+        : buffer_first(first), buffer_second(second) {}
+
+protected:
+    //-----------------------------------------------------------------------------
+    // override overflow to write to both buffers
+    virtual int overflow(int c) override 
+    {
+        if (c == EOF) 
+            return !EOF;
+
+        bool fail = false;
+        if (buffer_first->sputc(c) == EOF) 
+            fail = true;
+        
+        if (buffer_second->sputc(c) == EOF) 
+            fail = true;
+
+        return fail ? EOF : c;
+    }   // end of overflow
+
+    //-----------------------------------------------------------------------------
+    // override sync to ensure both destinations are flushed
+    virtual int sync() override 
+    {
+        int res_first = buffer_first->pubsync();
+        int res_second = buffer_second->pubsync();
+        
+        return (res_first == 0 && res_second == 0) ? 0 : -1;
+    }   // end of sync
+
+private:
+    std::streambuf* buffer_first;
+    std::streambuf* buffer_second;
+    
+};  // end of dual_stream_buffer class
+
+//-----------------------------------------------------------------------------
+// manager class to handle the redirection life-cycle (RAII)
+class stream_redirector 
+{
+public:
+    //-----------------------------------------------------------------------------
+    stream_redirector(const std::string& file_name) 
+    {
+        output_file.open(file_name, std::ios::out | std::ios::app);
+        
+        if (output_file.is_open()) 
+        {
+            // create dual buffers for cout and cerr
+            cout_dual_buffer = std::make_unique<dual_stream_buffer>(std::cout.rdbuf(), output_file.rdbuf());
+            
+            cerr_dual_buffer = std::make_unique<dual_stream_buffer>(std::cerr.rdbuf(), output_file.rdbuf());
+
+            // redirect global streams
+            old_cout_buffer = std::cout.rdbuf(cout_dual_buffer.get());
+            old_cerr_buffer = std::cerr.rdbuf(cerr_dual_buffer.get());
+        }
+    }
+
+    //-----------------------------------------------------------------------------
+    // restore original buffers on destruction
+    ~stream_redirector() 
+    {
+        if (old_cout_buffer) 
+            std::cout.rdbuf(old_cout_buffer);
+        
+        if (old_cerr_buffer) 
+            std::cerr.rdbuf(old_cerr_buffer);
+    }
+
+private:
+    std::ofstream output_file;
+    std::streambuf* old_cout_buffer = nullptr;
+    std::streambuf* old_cerr_buffer = nullptr;
+    std::unique_ptr<dual_stream_buffer> cout_dual_buffer;
+    std::unique_ptr<dual_stream_buffer> cerr_dual_buffer;
+    
+};  // end of stream_redirector class
+
 
 #endif  // SIMPLE_DATA_LOGGER_H_
