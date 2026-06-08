@@ -1,4 +1,4 @@
-function iq_vector = generate_cpfsk(symbol_rate, sample_rate, data, amplitude)
+function iq_vector = generate_cpfsk(symbol_length, sample_rate, data, amplitude)
     % generate_cpfsk: Generates a complex baseband CPFSK (MSK) signal
     % Inputs:
     %   symbol_rate - Symbol rate in Hz (e.g., 16000)
@@ -14,32 +14,36 @@ function iq_vector = generate_cpfsk(symbol_rate, sample_rate, data, amplitude)
 
     % 2. Convert binary (0, 1) to bipolar NRZ (-1, +1)
     % Ensure data is a row vector
-    data = data(:)'; 
-    nrz_data = 2 * data - 1;
+    % data = data(:)'; 
+    % nrz_data = 2 * data - 1;
+    num_data = numel(data);
 
     % 3. Calculate Samples Per Symbol
-    sps = round(sample_rate / symbol_rate);
+    samples_per_symbol = floor(sample_rate * symbol_length + 0.5);
 
     % 4. Upsample the data (Sample and Hold)
     % Repeat each NRZ bit 'sps' times to match the sample rate
-    num_symbols = length(nrz_data);
-    upsampled_data = zeros(1, num_symbols * sps);
+    % num_data = length(nrz_data);
+    upsampled_data = zeros(1, num_data * samples_per_symbol);
     
-    for k = 1:num_symbols
-        start_idx = (k - 1) * sps + 1;
-        end_idx = k * sps;
-        upsampled_data(start_idx:end_idx) = nrz_data(k);
+    for idx = 1:num_data
+        start_idx = (idx - 1) * samples_per_symbol + 1;
+        end_idx = idx * samples_per_symbol;
+        upsampled_data(start_idx:end_idx) = 2 * data(idx) - 1;
     end
 
     % 5. Calculate Phase Increments
     % Peak frequency deviation from the center (delta_f) = (h * symbol_rate) / 2
-    delta_f = (h * symbol_rate) / 2;
+    delta_f_old = (h * (1/symbol_length)) / (2);
+    delta_f = h  / (2 * symbol_length);
     
     % Time per sample
     dt = 1 / sample_rate;
     
     % Instantaneous phase step per sample: d(theta) = 2 * pi * delta_f * data * dt
-    phase_step = 2 * pi * delta_f * upsampled_data * dt;
+    phase_step_old = 2 * pi * delta_f_old * upsampled_data * dt;
+    phase_step = h * pi * upsampled_data * (1/(sample_rate * symbol_length));
+    
 
     % 6. Integrate Phase over Time
     % This cumsum (cumulative sum) is the secret to Continuous Phase!
