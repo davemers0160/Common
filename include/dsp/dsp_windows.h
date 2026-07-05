@@ -28,6 +28,7 @@ const double M_1PI = 3.14159265358979323846;            							//* pi
 const double M_2PI = 2.0 * 3.14159265358979323846;      							//* 2pi
 const double M_4PI = 4.0 * 3.14159265358979323846;      							//* 4pi
 const double M_6PI = 6.0 * 3.14159265358979323846;      							//* 6pi
+const double M_8PI = 8.0 * 3.14159265358979323846;      							//* 8pi
 const double SQRT_2 = 1.4142135623730951454746218587388284504413604736328125;	    //* sqrt(2.0)
 const double SQRT_2_INV = 0.707106781186547461715008466853760182857513427734375;	//* 1.0/sqrt(2.0)
 const double COS_3PI_8 = 0.3826834323650898372903839117498137056827545166015625; 	//* cos(3pi/8)
@@ -207,6 +208,24 @@ inline std::vector<double> blackman_harris_window(int64_t N)
 
     return w;
 }   // end of blackman_harris_window
+
+//-----------------------------------------------------------------------------
+inline std::vector<double> flat_top_window(int64_t N)
+{
+    std::vector<double> w(N, 0.0f);
+    double a0 = 0.21557895;
+    double a1 = 0.41663158;
+    double a2 = 0.277263158;
+    double a3 = 0.083578947;
+    double a4 = 0.006947368;
+
+    for (int64_t idx = 0; idx < N; ++idx)
+    {
+        w[idx] = a0 - a1 * std::cos(M_2PI * idx / (double)(N - 1)) + a2 * std::cos(M_4PI * idx / (double)(N - 1)) - a3 * std::cos(M_6PI * idx / (double)(N - 1)) + a4 * std::cos(M_8PI * idx / (double)(N - 1));
+    }
+
+    return w;
+}   // end of flat_top_window
 
 //-----------------------------------------------------------------------------
 template <typename T, typename funct>
