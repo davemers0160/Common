@@ -16,7 +16,7 @@ function [target_noise_mask, diagnostics] = generate_interference_mask2(iq_data,
     %% 1. Configuration & Setup
     cfg.impulse_kurtosis_th = 5.0;  
     cfg.comb_prominence_db  = 12.0; 
-    cfg.lfm_variance_th     = 10.0; 
+    cfg.lfm_variance_th     = 8.0; 
     cfg.noise_floor_db_th   = 2.0;  
     
     % --- MODIFIED: Handle optional user_cfg with the new argument order ---
@@ -86,7 +86,8 @@ function [target_noise_mask, diagnostics] = generate_interference_mask2(iq_data,
     bin_std = std(linear_mag, 0, 2);
     bin_mean = mean(linear_mag, 2);
     coeff_of_variation = bin_std ./ (bin_mean + eps);
-    mask_lfms = coeff_of_variation > cfg.lfm_variance_th;
+    cov_spread = max(coeff_of_variation) - min(coeff_of_variation);
+    mask_lfms = coeff_of_variation > cfg.lfm_variance_th - (0.5*cov_spread);
 
     % Aggregate STFT-level mask for the VALID bins
     % stft_noise_mask_valid = mask_awgn | mask_combs | mask_bursts | mask_lfms;
