@@ -15,7 +15,7 @@ function [target_noise_mask, diagnostics] = generate_interference_mask2(iq_data,
 
     %% 1. Configuration & Setup
     cfg.impulse_kurtosis_th = 5.0;  
-    cfg.comb_prominence_db  = 12.0; 
+    cfg.comb_prominence_db  = 2.0; 
     cfg.lfm_variance_th     = 8.0; 
     cfg.noise_floor_db_th   = 2.0;  
     
