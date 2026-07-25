@@ -132,7 +132,7 @@ plot_num = plot_num + 1;
 drawnow;
 
 %%
-[s, f, ts] = spectrogram(iqc, 256, 128, 256, fs, 'centered');
+[s, f, ts] = spectrogram(iqc, 64, 60, 64, fs, 'centered');
 
 figure(plot_num)
 set(gcf,'position',([50,50,1000,800]),'color','w')
